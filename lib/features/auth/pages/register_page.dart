@@ -18,6 +18,8 @@ class RegisterPage extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firstNameController = useTextEditingController();
+    final lastNameController = useTextEditingController();
     final emailController = useTextEditingController();
     final passwordController = useTextEditingController();
     final selectedRegisterType = useState<RegisterType>(RegisterType.candidate);
@@ -48,6 +50,16 @@ class RegisterPage extends HookWidget {
                   selectedRegisterType.value = value as RegisterType;
                 },
                 groupValue: selectedRegisterType.value,
+              ),
+              const SizedBox(height: 16),
+              CommonTextFormField(
+                hintText: 'First name',
+                controller: firstNameController,
+              ),
+              const SizedBox(height: 16),
+              CommonTextFormField(
+                hintText: 'Last name',
+                controller: lastNameController,
               ),
               const SizedBox(height: 16),
               CommonTextFormField(
