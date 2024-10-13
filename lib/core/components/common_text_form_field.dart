@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 class CommonTextFormField extends StatelessWidget {
-  const CommonTextFormField(
-      {super.key,
-      required this.hintText,
-      required this.controller,
-      required this.obscureText,});
+  const CommonTextFormField({
+    super.key,
+    required this.hintText,
+    required this.controller,
+    this.obscureText = false,
+  });
 
   final String hintText;
   final TextEditingController controller;
