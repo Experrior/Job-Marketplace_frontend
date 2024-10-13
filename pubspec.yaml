@@ -18,6 +18,7 @@ dependencies:
   flutter_hooks: ^0.20.5
   hooks_riverpod: ^2.5.4
   theme_tailor_annotation: ^3.0.1
+  email_validator: ^3.0.0
 
 dev_dependencies:
   flutter_test:

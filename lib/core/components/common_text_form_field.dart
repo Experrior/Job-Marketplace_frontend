@@ -6,11 +6,13 @@ class CommonTextFormField extends StatelessWidget {
     required this.hintText,
     required this.controller,
     this.obscureText = false,
+    this.validator,
   });
 
   final String hintText;
   final TextEditingController controller;
   final bool obscureText;
+  final String? Function(String?)? validator;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,7 @@ class CommonTextFormField extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
       ),
+      validator: validator,
     );
   }
 }
