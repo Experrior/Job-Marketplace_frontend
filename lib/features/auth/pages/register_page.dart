@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:job_search_app/core/components/common_text_form_field.dart';
 import 'package:job_search_app/core/components/scaffold_wrapper.dart';
 import 'package:job_search_app/core/router/router.dart';
+import 'package:job_search_app/features/auth/pages/forgot_password_page.dart';
 import 'package:job_search_app/features/auth/pages/login_page.dart';
 
 import '../../../core/components/common_button.dart';
@@ -25,6 +26,7 @@ class RegisterPage extends HookWidget {
     final lastNameController = useTextEditingController();
     final emailController = useTextEditingController();
     final passwordController = useTextEditingController();
+    final repeatPasswordController = useTextEditingController();
     final selectedRegisterType = useState<RegisterType>(RegisterType.candidate);
 
     return Scaffold(
@@ -102,6 +104,18 @@ class RegisterPage extends HookWidget {
                   },
                 ),
                 const SizedBox(height: 16),
+                CommonTextFormField(
+                  hintText: 'Repeat password',
+                  controller: repeatPasswordController,
+                  obscureText: true,
+                  validator: (value) {
+                    if (value!.isEmpty || value != passwordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
                 CommonButton(
                   onPressed: () {
                     if (!formKey.currentState!.validate()) {
@@ -112,11 +126,18 @@ class RegisterPage extends HookWidget {
                 ),
                 const SizedBox(height: 10),
                 CupertinoButton(
-                  child: Text('Already have an account? Sign in'),
+                  child: const Text('Already have an account? Sign in'),
                   onPressed: () {
                     context.pushNamed(LoginPage.route);
                   },
-                )
+                ),
+                const SizedBox(height: 10),
+                CupertinoButton(
+                  child: const Text('Forgot password?'),
+                  onPressed: () {
+                    context.pushNamed(ForgotPasswordPage.route);
+                  },
+                ),
               ],
             ),
           ),
