@@ -63,7 +63,7 @@ class RegisterPage extends HookWidget {
                   hintText: 'First name',
                   controller: firstNameController,
                   validator: (value) {
-                    if (value!.isEmpty || value.length < 6) {
+                    if (value!.isEmpty) {
                       return 'First name is required';
                     }
                     return null;
@@ -74,7 +74,7 @@ class RegisterPage extends HookWidget {
                   hintText: 'Last name',
                   controller: lastNameController,
                   validator: (value) {
-                    if (value!.isEmpty || value.length < 6) {
+                    if (value!.isEmpty) {
                       return 'Last name is required';
                     }
                     return null;
