@@ -1,6 +1,8 @@
+import 'package:injectable/injectable.dart';
 import 'package:job_search_app/features/home/data/datasources/jobs_datasource.dart';
 import 'package:job_search_app/models/job.dart';
 
+@LazySingleton(as: IJobsDatasource)
 class JobsMockDatasource implements IJobsDatasource {
   @override
   Future<List<Job>> getJobs() async {
