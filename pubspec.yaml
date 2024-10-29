@@ -22,6 +22,7 @@ dependencies:
   dio: ^5.7.0
   email_validator: ^3.0.0
   equatable: ^2.0.5
+  fpdart: ^1.1.0
 
 
 dev_dependencies:
