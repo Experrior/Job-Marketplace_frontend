@@ -32,6 +32,7 @@ final GoRouter router = GoRouter(
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
+        /// Skeleton for MacosWindow
         return Skeleton(
           key: state.pageKey,
           child: navigationShell,

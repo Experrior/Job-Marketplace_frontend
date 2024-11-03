@@ -3,6 +3,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../controllers/get_jobs_controller.dart';
+import 'package:macos_ui/macos_ui.dart';
+
 
 class HomePage extends HookConsumerWidget {
   const HomePage({super.key});
@@ -19,13 +21,18 @@ class HomePage extends HookConsumerWidget {
 
 
     final jobs = ref.watch(getJobsControllerProvider);
-    return Scaffold(
-      body: jobs.when(
-        data: (data) {
-          return Text(data.toString());
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
+
+    final Widget body = jobs.when(
+      data: (data) {
+        return Text(data.toString());
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(child: Text('Error: $error')),
+    );
+
+    return MacosScaffold(
+      toolBar: const ToolBar(
+        title: Text('Job Search App'),
       ),
     );
   }
