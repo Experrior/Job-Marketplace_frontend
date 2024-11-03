@@ -17,7 +17,7 @@ class GetJobsController extends _$GetJobsController {
 
   Future<void> getJobs() async {
     state = const AsyncValue.loading();
-    await AsyncValue.guard(() async {
+    state = await AsyncValue.guard(() async {
       final response = await ref.watch(jobsRepositoryProvider).getJobs();
       return response;
     });
