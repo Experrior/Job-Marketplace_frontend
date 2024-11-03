@@ -6,11 +6,11 @@ class Logo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Job Find Platform',
+      'JF',
       style: Theme.of(context).textTheme.displayMedium!.copyWith(
             color: Theme.of(context).primaryColor,
             fontWeight: FontWeight.bold,
-            fontSize: 24,
+            fontSize: 16,
           ),
     );
   }

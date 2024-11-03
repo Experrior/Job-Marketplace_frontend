@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:job_search_app/features/auth/pages/forgot_password_page.dart';
 import 'package:job_search_app/features/auth/pages/login_page.dart';
 import 'package:job_search_app/features/auth/pages/register_page.dart';
+import 'package:job_search_app/features/search_page/presentation/pages/search_page.dart';
 
 import '../../features/home/presentation/pages/home_page.dart';
 import '../components/skeleton.dart';
@@ -49,8 +50,18 @@ final GoRouter router = GoRouter(
               ),
             ),
           ],
-
-        )
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/${SearchPage.route}',
+              name: SearchPage.route,
+              builder: (context, state) => SearchPage(
+                key: state.pageKey,
+              ),
+            ),
+          ],
+        ),
       ],
     )
   ],

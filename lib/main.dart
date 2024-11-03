@@ -4,13 +4,12 @@ import 'package:macos_ui/macos_ui.dart';
 
 import 'core/app.dart';
 
-Future<void> main() async{
+Future<void> main() async {
   await configureMacosWindowUtils();
   runApp(const ProviderScope(child: JobSearchApp()));
 }
 
 Future<void> configureMacosWindowUtils() async {
-
   const config = MacosWindowUtilsConfig();
   await config.apply();
 }

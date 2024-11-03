@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../core/components/logo.dart';
 import '../controllers/get_jobs_controller.dart';
 import 'package:macos_ui/macos_ui.dart';
 
@@ -30,8 +31,9 @@ class HomePage extends HookConsumerWidget {
       error: (error, _) => Center(child: Text('Error: $error')),
     );
 
-    return MacosScaffold(
-      toolBar: const ToolBar(
+    return  MacosScaffold(
+      toolBar: ToolBar(
+        leading: Center(child: Logo(),widthFactor: 1,),
         title: Text('Job Search App'),
       ),
     );
