@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:injectable/injectable.dart';
 import 'package:job_search_app/features/home/data/repositories/jobs_repository.dart';
 
 import '../../../../models/job.dart';

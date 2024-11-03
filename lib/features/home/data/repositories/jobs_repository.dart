@@ -1,7 +1,4 @@
-import 'package:injectable/injectable.dart';
-import 'package:job_search_app/core/error/failures.dart';
 import 'package:job_search_app/features/home/data/datasources/jobs_datasource.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../models/job.dart';
 
