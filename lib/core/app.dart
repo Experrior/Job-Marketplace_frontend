@@ -10,13 +10,17 @@ class JobSearchApp extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  MacosApp.router(
+    return MaterialApp(
+      theme: Themes.light,
+      darkTheme: Themes.dark,
+      themeMode: ThemeMode.system,
+      home: MacosApp.router(
         title: 'Job Search App',
         theme: Themes.macosLight,
         darkTheme: Themes.macosDark,
-        themeMode: ThemeMode.light,
+        themeMode: ThemeMode.system,
         routerConfig: router,
-
+      ),
     );
   }
 }

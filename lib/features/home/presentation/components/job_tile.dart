@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:job_search_app/core/themes/palette.dart';
 
 import '../../../../models/job.dart';
 
@@ -16,7 +17,7 @@ class JobTile extends StatelessWidget {
       child: CupertinoListTile(
         onTap: () {},
         padding: const EdgeInsets.all(16),
-        backgroundColor: Theme.of(context).cardColor,
+        backgroundColor: CupertinoTheme.of(context).barBackgroundColor,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -27,6 +28,7 @@ class JobTile extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const Gap(6),
             _JobTags(job: job)
           ],
         ),
@@ -42,7 +44,6 @@ class JobTile extends StatelessWidget {
             ),
             const Gap(6),
             _JobLocation(job: job),
-
           ],
         ),
       ),
@@ -85,33 +86,24 @@ class _JobTags extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      child: Theme(
-        data: ThemeData(
-          chipTheme: ChipThemeData(
-            backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor,
-            labelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        child: Wrap(
-          spacing: 6,
-          children: job.requiredSkills
-              .map(
-                (tag) => Chip(
-                  label: Text(
-                    tag,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+      color: Colors.transparent,
+      child: Wrap(
+        spacing: 6,
+        children: job.requiredSkills
+            .map(
+              (tag) => Chip(
+                color: WidgetStateProperty.all(context.palette.primary),
+                label: Text(
+                  tag,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
-                  backgroundColor: Theme.of(context).primaryColor,
                 ),
-              )
-              .toList(),
-        ),
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
+            )
+            .toList(),
       ),
     );
   }
