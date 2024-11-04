@@ -25,7 +25,7 @@ class HomePage extends HookConsumerWidget {
 
     final Widget body = jobs.when(
       data: (jobs) {
-        return JobList(jobs: jobs!);
+        return JobList(jobs: jobs ?? []);
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Center(child: Text('Error: $error')),
