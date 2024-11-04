@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:job_search_app/core/themes/palette.dart';
 
 import '../../../../models/job.dart';
 
@@ -44,6 +43,7 @@ class JobTile extends StatelessWidget {
             ),
             const Gap(6),
             _JobLocation(job: job),
+
           ],
         ),
       ),
@@ -87,23 +87,33 @@ class _JobTags extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      child: Wrap(
-        spacing: 6,
-        children: job.requiredSkills
-            .map(
-              (tag) => Chip(
-                color: WidgetStateProperty.all(context.palette.primary),
-                label: Text(
-                  tag,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+      child: Theme(
+        data: ThemeData(
+          chipTheme: ChipThemeData(
+            backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor,
+            labelStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        child: Wrap(
+          spacing: 6,
+          children: job.requiredSkills
+              .map(
+                (tag) => Chip(
+                  label: Text(
+                    tag,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
+                  backgroundColor: Theme.of(context).primaryColor,
                 ),
-                backgroundColor: Theme.of(context).primaryColor,
-              ),
-            )
-            .toList(),
+              )
+              .toList(),
+        ),
       ),
     );
   }

@@ -15,14 +15,14 @@ class Palette extends ThemeExtension<Palette> with _$PaletteTailorMixin {
 
   factory Palette.light() {
     return Palette(
-      primary: const Color(0xFF008BEE),
+      primary: Colors.deepPurpleAccent,
       card: const Color(0xFFDCDCDC),
     );
   }
 
   factory Palette.dark() {
     return Palette(
-      primary: const Color(0xFF008BEE),
+      primary: Colors.deepPurpleAccent,
       card: const Color(0xFF333333),
     );
   }
