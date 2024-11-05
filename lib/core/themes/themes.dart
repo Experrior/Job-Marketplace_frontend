@@ -7,9 +7,11 @@ import 'package:macos_ui/macos_ui.dart';
 class Themes {
   static final MacosThemeData macosLight = MacosThemeData.light().copyWith(
     primaryColor: Colors.deepPurpleAccent,
+    accentColor: AccentColor.purple,
   );
   static final MacosThemeData macosDark = MacosThemeData.dark().copyWith(
     primaryColor: Colors.deepPurpleAccent,
+    accentColor: AccentColor.purple,
   );
 
   static final light = ThemeData.light().copyWith(
