@@ -28,7 +28,13 @@ class JobTile extends StatelessWidget {
               ),
             ),
             const Gap(6),
-            _JobTags(job: job)
+            Row(
+              children: [
+                _JobTags(job: job),
+                const Spacer(),
+                _JobSalary(job: job),
+              ],
+            )
           ],
         ),
         subtitle: Column(
@@ -50,6 +56,24 @@ class JobTile extends StatelessWidget {
     );
   }
 }
+
+class _JobSalary extends StatelessWidget {
+  const _JobSalary({super.key, required this.job});
+
+  final Job job;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      "\$ ${job.salary}",
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+}
+
 
 class _JobLocation extends StatelessWidget {
   const _JobLocation({super.key, required this.job});
@@ -89,9 +113,8 @@ class _JobTags extends StatelessWidget {
       color: Colors.transparent,
       child: Theme(
         data: ThemeData(
-          chipTheme: ChipThemeData(
-            backgroundColor: CupertinoTheme.of(context).scaffoldBackgroundColor,
-            labelStyle: const TextStyle(
+          chipTheme: const ChipThemeData(
+            labelStyle: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),

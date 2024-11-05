@@ -11,15 +11,18 @@ part of 'palette.dart';
 mixin _$PaletteTailorMixin on ThemeExtension<Palette> {
   Color get primary;
   Color get card;
+  Color get tagOnCardBackground;
 
   @override
   Palette copyWith({
     Color? primary,
     Color? card,
+    Color? tagOnCardBackground,
   }) {
     return Palette(
       primary: primary ?? this.primary,
       card: card ?? this.card,
+      tagOnCardBackground: tagOnCardBackground ?? this.tagOnCardBackground,
     );
   }
 
@@ -29,6 +32,8 @@ mixin _$PaletteTailorMixin on ThemeExtension<Palette> {
     return Palette(
       primary: Color.lerp(primary, other.primary, t)!,
       card: Color.lerp(card, other.card, t)!,
+      tagOnCardBackground:
+          Color.lerp(tagOnCardBackground, other.tagOnCardBackground, t)!,
     );
   }
 
@@ -38,7 +43,9 @@ mixin _$PaletteTailorMixin on ThemeExtension<Palette> {
         (other.runtimeType == runtimeType &&
             other is Palette &&
             const DeepCollectionEquality().equals(primary, other.primary) &&
-            const DeepCollectionEquality().equals(card, other.card));
+            const DeepCollectionEquality().equals(card, other.card) &&
+            const DeepCollectionEquality()
+                .equals(tagOnCardBackground, other.tagOnCardBackground));
   }
 
   @override
@@ -47,6 +54,7 @@ mixin _$PaletteTailorMixin on ThemeExtension<Palette> {
       runtimeType.hashCode,
       const DeepCollectionEquality().hash(primary),
       const DeepCollectionEquality().hash(card),
+      const DeepCollectionEquality().hash(tagOnCardBackground),
     );
   }
 }
