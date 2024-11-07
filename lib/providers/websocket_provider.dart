@@ -5,7 +5,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocketProvider with ChangeNotifier {
   late WebSocketChannel _channel;
-  String userId = '66f533c1-3466-4d0c-8bc4-f93bcee74cb6';
+  String userId = '694f2be7-23e6-4dce-8a31-4fae236cb928';
   String username = 'John';
   Map<String, List<Map<String, dynamic>>> chatMessages = {};
 
