@@ -102,6 +102,27 @@
             <path d="M12 12c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z" />
         </svg>
     </button>
+    <button class="quiz-icon" on:click={() => goto('/quizCreate')} aria-label="Go to quizCreate page">
+        <!-- Quiz icon as SVG -->
+        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+            <rect x="4" y="4" width="16" height="16" rx="4" />
+            <path d="M7 8h10v2H7zm0 4h6v2H7zm0 4h10v2H7z" />
+        </svg>
+    </button>
+    <button class="quiz-icon" on:click={() => goto('/quizTake')} aria-label="Go to quizTake page">
+        <!-- Quiz icon as SVG -->
+        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+            <rect x="4" y="4" width="16" height="16" rx="4" />
+            <path d="M7 8h10v2H7zm0 4h6v2H7zm0 4h10v2H7z" />
+        </svg>
+    </button>
+    <button class="test-icon" on:click={() => goto('/test')} aria-label="Go to test page">
+        <!-- Test icon as SVG -->
+        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+            <rect x="4" y="4" width="16" height="16" rx="4" />
+            <path d="M7 8h10v2H7zm0 4h6v2H7zm0 4h10v2H7z" />
+        </svg>
+    </button>
 </div>
 
 
@@ -119,7 +140,7 @@
 </main>
 
 <style>
-        .app-bar {
+    .app-bar {
         position: fixed;
         top: 0;
         left: 0;
