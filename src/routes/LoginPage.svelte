@@ -1,12 +1,11 @@
 <script>
-  </script>
+</script>
 
 <div class="login-container">
   <div class="image-container">
     <img src="/assets/login_image.jpg" alt="Login Image" />
   </div>
-  <div class="form-container">
-    </div>
+  <div class="form-container"></div>
 </div>
 
 <style>

@@ -8,19 +8,17 @@
     let currentPage = 'personalData';
 
     function handleLogout() {
-        goto('/login'); // Redirect to login page on logout
+        goto('/login');
     }
 
     function goToHome() {
-        goto('/'); // Redirect to the home page when "My App" or user icon is clicked
+        goto('/');
     }
 </script>
 
-<!-- App bar with app name and user icon -->
 <div class="app-bar">
     <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
     <button class="user-icon" on:click={goToHome} aria-label="Go to settings">
-        <!-- User icon as SVG -->
         <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
             <circle cx="12" cy="8" r="4" />
             <path d="M12 12c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z" />
@@ -66,49 +64,12 @@
 </div>
 
 <style>
-    /* App bar styles */
-    .app-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 60px;
-        background-color: #007bff;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 1rem;
-        color: white;
-        z-index: 1000;
-    }
 
-    /* App name link */
-    .app-name {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: white;
-        text-decoration: none;
-    }
 
-    /* User icon button */
-    .user-icon {
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #0056b3;
-        border-radius: 50%;
-        border: none;
-        cursor: pointer;
-        color: white;
-    }
-
-    /* Main settings container and layout */
     .settings-container {
         display: flex;
-        height: calc(100vh - 60px); /* Adjust for the height of the app bar */
-        margin-top: 60px; /* Push content below the app bar */
+        height: calc(100vh - 60px);
+        margin-top: 60px;
     }
 
     .sidebar {

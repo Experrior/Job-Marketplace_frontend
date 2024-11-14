@@ -5,19 +5,27 @@
 
   let slug = $page.params.slug;
 
-  // Rest of your code
+  // Updated job object with requiredExperience and requiredSkills
   const job = {
-      id: '1',
-      slug: 'senior-software-engineer',
-      title: 'Senior Software Engineer',
-      company: 'Tech Corp',
-      companyLogo: '/logos/logo2.png',
-      location: 'San Francisco, CA',
-      category: 'Engineering',
-      tags: ['Python', 'JavaScript', 'Docker'],
-      description: 'Detailed job description goes here.',
-    };
-
+    id: '1',
+    slug: 'senior-software-engineer',
+    title: 'Senior Software Engineer',
+    company: 'Tech Corp',
+    companyLogo: '/logos/logo2.png',
+    location: 'San Francisco, CA',
+    category: 'Engineering',
+    tags: ['Python', 'JavaScript', 'Docker'],
+    description: 'We are looking for a Senior Software Engineer with at least 5 years of experience in software development, particularly in building scalable web applications. The candidate should have a strong understanding of software architecture and design patterns, and experience leading development teams. We are looking for a Senior Software Engineer with at least 5 years of experience in software development, particularly in building scalable web applications. The candidate should have a strong understanding of software architecture and design patterns, and experience leading development teams.',
+    requiredExperience: 'We are looking for a Senior Software Engineer with at least 5 years of experience in software development, particularly in building scalable web applications. The candidate should have a strong understanding of software architecture and design patterns, and experience leading development teams.',
+    requiredSkills: {
+      'JavaScript': 5,
+      'TypeScript': 4,
+      'React': 5,
+      'Node.js': 4,
+      'Docker': 3,
+      'AWS': 3
+    }
+  };
 </script>
 
 <div class="app-bar">
@@ -31,16 +39,9 @@
   </button>
 </div>
 
-<div class="image-container">
-  <!-- Background Image -->
+<div class="scrollable-page">
   <img src="/images/job_background.webp" alt="Job Background" class="full-width-image" />
 
-  <!-- Overlay Text -->
-  <div class="overlay-text">
-    <h1>Find Your Dream Job</h1>
-  </div>
-
-  <!-- Job Description Overlay -->
   {#if job}
     <div class="job-description">
       <img src="{job.companyLogo}" alt="{job.company} Logo" class="company-logo" />
@@ -62,6 +63,28 @@
       <h2>Job Description</h2>
       <p>{job.description}</p>
 
+      <!-- Required Experience -->
+      <h2>Required Experience</h2>
+      <p>{job.requiredExperience}</p>
+
+      <!-- Required Skills -->
+      <h2>Required Skills</h2>
+      <ul class="required-skills">
+        {#each Object.entries(job.requiredSkills) as [skill, level]}
+          <li>
+            <span class="skill-name">{skill}</span>
+            <span class="skill-level">
+              {#each Array(level) as _, index}
+                <span class="star">&#9733;</span>
+              {/each}
+              {#each Array(5 - level) as _, index}
+                <span class="star empty">&#9734;</span>
+              {/each}
+            </span>
+          </li>
+        {/each}
+      </ul>
+
       <!-- Apply Button -->
       <button class="apply-button" on:click={() => alert('Application process initiated')}>
         Apply Now
@@ -73,128 +96,153 @@
 </div>
 
 <style>
+  /* Existing styles */
+
+  /* Required Skills Styles */
+  .required-skills {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+  }
+
+  .required-skills li {
+    display: flex;
+    /* align-items: center; */
+    margin-bottom: 0.5rem;
+  }
+
+  .skill-name {
+    flex: 2;
+  }
+
+  .skill-level {
+    display: flex;
+    width: 70px;
+    flex:0.5;
+  }
+
+  .star {
+    color: #f1c40f;
+    margin-right: 10px;
+    font-size: 40px;
+    margin-left: -20px;
+  }
+
+  .star.empty {
+    color: #ccc;
+    font-size: 40px;
+  }
+
+
 
   /* App Bar Styles */
-.app-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #007bff;
-  padding: 0.5rem 1rem;
-  color: white;
-  width: 100%;
-}
+  .app-bar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #007bff;
+    padding: 0.5rem 1rem;
+    color: white;
+  }
 
-.app-name {
-  color: white;
-  text-decoration: none;
-  font-size: 1.5rem;
-}
+  .app-name {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+  }
 
-.user-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
+  .user-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
 
-/* Image Container Styles */
-.image-container {
-  position: relative;
-  width: 100%;
-}
-
-.full-width-image {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.overlay-text {
-  position: absolute;
-  top: 10%;
-  left: 50%;
-  transform: translate(-50%, -10%);
-  color: white;
-  text-align: center;
-}
-
-/* Job Description Overlay Styles */
-.job-description {
-  position: absolute;
-  top: 50%; /* Adjust as needed */
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%; /* Adjust width as needed */
-  background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent background */
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: auto;
-  max-height: 70%; /* Allow scrolling if content overflows */
-}
-
-/* Job Description Content Styles */
-.company-logo {
-  width: 100px;
-  height: 100px;
-  object-fit: contain;
-  margin-bottom: 1rem;
-}
-
-.job-description h1 {
-  margin-top: 0;
-}
-
-.job-description p {
-  margin: 0.5rem 0;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.tag {
-  background-color: #e0e0e0;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-.apply-button {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  background-color: #28a745;
-  color: white;
-  cursor: pointer;
-  font-size: 1rem;
-  margin-top: 1rem;
-}
-
-.apply-button:hover {
-  background-color: #218838;
-}
-
-.error-message {
-  color: red;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
+  /* Job Description Styles */
   .job-description {
-    width: 90%;
-    top: 55%;
+    max-width: 800px;
+    margin: -80px auto 2rem; /* Negative top margin for overlap */
+    padding: 1.5rem;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1; /* Brings job-description above the image */
+  }
+
+  /* Image Styles */
+  .full-width-image {
+    width: 100%;
+    max-height: 350px;
+    object-fit: cover;
+    display: block;
+    position: relative;
+    z-index: 0; /* Ensures image stays behind job-description */
   }
 
   .company-logo {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 1rem;
   }
-}
 
+  .job-description h1 {
+    margin-top: 0;
+  }
+
+  .job-description p {
+    margin: 0.5rem 0;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .tag {
+    background-color: #e0e0e0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+
+  .apply-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 1rem;
+  }
+
+  .apply-button:hover {
+    background-color: #218838;
+  }
+
+  .error-message {
+    color: red;
+    text-align: center;
+    margin-top: 2rem;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .job-description {
+      width: 90%;
+      margin: -60px auto 1.5rem; /* Adjusted for smaller screens */
+    }
+
+    .company-logo {
+      width: 80px;
+      height: 80px;
+    }
+  }
 </style>

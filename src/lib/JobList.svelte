@@ -1,6 +1,48 @@
 <script>
     import JobCard from './JobCard.svelte';
-    export let filteredJobs = [];
+    export let filteredJobs = [        {
+  title: 'Senior Software Engineer',
+  company: 'Tech Corp',
+  companyLogo: '/logos/logo1.png', // or null if no logo
+  location: 'San Francisco, CA',
+  category: 'Engineering',
+  tags: ['Python', 'JavaScript', 'Docker']
+},        {
+  title: 'Senior Software Engineer',
+  company: 'Tech Corp',
+  companyLogo: '/logos/logo1.png', // or null if no logo
+  location: 'San Francisco, CA',
+  category: 'Engineering',
+  tags: ['Python', 'JavaScript', 'Docker']
+},        {
+  title: 'Senior Software Engineer',
+  company: 'Tech Corp',
+  companyLogo: '/logos/logo1.png', // or null if no logo
+  location: 'San Francisco, CA',
+  category: 'Engineering',
+  tags: ['Python', 'JavaScript', 'Docker']
+},        {
+  title: 'Senior Software Engineer',
+  company: 'Tech Corp',
+  companyLogo: '/logos/logo1.png', // or null if no logo
+  location: 'San Francisco, CA',
+  category: 'Engineering',
+  tags: ['Python', 'JavaScript', 'Docker']
+},        {
+  title: 'Senior Software Engineer',
+  company: 'Tech Corp',
+  companyLogo: '/logos/logo1.png', // or null if no logo
+  location: 'San Francisco, CA',
+  category: 'Engineering',
+  tags: ['Python', 'JavaScript', 'Docker']
+},        {
+  title: 'Senior Software Engineer',
+  company: 'Tech Corp',
+  companyLogo: '/logos/logo1.png', // or null if no logo
+  location: 'San Francisco, CA',
+  category: 'Engineering',
+  tags: ['Python', 'JavaScript', 'Docker']
+},];
   
     // Pagination variables
     let currentPage = 1;

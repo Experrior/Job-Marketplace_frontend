@@ -3,8 +3,10 @@
     import { goto } from '$app/navigation'; // SvelteKit's navigation helper
     import ImageRotator from '$lib/ImageRotator.svelte'; // Ensure this component exists
     import SwitchButton from './SwitchButton.svelte';
-    import { accessToken, refreshToken } from '$lib/authStore';
+    import { accessToken, refreshToken, userId } from '$lib/authStore';
     import axios from 'axios';
+    import { auth } from '../stores/auth';
+
     let isApplicant = true;
     let isLogin = true;
     let formData = { email: '', password: '', confirmPassword: '' };
@@ -27,6 +29,7 @@
 
         const url = !isLogin ? 'http://localhost:8080/user-service/register/applicant' : 'http://localhost:8080/user-service/login';
         var response = null
+        auth.setRole(isApplicant ? 'applicant' : 'recruiter')
         try {
 
             if (isLogin) {
@@ -51,17 +54,20 @@
             if (response.ok) {
                 // accessToken.set(data.accessToken);
                 // refreshToken.set(data.refreshToken);
-                goto('/search');
+                userId.set(formData.email)
+                goto('/');
             } else {
-                goto('/search');
+                userId.set(formData.email)
+                goto('/');
                 errorMessage = data.message || 'An error occurred. Please try again.';
             }
         } catch (error) {
+            userId.set(formData.email)
             console.log(error.status)
             console.log(error.response.data)
             console.error('Error during login:', error);
-            errorMessage = error.response.data
-            goto('/search');
+            // errorMessage = error.response.data
+            goto('/');
         }
     }
 
@@ -92,22 +98,20 @@
             <h1>{isLogin ? 'Login' : 'Register'}</h1>
 
 
-                  {#if !isLogin}
+            <!-- {#if !isLogin} -->
           <!-- Centered Switch Button -->
             <div class="switch-button-wrapper">
                 <SwitchButton bind:isApplicant leftText="Applicant" rightText="Recruiter" />
 <!--                 <p>Selected role: {isApplicant ? "Applicant" : "Recruiter"}</p> -->
             </div>
-{/if}
-            <!-- Email input -->
+            <!-- {/if} -->
+
             <input type="email" placeholder="Email" bind:value={formData.email} required />
 
 
 
-            <!-- Confirm Password input, only visible in register mode -->
             {#if !isLogin}
             <input type="text" placeholder="First Name" bind:value={formData.firstName} required />
-            <!-- Email input -->
             <input type="text" placeholder="Last Name" bind:value={formData.lastName} required />
            {/if}
 

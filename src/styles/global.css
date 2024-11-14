@@ -35,6 +35,12 @@ html, body {
   font-weight: bold;
   color: white;
   text-decoration: none;
+  margin-right: 4rem;
+}
+.nav-links {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .user-icon {
@@ -51,12 +57,12 @@ html, body {
 }
 .job-card {
   display: flex;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
   align-items: center;
-  gap: 1rem;
-  position: relative;
+  margin: 2rem;
+  background-color: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .company-logo {
   width: 60px;
@@ -67,6 +73,11 @@ html, body {
 
 .job-info {
   flex: 1;
+}
+.error-message {
+  color: red;
+  text-align: center;
+  margin-top: 2rem;
 }
 
 .job-header {
@@ -98,3 +109,36 @@ html, body {
   color: white;
   text-align: center;
 }
+
+
+    /* User icon button */
+    .user-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #0056b3;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      color: white;
+  }
+
+  .scrollable-page {
+    position: absolute;
+    top: 60px; 
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+  }
+  .personal-data-widget {
+    display: flex;
+    align-items: center;
+    margin: 2rem;
+    background-color: #f9f9f9;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
