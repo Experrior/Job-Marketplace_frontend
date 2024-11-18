@@ -1,12 +1,10 @@
 <script>
   import { goto } from "$app/navigation";
-  import { auth } from "../../../stores/auth";
+  import { user } from "../../../stores/user";
+  import axios from "axios";
 
   let userRole;
-
-  $: userRole = $auth.role;
-  console.log(userRole);
-  auth.setRole("recruiter");
+  $: userRole = $user.role;
   console.log(userRole);
 
   const recruiter = {
@@ -15,32 +13,63 @@
     company: "Tech Solutions",
     logo: "/logos/logo1.png",
   };
+
+
+
+  async function loadRecruiterJobs() {
+//     const query =`{
+//   jobsByRecruiter {
+//     jobId
+//     title
+//     description
+//     location
+//     salary
+//     createdAt
+//     isDeleted
+//     quizId
+//   }
+// }`;
+
+
+//     let response = await fetch('http://localhost:8080/job-service/graphql', {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//           'Authorization': `Bearer ${$user.jwt}` // Include JWT if required
+//         },
+//         body: JSON.stringify(query) // Send the hardcoded JSON
+//       });
+//       console.log($user.jwt)
+      
+//       console.log(response)
+
+            
+  }
+  // loadRecruiterJobs()
   function createListOfCopies(originalObject, numberOfCopies) {
     const listOfCopies = [];
 
     for (let i = 0; i < numberOfCopies; i++) {
-      listOfCopies.push(JSON.parse(JSON.stringify(originalObject)));
+      listOfCopies.push(JSON.parse(JSON.stringify({"query": originalObject})));
     }
 
     return listOfCopies;
   }
   const originalObject = {
     id: "2",
-    slug: "backend-engineer",
     title: "Backend Engineer",
     company: recruiter.company,
     companyLogo: recruiter.logo,
     location: "Remote",
-    category: "Engineering",
-    tags: ["Node.js", "Express", "MongoDB", "AWS"],
+    occupation: "San Diego, USA",
     description:
       "Looking for a Backend Engineer proficient in Node.js and cloud services. Must have experience with database design and API development.",
     requiredExperience: "At least 4 years of backend development experience.",
     requiredSkills: {
       "Node.js": 5,
-      Express: 4,
-      MongoDB: 4,
-      AWS: 3,
+      "Express": 4,
+      "MongoDB": 4,
+      "AWS": 3,
       "API Development": 5,
     },
   };
@@ -76,6 +105,7 @@
 </div>
 
 <div class="scrollable-page">
+  <button on:click={() => window.location.href = '/recruiter/jobs/new'}>Create New Job Offer</button>
   {#each jobs as job}
     <div class="job-card">
       <div class="job-info">
@@ -107,7 +137,6 @@
 </div>
 
 <style>
-  /* Existing styles */
 
   .job-card {
     display: flex;
@@ -133,7 +162,7 @@
   }
   .edit-button {
   padding: 0.5rem 1rem;
-  background-color: #28a745; /* Green */
+  background-color: #28a745;
   border: none;
   color: white;
   border-radius: 4px;

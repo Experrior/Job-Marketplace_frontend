@@ -1,20 +1,24 @@
 <script>
-  import { onMount } from "svelte";
   let userId = "";
   let socket;
   let chatId;
   let chatMessages = {}; // In-memory storage of messages for each chat
   let chatList; // Store chat IDs for the user
   let newMessage;
-  let username = "Gustaffson";
-
+  import { user } from "../../stores/user.js";
+  console.log($user.jwt)
   function startChat() {
     if (!userId) {
       alert("Please enter a User ID");
       return;
     }
-
-    fetch(`http://localhost:8080/chat-service/getUserChats?userId=${userId}`)
+//     const reqHeaders = new Headers();
+//     reqHeaders.set("Authorization", "Bearer COSŁYCHAĆ");
+//     const options = {
+//   headers: reqHeaders,
+// };
+    console.log($user.jwt)
+    fetch(`http://localhost:8080/chat-service/getUserChats?userId=${userId}`, {headers: {"Authorization": "Bearer "+$user.jwt}})
       .then((response) => response.text())
       .then((data) => {
         console.log(data);
@@ -28,12 +32,10 @@
           return;
         }
 
-        // Initialize chat messages storage if not already initialized
         if (!chatMessages[chatId]) {
           chatMessages[chatId] = [];
         }
 
-        // Start WebSocket connection
         socket = new WebSocket("ws://localhost:8080/chat-service/ws");
 
         socket.onopen = () => {
@@ -44,12 +46,15 @@
               chatId: chatId,
               createdBy: userId,
             },
+            Authorization: {
+              "Bearer":$user.jwt,
+            },
           };
           socket.send(JSON.stringify(request));
         };
 
         socket.onmessage = (event) => {
-          const messages = JSON.parse(event.data); // Assuming the response is a list of message objects
+          const messages = JSON.parse(event.data);
           if (Array.isArray(messages)) {
             console.log("Messages received:", messages);
             // Add new messages to in-memory storage

@@ -1,27 +1,27 @@
 <script>
-    import { onMount } from 'svelte';
-    import { goto } from '$app/navigation'; // SvelteKit's navigation helper
-    import ImageRotator from '$lib/ImageRotator.svelte'; // Ensure this component exists
+    import { goto } from '$app/navigation';
+    import ImageRotator from '$lib/ImageRotator.svelte';
     import SwitchButton from './SwitchButton.svelte';
-    import { accessToken, refreshToken, userId } from '$lib/authStore';
     import axios from 'axios';
-    import { auth } from '../stores/auth';
+    import { user } from "../stores/user.js";
 
+    let errors = {};
     let isApplicant = true;
     let isLogin = true;
     let formData = { email: '', password: '', confirmPassword: '' };
     let errorMessage = '';
     let isCustomCompany = false;
+    let justRegistered = false;
 
-    // Toggle between login and register modes
     function toggleForm() {
+        justRegistered = false;
         isLogin = !isLogin;
         formData = { email: '', password: '', confirmPassword: '' };
         errorMessage = '';
     }
 
-    // Submit handler for login/register
     async function handleSubmit() {
+        errors = {};
         if (!isLogin && formData.password !== formData.confirmPassword) {
             errorMessage = 'Passwords do not match.';
             return;
@@ -29,45 +29,62 @@
 
         const url = !isLogin ? 'http://localhost:8080/user-service/register/applicant' : 'http://localhost:8080/user-service/login';
         var response = null
-        auth.setRole(isApplicant ? 'applicant' : 'recruiter')
+        justRegistered = false
+        $user.role = (isApplicant ? 'applicant' : 'recruiter')
         try {
-
+            $user.username = formData.email
             if (isLogin) {
-            // Login request with axios
+            
             response = await axios.post(url, {
                 email: formData.email,
                 password: formData.password
             });
-        } else {
-            // Registration request with axios
-            response = await axios.post(url, {
-                email: formData.email,
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                password: formData.password,
-                confirmPassword: formData.confirmPassword
-            });
-        }
-            console.log(response.class)
+
+            if (response.status == 200) {
+                $user.username = formData.email
+                $user.jwt = response.data.accessToken
+                goto('/');
+            }else {
+                errorMessage = data.message || 'An error occurred. Please try again.';
+            }
+
+            } else {
+
+                response = await axios.post(url, {
+                    email: formData.email,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    password: formData.password,
+                    confirmPassword: formData.confirmPassword
+                });
+                justRegistered = true;
+                console.log(response.status)
+            }
+
+            console.log(response)
+            console.log("1235")
             const data = await response.json();
 
+            console.log(data)
             if (response.ok) {
-                // accessToken.set(data.accessToken);
-                // refreshToken.set(data.refreshToken);
-                userId.set(formData.email)
-                goto('/');
+                $user.username=formData.email
+                $user.jwt = data.accessToken
+                
             } else {
-                userId.set(formData.email)
-                goto('/');
                 errorMessage = data.message || 'An error occurred. Please try again.';
             }
         } catch (error) {
-            userId.set(formData.email)
+            console.log("1234")
             console.log(error.status)
+            console.log(error)
+            if (error.status === 400) {
+                errors = error.response.data
+            } else {
+                errorMessage = error.response.data
+            }
+
             console.log(error.response.data)
             console.error('Error during login:', error);
-            // errorMessage = error.response.data
-            goto('/');
         }
     }
 
@@ -86,13 +103,11 @@
 
 
 <div class="container">
-    <!-- Left side for the rotating image -->
+
     <div class="image-side">
         <ImageRotator />
     </div>
 
-
-    <!-- Right side for the form -->
     <div class="form-side">
         <div class="form-container">
             <h1>{isLogin ? 'Login' : 'Register'}</h1>
@@ -104,24 +119,32 @@
                 <SwitchButton bind:isApplicant leftText="Applicant" rightText="Recruiter" />
 <!--                 <p>Selected role: {isApplicant ? "Applicant" : "Recruiter"}</p> -->
             </div>
-            <!-- {/if} -->
 
+            {#if errors.email}
+            <div class="error">{errors.email}</div>
+            {/if}
             <input type="email" placeholder="Email" bind:value={formData.email} required />
 
 
-
             {#if !isLogin}
-            <input type="text" placeholder="First Name" bind:value={formData.firstName} required />
-            <input type="text" placeholder="Last Name" bind:value={formData.lastName} required />
+                {#if errors.lastName}
+                <div class="error">{errors.lastName}</div>
+                {/if}
+                <input type="text" placeholder="First Name" bind:value={formData.firstName} required />
+                {#if errors.firstName}
+                <div class="error">{errors.firstName}</div>
+                {/if}
+                <input type="text" placeholder="Last Name" bind:value={formData.lastName} required />
            {/if}
 
-                       <!-- Password input -->
+           {#if errors.password}
+           <div class="error">{errors.password}</div>
+           {/if}
             <input type="password" placeholder="Password" bind:value={formData.password} required />
+
 
             {#if !isLogin}
                         <input type="password" placeholder="Repeat Password" bind:value={formData.confirmPassword} required />
-
-
             {/if}
 
             {#if !isLogin && !isApplicant}
@@ -156,7 +179,9 @@
 
             {/if}
 
-
+            {#if justRegistered}
+            <div class="registerConfirm">Register request successful, please verify your email.</div>
+            {/if}
 
             <!-- Submit button -->
             <button on:click={handleSubmit}>
@@ -172,6 +197,12 @@
             <button class="button-toggle" on:click={toggleForm}>
                 {isLogin ? 'Need an account? Register' : 'Have an account? Login'}
             </button>
+            <text class="info1">
+                This website is still under progress.
+                The login system allows access to the IT services of Job Market webpage. Use email and password to log in.
+                If you do not know your username or password, use option Forgot my password.
+                In the event of a problem with logging in, please write to 259905@student.pwr.edu.pl.
+            </text>
         </div>
     </div>
 </div>
@@ -190,6 +221,15 @@
         background-color: #f0f0f0;
     }
 
+
+    .info1 {
+    text-align: left;
+    opacity: 0.5;
+    font-size: 10px;
+    display:block;
+  }
+
+
         /* Centering the Switch Button and text below the heading */
     .switch-button-wrapper {
         display: flex;
@@ -205,6 +245,20 @@
         justify-content: center;
         background-color: white;
     }
+
+    .error {
+    color: red;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    opacity: 1;
+  }
+
+  .registerConfirm {
+    color: green;
+    font-size: 1.2rem;
+    margin-top: 0.25rem;
+    opacity: 1;
+  }
 
     .form-container {
         max-width: 400px;

@@ -4,25 +4,62 @@
   import JobCard from './JobCard.svelte';
   import ChatBox from './ChatBox.svelte';
   import { auth } from '../stores/auth';
-
-  let userRole;
-
-  $: userRole = $auth.role;
-  console.log(userRole)
-  auth.setRole('recruiter')
-  console.log(userRole)
-
+  // import { user } from '$lib/stores/userStore';
+  import { user } from "../stores/user.js";
 
   let searchQuery = '';
   let categories = ['Engineering', 'Design', 'Marketing'];
   let selectedCategory = '';
   let filteredJobs = [];
   let currentPage = 1;
-  let jobsPerPage = 10; // Number of jobs per page
+  let jobsPerPage = 10;
   let totalPages = 1;
 
-  // Generate 50 mock job entries
+
   let allJobs = [];
+
+  async function loadRecruiterJobs() {
+    const query =`query {
+      jobs(
+        filter: {
+        },
+        limit: 10,
+        offset: 0
+      ) {
+        content {
+          jobId
+          title
+          location
+          requiredExperience
+          salary
+          companyId
+          requiredSkills
+        }
+        totalPages
+        totalElements
+      }
+    }
+`;
+
+    try {
+      const response = await fetch('http://localhost:8080/job-service/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${$user.jwt}`
+        },
+        data: {query}
+      });
+      console.log("XD")
+      console.log(response)
+    }catch  (error) {
+      console.log("XD2")
+      console.log(error)
+    }
+
+  }
+  // loadRecruiterJobs()
+
 
   for (let i = 1; i <= 50; i++) {
     allJobs.push({
@@ -35,7 +72,6 @@
       description: `This is the description for Job Title ${i}.`,
     });
   }
-
   filteredJobs = allJobs;
   totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
 
@@ -69,10 +105,12 @@
 <div class="app-bar">
   <div class="nav-links">
     <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
-    {#if userRole === 'recruiter'}
-      <a href="/recruiter/jobs" class="app-name" aria-label="Create job">My jobs</a>
+    <a href="/test1" class="app-name" aria-label="Go to home">Test1</a>
+    {#if $user.role === 'recruiter'}
+      <a href="/recruiter/jobs" class="app-name" aria-label="Create job">My job offers</a>
     {/if}
-    <text>{userRole}</text>
+    <text>{$user.role}</text>
+    <text>{$user.jwt}</text>
   </div>
 
     <button class="user-icon" on:click={() => goto('/settings')} aria-label="Go to settings">
