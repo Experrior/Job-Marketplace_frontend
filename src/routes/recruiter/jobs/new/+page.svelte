@@ -314,7 +314,6 @@
       border-radius: 8px;
       border: 1px solid #ced4da;
       overflow-y: auto;
-      max-height: calc(100vh - 200px);
     }
   
     @media (max-width: 228px) {

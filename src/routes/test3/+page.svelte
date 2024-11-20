@@ -3,17 +3,16 @@
     import AccountInformation from '$lib/AccountInformation.svelte';
     import SavedOffers from '$lib/SavedOffers.svelte';
     import MyApplications from '$lib/MyApplications.svelte';
+    import Educations from '$lib/Educations.svelte';
+    import Experiences from '$lib/Experiences.svelte';
     import CVCreator from '$lib/CVCreator.svelte';
+    import CVOverview from '$lib/CVOverview.svelte';
     import { goto } from '$app/navigation';
+    import { onMount } from 'svelte';
     import { user } from "../../stores/user.js";
-
+  import CvCreator from '../../lib/CVCreator.svelte';
 
     let currentPage = 'personalData';
-    //todo add settings
-    let offers_notification;
-    let newsletter_notification;
-    let recruiter_messages;
-    let push_notification;
 
     function handleLogout() {
         goto('/login');
@@ -45,18 +44,24 @@
             <li on:click={() => currentPage = 'accountInformation'} class:selected={currentPage === 'accountInformation'}>
                 Account Information
             </li>
+            <li on:click={() => currentPage = 'educations'} class:selected={currentPage === 'educations'}>
+                Educations
+            </li>
+            <li on:click={() => currentPage = 'experiences'} class:selected={currentPage === 'experiences'}>
+                Experiences
+            </li>
             <li on:click={() => currentPage = 'savedOffers'} class:selected={currentPage === 'savedOffers'}>
                 Saved Offers
             </li>
             <li on:click={() => currentPage = 'myApplications'} class:selected={currentPage === 'myApplications'}>
                 My Applications
             </li>
-            <!-- TODO UNCOMMENT IF-->
-            <!-- {#if $user.role === 'applicant'} -->
-            <li on:click={() => currentPage = 'cvCreator'} class:selected={currentPage === 'cvCreator'}>
-                CV Creator
+            <li on:click={() => currentPage = 'cvGenerator'} class:selected={currentPage === 'cvGenerator'}>
+                CV Generator
             </li>
-            <!-- {/if} -->
+            <li on:click={() => currentPage = 'cvOverview'} class:selected={currentPage === 'cvOverview'}>
+                CV Overview
+            </li>
         </ul>
 
         <!-- Log Out button at the bottom of the sidebar -->
@@ -69,18 +74,23 @@
             <PersonalData />
         {:else if currentPage === 'accountInformation'}
             <AccountInformation />
+        {:else if currentPage === 'educations'}
+            <Educations />
+        {:else if currentPage === 'experiences'}
+            <Experiences />
         {:else if currentPage === 'savedOffers'}
             <SavedOffers />
         {:else if currentPage === 'myApplications'}
             <MyApplications />
-            {:else if currentPage === 'cvCreator'}
-            <CVCreator />
+        {:else if currentPage === 'cvGenerator'}
+            <CvCreator />
+        {:else if currentPage === 'cvOverview'}
+            <CVOverview />
         {/if}
     </main>
 </div>
 
 <style>
-
     .settings-container {
         display: flex;
         height: calc(100vh - 60px);

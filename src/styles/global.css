@@ -1,6 +1,7 @@
-/* src/styles/global.css */
 
-/* Remove default margin and padding */
+@import url('https://fonts.googleapis.com/css2?family=Raleway&display=swap');
+
+
 html, body {
   margin: 0;
   padding: 0;
@@ -8,9 +9,9 @@ html, body {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  font-family: 'Raleway', sans-serif;
 }
 
-/* Apply border-box to all elements */
 *, *::before, *::after {
   box-sizing: inherit;
 }

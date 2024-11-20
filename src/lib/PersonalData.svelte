@@ -3,7 +3,8 @@
   import { writable } from 'svelte/store';
   import { onDestroy } from "svelte";
   import { format } from "date-fns";
-  import FileDropzone from 'svelte-file-dropzone';
+  import Educations from '$lib/Educations.svelte';
+  import Experiences from '$lib/Experiences.svelte';
 
   let user;
   const userData = {
@@ -164,6 +165,8 @@
         {/if}
     </div>
   </div>
+  <Educations/>
+  <Experiences/>
 {:else}
   <p>Loading user data...</p>
 {/if}

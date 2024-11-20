@@ -27,7 +27,8 @@
             return;
         }
 
-        const url = !isLogin ? 'http://localhost:8080/user-service/register/applicant' : 'http://localhost:8080/user-service/login';
+        const url = !isLogin ? "http://localhost:8080/user-service/register/" + $user.role : 'http://localhost:8080/user-service/login';
+        
         var response = null
         justRegistered = false
         $user.role = (isApplicant ? 'applicant' : 'recruiter')
@@ -41,6 +42,8 @@
             });
 
             if (response.status == 200) {
+                localStorage.setItem('jwt', response.data.accessToken);
+                localStorage.setItem('jwt_expiration', Date.now() + 8 * 60 * 60 * 1000)
                 $user.username = formData.email
                 $user.jwt = response.data.accessToken
                 goto('/');

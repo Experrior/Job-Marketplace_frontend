@@ -1,12 +1,12 @@
 <script>
   import { goto } from "$app/navigation";
   import { user } from "../../../stores/user";
-  import axios from "axios";
+  import { onMount } from 'svelte';
 
   let userRole;
   $: userRole = $user.role;
-  console.log(userRole);
 
+  // Mock recruiter data
   const recruiter = {
     id: "recruiter1",
     name: "Jane Doe",
@@ -14,47 +14,19 @@
     logo: "/logos/logo1.png",
   };
 
-
-
-  async function loadRecruiterJobs() {
-//     const query =`{
-//   jobsByRecruiter {
-//     jobId
-//     title
-//     description
-//     location
-//     salary
-//     createdAt
-//     isDeleted
-//     quizId
-//   }
-// }`;
-
-
-//     let response = await fetch('http://localhost:8080/job-service/graphql', {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//           'Authorization': `Bearer ${$user.jwt}` // Include JWT if required
-//         },
-//         body: JSON.stringify(query) // Send the hardcoded JSON
-//       });
-//       console.log($user.jwt)
-      
-//       console.log(response)
-
-            
-  }
-  // loadRecruiterJobs()
+  // Function to create a list of job offers
   function createListOfCopies(originalObject, numberOfCopies) {
     const listOfCopies = [];
 
     for (let i = 0; i < numberOfCopies; i++) {
-      listOfCopies.push(JSON.parse(JSON.stringify({"query": originalObject})));
+      // Add unique IDs or slugs if necessary
+      const jobCopy = { ...originalObject, id: `${originalObject.id}-${i}`, slug: `backend-engineer-${i}` };
+      listOfCopies.push(jobCopy);
     }
 
     return listOfCopies;
   }
+
   const originalObject = {
     id: "2",
     title: "Backend Engineer",
@@ -73,24 +45,26 @@
       "API Development": 5,
     },
   };
+
   const jobs = createListOfCopies(originalObject, 20);
 
   function showApplicants(slug) {
     goto(`/recruiter/jobs/${slug}`);
   }
+
+  function editJobOffer(slug) {
+    goto(`/recruiter/jobs/${slug}/edit`);
+  }
 </script>
 
+<!-- App Bar -->
 <div class="app-bar">
   <div class="nav-links">
     <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
     {#if userRole === "recruiter"}
-      <a href="/recruiter/jobs" class="app-name" aria-label="Create job"
-        >My jobs</a
-      >
+      <a href="/recruiter/jobs" class="app-name" aria-label="My Jobs">My Jobs</a>
     {/if}
-    <text>{userRole}</text>
   </div>
-<div class="scrollable-page">
   <button
     class="user-icon"
     on:click={() => goto("/settings")}
@@ -102,41 +76,137 @@
     </svg>
   </button>
 </div>
-</div>
 
-<div class="scrollable-page">
-  <button on:click={() => window.location.href = '/recruiter/jobs/new'}>Create New Job Offer</button>
-  {#each jobs as job}
-    <div class="job-card">
-      <div class="job-info">
-        <img
-          src={job.companyLogo}
-          alt="{job.company} Logo"
-          class="company-logo"
-        />
-        <div>
-          <h2>{job.title}</h2>
-          <p>{job.company} - {job.location}</p>
-        </div>
-      </div>
-      <button
-        class="show-button"
-        on:click={() => showApplicants(job.slug)}
-        aria-label={`Show applicants for ${job.title}`}
-      >
-        Show applicants
-      </button>
-      <button
-      class="edit-button"
-      on:click={() => showApplicants(job.slug)}
-    >
-     Edit job offer
-    </button>
+<!-- Main Content -->
+<div class="main-container">
+  <!-- Top Buttons -->
+  {#if userRole === "recruiter"}
+    <div class="top-buttons">
+      <button on:click={() => goto('/recruiter/jobs/new')} class="create-button">Create New Job Offer</button>
+      <button on:click={() => goto('/create-quiz')} class="create-button">Create New Quiz</button>
     </div>
-  {/each}
+  {/if}
+
+  <!-- Scrollable Job List -->
+  <div class="scrollable-page">
+    <main>
+      <!-- Job List -->
+      <div class="job-list-container">
+        {#each jobs as job}
+          <div class="job-card">
+            <div class="job-info">
+              <img
+                src={job.companyLogo}
+                alt="{job.company} Logo"
+                class="company-logo"
+              />
+              <div>
+                <h2>{job.title}</h2>
+                <p>{job.company} - {job.location}</p>
+              </div>
+            </div>
+            <div class="job-actions">
+              <button
+                class="show-button"
+                on:click={() => showApplicants(job.slug)}
+                aria-label={`Show applicants for ${job.title}`}
+              >
+                Show Applicants
+              </button>
+              <button
+                class="edit-button"
+                on:click={() => editJobOffer(job.slug)}
+                aria-label={`Edit ${job.title}`}
+              >
+                Edit Job Offer
+              </button>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </main>
+  </div>
 </div>
 
 <style>
+  /* App Bar Styles */
+  .app-bar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: #007bff;
+    padding: 0.5rem 1rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .app-name {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+  }
+
+  .user-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Main Container */
+  .main-container {
+    margin-top: 60px; /* Adjust to the height of your app bar */
+  }
+
+  /* Top Buttons Styles */
+  .top-buttons {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    position: sticky;
+    top: 60px; /* Stick below the app bar */
+    z-index: 999; /* Ensure it stays above scrollable content */
+  }
+
+  .create-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  .create-button:hover {
+    background-color: #218838;
+  }
+
+  /* Scrollable Content */
+  .scrollable-page {
+    max-height: calc(100vh - 60px - 72px); /* Subtract app bar and buttons height */
+    overflow-y: auto;
+  }
+
+  main {
+    padding: 1rem;
+  }
+
+  /* Job List Styles */
+  .job-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
 
   .job-card {
     display: flex;
@@ -144,8 +214,8 @@
     justify-content: space-between;
     border: 1px solid #ddd;
     padding: 1rem;
-    margin-bottom: 1rem;
     border-radius: 8px;
+    background-color: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
@@ -159,22 +229,13 @@
     width: 80px;
     height: 80px;
     object-fit: contain;
+    border-radius: 8px;
   }
-  .edit-button {
-  padding: 0.5rem 1rem;
-  background-color: #28a745;
-  border: none;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-left: 1rem;
-}
 
-.edit-button:hover {
-  background-color: #218838;
-}
-
+  .job-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
 
   .show-button {
     padding: 0.5rem 1rem;
@@ -188,5 +249,31 @@
 
   .show-button:hover {
     background-color: #0056b3;
+  }
+
+  .edit-button {
+    padding: 0.5rem 1rem;
+    background-color: #ffc107;
+    border: none;
+    color: #212529;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .edit-button:hover {
+    background-color: #e0a800;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .job-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .job-actions {
+      margin-top: 1rem;
+    }
   }
 </style>
