@@ -1,6 +1,7 @@
 <script>
     import { writable } from 'svelte/store';
     import jsPDF from 'jspdf';
+  import { yearsToDays, yearsToMonths } from 'date-fns';
 //    import {envelope, linkedin, telephone_inbound} from 'bootstrap-icons';
 //    import { AiOutlineLinkedin } from "svelte-icons-pack/ai";
 //    import { AiOutlineMail } from "svelte-icons-pack/ai";
@@ -19,7 +20,7 @@ const BsTelephoneInbound = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAA
   let linkedin = 'https://www.linkedin.com/in/johndoe/';
   let summary = 'Experienced professional with a background in software development.';
   let address = "Wroclaw, Burzowa 90/2a"
-  let skills = 'JavaScript, Svelte, React, Node.js, CSS, HTML, Git'
+
   let experiences = [
     {
       company: 'Tech Corp',
@@ -38,6 +39,15 @@ const BsTelephoneInbound = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAA
       description: 'Focused on software engineering and data structures.',
     },
   ];
+  let skills = [
+    { name: 'JavaScript', value: 5 },
+    { name: 'Svelte', value: 4 },
+    { name: 'React', value: 4 },
+    { name: 'Node.js', value: 4 },
+  ];
+
+  // New skill template
+  let newSkill = { name: '', value: 1 };
   
 
     const MAX_FULL_NAME_LENGTH = 50;
@@ -53,6 +63,10 @@ const BsTelephoneInbound = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAA
     const MAX_EDUCATIONS = 3; 
     const MAX_LINK_LENGTH = 160;
     const MAX_ADDRESS_LENGHT = 80;
+    const MAX_SKILLS = 10;
+
+
+    const skillOptions = [1, 2, 3, 4, 5];
     let newExperience = { company: '', role: '', startDate: '', endDate: '', description: '' };
     let newEducation = { institution: '', degree: '', startDate: '', endDate: '', description: '' };
   
@@ -283,6 +297,43 @@ let yOffset = 80
       }
     }
 
+      // Function to add a new skill
+  function addSkill() {
+    if (skills.length >= MAX_SKILLS) {
+      errors.skillLimit = `You can add up to ${MAX_SKILLS} skills.`;
+      return;
+    }
+
+    errors = {};
+
+    // Validate skill name
+    if (!newSkill.name.trim()) {
+      errors.skillName = 'Skill name is required.';
+    } else if (newSkill.name.length > 30) {
+      errors.skillName = 'Skill name cannot exceed 30 characters.';
+    }
+
+    // Validate proficiency value
+    if (!skillOptions.includes(newSkill.value)) {
+      errors.skillValue = 'Skill value must be between 1 and 5.';
+    }
+
+    // If no errors, add the skill
+    if (Object.keys(errors).length === 0) {
+      skills = [...skills, { ...newSkill }];
+      newSkill = { name: '', value: 1 }; // Reset the newSkill object
+    }
+  }
+
+  // Function to remove a skill by index
+  function removeSkill(index) {
+    skills = skills.filter((_, i) => i !== index);
+    if (errors.skillLimit) {
+      delete errors.skillLimit;
+    }
+  }
+
+
     function generatePDF2() {
         //preverification
     errors = {};
@@ -310,23 +361,19 @@ let yOffset = 80
       const lineWidth = 170;
 
     if (userImage) {
-      doc.addImage(userImage, 'JPEG', leftMargin + lineWidth - 55, 5, 35, 45);
-
-    
+      doc.addImage(userImage, 'JPEG', leftMargin + lineWidth - 55, 8, 35, 45);
     }
   
-      // Add Full Name
+
       doc.setFontSize(22);
       doc.setFont('helvetica', 'bold');
       doc.text(fullName, leftMargin, y);
       y += 6;
   
-      // Draw a horizontal line
       doc.setLineWidth(0.5);
       doc.line(leftMargin, y, leftMargin + 90, y);
       y += 10;
-  
-      // Contact Information
+
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
       doc.text(`Email: ${email}`, leftMargin, y);
@@ -428,16 +475,47 @@ let yOffset = 80
       y += 10;
   
       // Skills
+
+      // doc.setFontSize(16);
+      // doc.setFont('helvetica', 'bold');
+      // doc.text('Skills', leftMargin, y);
+      // y += 6;
+      // doc.setFontSize(12);
+      // doc.setFont('helvetica', 'normal');
+      // const skillsLines = doc.splitTextToSize(skills, leftMargin + lineWidth);
+      // doc.text(skillsLines, leftMargin, y);
+      // y += skillsLines.length * 6 + 10;
+   // Skills Section in PDF
+   if (skills.length > 0) {
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('Skills', leftMargin, y);
-      y += 6;
+      doc.text('Skills', 20, y);
+      y += 8;
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      const skillsLines = doc.splitTextToSize(skills, leftMargin + lineWidth);
-      doc.text(skillsLines, leftMargin, y);
-      y += skillsLines.length * 6 + 10;
-  
+      skills.forEach(skill => {
+        doc.text(`${skill.name}`, 20, y);
+        // Add proficiency level as filled and empty circles (stars)
+        for (let i = 0; i < 5; i++) {
+          if (i < skill.value) {
+            doc.setFillColor(255, 215, 0); // Gold color for filled stars
+            doc.circle(80 + i * 5, y - 2, 2, 'F');
+          } else {
+            doc.setFillColor(200, 200, 200); // Grey color for empty stars
+            doc.circle(80 + i * 5, y - 2, 2, 'F');
+          }
+        }
+        y += 6;
+
+        // Check for page overflow
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+    }
+
+
       // Disclaimer
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
@@ -645,6 +723,46 @@ let yOffset = 80
         </div>
         <button type="button" class="btn add-btn" on:click={addEducation}>Add Education</button>
       </section>
+
+
+      <!-- Skills Section -->
+  <section class="section">
+    <h3>Skills (up to {MAX_SKILLS})</h3>
+    {#if skills.length > 0}
+      <ul>
+        {#each skills as skill, index}
+          <li>
+            {skill.name} - Level {skill.value}
+            <button type="button" on:click={() => removeSkill(index)} style="margin-left: 10px; background-color: #dc3545;">Remove</button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    {#if errors.skillLimit}
+      <p class="error-message">{errors.skillLimit}</p>
+    {/if}
+    <div class="form-row">
+      <div class="form-group">
+        <label>Skill Name *</label>
+        <input type="text" bind:value={newSkill.name} maxlength="30" />
+        {#if errors.skillName}
+          <p class="error-message">{errors.skillName}</p>
+        {/if}
+      </div>
+      <div class="form-group">
+        <label>Proficiency Level *</label>
+        <select bind:value={newSkill.value}>
+          {#each skillOptions as option}
+            <option value={option}>{option}</option>
+          {/each}
+        </select>
+        {#if errors.skillValue}
+          <p class="error-message">{errors.skillValue}</p>
+        {/if}
+      </div>
+    </div>
+    <button type="button" class="btn add-btn" on:click={addSkill}>Add Skill</button>
+  </section>
   
       <!-- Submit Button -->
       <button type="submit" class="generate-btn">Generate PDF</button>
@@ -749,6 +867,53 @@ let yOffset = 80
       font-size: 0.9rem;
       margin-top: 0.25rem;
     }
+
+
+
+    .section ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+
+  .section ul li {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .section ul li button {
+    margin-left: auto;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .section ul li button:hover {
+    background-color: #c82333;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .form-row {
+      flex-direction: column;
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   </style>
   

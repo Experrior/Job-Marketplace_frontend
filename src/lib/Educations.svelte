@@ -2,7 +2,6 @@
     import { onMount } from 'svelte';
     import { writable } from 'svelte/store';
 
-    // Sample data store for educations
     let educations = writable([]);
 
     let newEducation = {
@@ -98,13 +97,6 @@
         color: #333;
     }
 
-    form {
-        background-color: #fff;
-        padding: 1rem;
-        border-radius: 5px;
-        margin-bottom: 2rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
 
     .form-group {
         display: flex;

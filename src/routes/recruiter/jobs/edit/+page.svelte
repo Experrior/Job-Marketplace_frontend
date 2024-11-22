@@ -1,17 +1,15 @@
 <script>
     import { goto } from '$app/navigation';
     import JobDescription from '$lib/JobDescription.svelte';
-    import axios from 'axios';
-    import {user, verifyUser} from '$lib/stores/user';
-    import { onMount } from 'svelte';
-    console.log(verifyUser())
+
+    import AppBar from '$lib/AppBar.svelte';
 
     let title = '';
   let companyLogo = '';
   let location = '';
   let category = '';
-  let employmentType = '';
-  let workLocation = '';
+  let employment_type = '';
+  let work_location = '';
   let salary = '';
   let description = '';
   let requiredExperience = '';
@@ -19,36 +17,6 @@
   let skillName = '';
   let skillLevel = '';
   let skillsList = [];
-let quizName = '';
-let quizzes = []
-
-
-    onMount(async () => {
-      try {
-          const response = await axios.post('http://localhost:8080/job-service/graphql', {
-      query: `query{
-    quizzesByRecruiter{
-        quizId,
-        quizName
-    }
-}`
- }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${$user.jwt}`
-        }
-      })
-      console.log($user.jwt)
-      console.log('asdasd')
-      console.log(response)
-      console.log(response.data.data.quizzesByRecruiter)
-      quizzes = response.data.data.quizzesByRecruiter
-      console.log(quizzes)
-    }catch (error) {
-      alert(error)
-    }
-
-})
 
   const employmentTypes = [
     'Full-time',
@@ -65,153 +33,34 @@ let quizzes = []
   
     function addSkill() {
       if (skillName && skillLevel) {
-        let newSkill = []
-        newSkill['name'] = skillName;
-        newSkill['value'] = +skillLevel;
-        skillsList.push(newSkill)
+        requiredSkills[skillName] = +skillLevel;
+        skillsList = Object.entries(requiredSkills);
         skillName = '';
         skillLevel = '';
       }
     }
   
-    async function  submit() {
-        const jobRequestValue = {
-        title,
-        location,
-        employmentType,
-        workLocation,
-        salary: salary ? parseInt(salary) : null,
-        description,
-        requiredExperience,
-        skillsList,
-        };
-        console.log(jobRequestValue);
-        console.log($user.jwt)
-        let quizId = quizzes.find(item => item.name === quizName);
-
-        const mutation = `
-        mutation XD($jobDefinition: JobInput!){
-        createJob(jobRequest: $jobDefinition) {
-            jobId
-            companyId
-            title
-            description
-            requiredSkills
-            requiredExperience
-            location
-            salary
-            createdAt
-            quizId
-        }
-        }`;
-        const variables = {
-            jobDefinition: {
-    title: "Data Scientist",
-    description: "Analyze data and build predictive models for business insights.",
-    location: "Wroclaw",
-    salary: 10000.0,
-    requiredSkills: [
-      {
-        name: "C++",
-        level: 5
-      },
-      {
-        name: "JavaScript",
-        level: 4
-      },
-      {
-        name: "Java",
-        level: 3
-      }
-    ],
-    requiredExperience: "Senior", // Ensure this is a string
-    quizId: quizId,
-    employmentType: "test1",
-    workLocation: "test2"
-  }
-};
-
-        // const variables = {
-        //     "jobDefinition": {
-        //     "title": title,
-        //     "description": description,
-        //     "location": location,
-        //     "salary": 10000.0,
-        //     "requiredSkills": skillsList,
-        //     "requiredExperience": requiredExperience,
-        //     "quizId": quizId,
-        //     "employmentType": employmentType,
-        //     "workLocation": workLocation
-        //     }
-        // };
-        try {
-            const response = await axios.post('http://localhost:8080/job-service/graphql', {
-      query: mutation,
-      variables: variables
-    }, {headers:{
-               "Content-Type": "application/json",
-               'Authorization': `Bearer ${$user.jwt}`
-            } }
-)
-//         const response = await axios.post('http://localhost:8080/job-service/graphql', {query: 
-//             `mutation ($requiredSkills) {
-//   createJob(jobRequest: {
-//     title: "${title}",
-//     description: "${description}",
-//     location: "${location}",
-//     salary: ${salary},
-//     requiredSkills: $requiredSkills,
-//     requiredExperience: "${requiredExperience}",
-//     quizId: "${quizId}",
-//     workLocation: "${workLocation}",
-//     employmentType: "${employmentType}",
-//   }) {
-//     jobId
-//     companyId
-//     title
-//     description
-//     requiredSkills
-//     requiredExperience
-//     location
-//     salary
-//     createdAt
-//     quizId
-//   }
-// }
-// `,   variables: {
-// 	requiredSkills: JSON.stringify(requiredSkills)
-//   } },
-//           {headers:{
-//               "Content-Type": "application/json",
-//               'Authorization': `Bearer ${$user.jwt}`
-//             } })
-
-            console.log(response)
-            console.log(response.data.data.createJob.jobId)
-            const newJobId = response.data.data.createJob.jobId
-            goto(`/job/${newJobId}`);
-
-        }catch (error) {
-            console.log(error)
-            alert(error)
-        }
-
-
-        // goto('/jobs')
-    // goto(`/jobs/${title.toLowerCase().replace(/\s+/g, '-')}`);
+    function submit() {
+    const job = {
+      title,
+      companyLogo,
+      location,
+      category,
+      employment_type,
+      work_location,
+      salary: salary ? parseInt(salary) : null,
+      description,
+      requiredExperience,
+      requiredSkills,
+    };
+    console.log(job);
+    goto(`/jobs/${title.toLowerCase().replace(/\s+/g, '-')}`);
   }
   </script>
   
-  <div class="app-bar">
-    <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
-    <button class="user-icon" on:click={() => goto('/settings')} aria-label="Go to settings">
-      <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-        <circle cx="12" cy="8" r="4" />
-        <path d="M12 12c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z" />
-      </svg>
-    </button>
-  </div>
-  
+  <AppBar/>
+
+
   <div class="scrollable-page">
     <img src="/images/job_background.webp" alt="Job Background" class="full-width-image" />
   
@@ -236,8 +85,8 @@ let quizzes = []
           </div>
       
           <div class="form-group">
-            <label for="employmentType">Employment Type</label>
-            <select id="employmentType" bind:value={employmentType} required>
+            <label for="employment_type">Employment Type</label>
+            <select id="employment_type" bind:value={employment_type} required>
               <option value="" disabled selected>Select employment type</option>
               {#each employmentTypes as type}
                 <option value="{type}">{type}</option>
@@ -246,8 +95,8 @@ let quizzes = []
           </div>
       
           <div class="form-group">
-            <label for="workLocation">Work Location</label>
-            <select id="workLocation" bind:value={workLocation} required>
+            <label for="work_location">Work Location</label>
+            <select id="work_location" bind:value={work_location} required>
               <option value="" disabled selected>Select work location</option>
               {#each workLocations as loc}
                 <option value="{loc}">{loc.charAt(0).toUpperCase() + loc.slice(1)}</option>
@@ -275,16 +124,6 @@ let quizzes = []
           <label for="requiredExperience">Required Experience</label>
           <textarea id="requiredExperience" bind:value={requiredExperience} placeholder="Detail the required experience"></textarea>
         </div>
-
-        <div class="form-group">
-            <label for="quiz">Quiz</label>
-            <select id="quiz" bind:value={quizName}>
-              <option value="" disabled selected>Select quiz for applicants</option>
-              {#each quizzes as quiz}
-                <option value="{quiz.quizName}">{quiz.quizName}</option>
-              {/each}
-            </select>
-          </div>
   
         <div class="form-group skills-section">
           <h2>Add Required Skills</h2>
@@ -311,12 +150,12 @@ let quizzes = []
       company=""
       {companyLogo}
       {location}
-      {employmentType}
-      {workLocation}
+      {employment_type}
+      {work_location}
       {salary}
       {description}
       {requiredExperience}
-      {skillsList}
+      {requiredSkills}
     />
   </div>
 </div>
@@ -470,7 +309,6 @@ let quizzes = []
       border-radius: 8px;
       border: 1px solid #ced4da;
       overflow-y: auto;
-      max-height: calc(100vh - 200px);
     }
   
     @media (max-width: 228px) {

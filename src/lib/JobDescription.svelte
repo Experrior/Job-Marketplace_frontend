@@ -9,6 +9,7 @@
     export let description = '';
     export let requiredExperience = '';
     export let requiredSkills = {};
+    export let skillsList = {};
   </script>
   
   <div class="job-description">
@@ -51,22 +52,22 @@
 </div>
   
 
-    {#if requiredSkills && Object.keys(requiredSkills).length > 0}
+    {#if skillsList && Object.keys(skillsList).length > 0}
       <h2>Required Skills</h2>
       <ul class="required-skills">
-        {#each Object.entries(requiredSkills) as [skill, level]}
-          <li>
-            <span class="skill-name">{skill}</span>
-            <span class="skill-level">
-              {#each Array(level) as _}
-                <span class="star">&#9733;</span>
-              {/each}
-              {#each Array(5 - level) as _}
-                <span class="star empty">&#9734;</span>
-              {/each}
-            </span>
-          </li>
-        {/each}
+        {#each skillsList as skill}
+        <li>
+          <span class="skill-name">{skill.name}</span>
+          <span class="skill-level">
+            {#each Array(skill.value) as _, index}
+              <span class="star">&#9733;</span>
+            {/each}
+            {#each Array(5 - skill.value) as _, index}
+              <span class="star empty">&#9734;</span>
+            {/each}
+          </span>
+        </li>
+      {/each}
       </ul>
     {/if}
   

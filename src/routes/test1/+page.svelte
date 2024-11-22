@@ -5,6 +5,7 @@
   let chatMessages = {}; // In-memory storage of messages for each chat
   let chatList; // Store chat IDs for the user
   let newMessage;
+  import ChatBox from "../../lib/ChatBox.svelte";
   import { user } from "../../stores/user.js";
   console.log($user.jwt)
   function startChat() {
@@ -104,7 +105,7 @@
     }
 
     if (socket && socket.readyState === WebSocket.OPEN && chatList.length > 0) {
-      const chatId = chatList[0]; // Use the first chatId from the list
+      const chatId = chatList[0];
       const message = {
         operation: "post",
         message: {
@@ -126,6 +127,8 @@
   }
 </script>
 
+
+<ChatBox/>
 <main>
   <h1>Simple WebSocket Chat App</h1>
   <label for="userId">User ID:</label>

@@ -98,19 +98,19 @@
         color: #333;
     }
 
-    form {
+    /* form {
         background-color: #fff;
         padding: 1rem;
         border-radius: 5px;
         margin-bottom: 2rem;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
+    } */
 
     .form-group {
         display: flex;
         flex-direction: column;
         margin-bottom: 0.75rem;
-    }
+    } 
 
     label {
         margin-bottom: 0.25rem;

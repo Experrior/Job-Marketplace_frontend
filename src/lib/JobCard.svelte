@@ -2,12 +2,11 @@
   export let job;
 
   function navigateToJob() {
-    // Navigate to job details page; adjust the route as needed
-    window.location.href = `/jobs/${job.jobId}`;
+    window.location.href = `/job/${job.jobId}`;
   }
 
-  // Function to parse requiredSkills string into an array of skill objects
-  function parseRequiredSkills(skillsString) {
+
+  function parseRequiredSkillsOld(skillsString) {
     // Remove the enclosing square brackets
     skillsString = skillsString.slice(1, -1);
 
@@ -31,6 +30,33 @@
 
     return skills;
   }
+
+  function parseRequiredSkills(skillsArray) {
+  if (!Array.isArray(skillsArray)) {
+    throw new TypeError("Input must be an array of skill objects.");
+  }
+
+  // Optionally, validate and process each skill object
+  const processedSkills = skillsArray.map((skill, index) => {
+    if (typeof skill !== 'object' || skill === null) {
+      throw new TypeError(`Skill at index ${index} is not a valid object.`);
+    }
+
+    const { name, level } = skill;
+
+    if (typeof name !== 'string') {
+      throw new TypeError(`'name' property at index ${index} must be a string.`);
+    }
+
+    if (typeof level !== 'number' || !Number.isInteger(level)) {
+      throw new TypeError(`'level' property at index ${index} must be an integer.`);
+    }
+
+    return { name, level };
+  });
+
+  return processedSkills;
+}
 
   // Parse requiredSkills string
   let requiredSkills = [];

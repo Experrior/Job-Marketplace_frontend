@@ -4,64 +4,81 @@
     import SwitchButton from './SwitchButton.svelte';
     import axios from 'axios';
     import { user } from "../stores/user.js";
+  import { onMount } from 'svelte';
 
     let errors = {};
     let isApplicant = true;
     let isLogin = true;
-    let formData = { email: '', password: '', confirmPassword: '' };
+    let loginFormData = { 
+        email: '', password: '', };
+    let registerFormData = {
+        email: '',
+        firstName: '',
+        lastName: '',
+        password: '',
+        confirmPassword: '',
+        company: ''
+    }
     let errorMessage = '';
-    let isCustomCompany = false;
     let justRegistered = false;
-
     function toggleForm() {
         justRegistered = false;
         isLogin = !isLogin;
-        formData = { email: '', password: '', confirmPassword: '' };
         errorMessage = '';
+
     }
+    let companies = ["TechCorp", "DesignPro", "MarketMasters", "FinanceGurus"];
+
+	onMount(async () => {
+		const res = await axios.get('http://localhost:8080/user-service/getCompanies')
+        companies = res.data.map(comp => comp.name)
+        console.log(res.data)
+
+        companies = companies.sort()
+
+	});
 
     async function handleSubmit() {
+        // alert('hello')
         errors = {};
-        if (!isLogin && formData.password !== formData.confirmPassword) {
+        errorMessage = '';
+        if (!isLogin && loginFormData.password !== loginFormData.confirmPassword) {
+            errorMessage = 'Passwords do not match.';
+            return;
+        }else if (registerFormData.password !== registerFormData.confirmPassword){
             errorMessage = 'Passwords do not match.';
             return;
         }
-
         const url = !isLogin ? "http://localhost:8080/user-service/register/" + $user.role : 'http://localhost:8080/user-service/login';
         
         var response = null
         justRegistered = false
         $user.role = (isApplicant ? 'applicant' : 'recruiter')
+        $user.role = 'recruiter'
         try {
-            $user.username = formData.email
+            $user.username = loginFormData.email
             if (isLogin) {
-            
-            response = await axios.post(url, {
-                email: formData.email,
-                password: formData.password
-            });
+                response = await axios.post(url, loginFormData);
 
-            if (response.status == 200) {
-                localStorage.setItem('jwt', response.data.accessToken);
-                localStorage.setItem('jwt_expiration', Date.now() + 8 * 60 * 60 * 1000)
-                $user.username = formData.email
-                $user.jwt = response.data.accessToken
-                goto('/');
-            }else {
-                errorMessage = data.message || 'An error occurred. Please try again.';
-            }
+                if (response.status == 200) {
+                    localStorage.setItem('jwt', response.data.accessToken);
+                    localStorage.setItem('jwt_expiration', Date.now() + 8 * 60 * 60 * 1000)
+                    $user.email = loginFormData.email
+                    $user.jwt = response.data.accessToken
+                    goto('/');
+                }else {
+                    errorMessage = data.message || 'An error occurred. Please try again.';
+                }
 
             } else {
-
-                response = await axios.post(url, {
-                    email: formData.email,
-                    firstName: formData.firstName,
-                    lastName: formData.lastName,
-                    password: formData.password,
-                    confirmPassword: formData.confirmPassword
-                });
+                // let companyId = companies.find(x => x.name === registerFormData.company)
+                // console.log(companyId)
+                // registerFormData.company = companyId
+                console.log(registerFormData.company)
+                response = await axios.post(url,registerFormData);
                 justRegistered = true;
                 console.log(response.status)
+
             }
 
             console.log(response)
@@ -70,36 +87,32 @@
 
             console.log(data)
             if (response.ok) {
-                $user.username=formData.email
+                $user.username=loginFormData.email
                 $user.jwt = data.accessToken
                 
             } else {
+                // alert(response)
                 errorMessage = data.message || 'An error occurred. Please try again.';
             }
         } catch (error) {
             console.log("1234")
             console.log(error.status)
             console.log(error)
-            if (error.status === 400) {
-                errors = error.response.data
-            } else {
-                errorMessage = error.response.data
-            }
-
+            // alert(response)
+            // if (error.status === 400) {
+            //     errors = error.response.data
+            // } else {
+            //     errorMessage = error.response.data
+            // }
+            errorMessage = error.response.data
             console.log(error.response.data)
             console.error('Error during login:', error);
         }
     }
 
 
-        function handleCompanyChange(event) {
-        if (event.target.value === 'other') {
-            isCustomCompany = true;
-            formData.company = ''; // Clear the current company selection
-        } else {
-            isCustomCompany = false;
-            formData.company = event.target.value;
-        }
+    function handleCompanyChange(event) {
+        registerFormData.company = event.target.value;
     }
 </script>
 
@@ -116,90 +129,77 @@
             <h1>{isLogin ? 'Login' : 'Register'}</h1>
 
 
-            <!-- {#if !isLogin} -->
-          <!-- Centered Switch Button -->
-            <div class="switch-button-wrapper">
-                <SwitchButton bind:isApplicant leftText="Applicant" rightText="Recruiter" />
-<!--                 <p>Selected role: {isApplicant ? "Applicant" : "Recruiter"}</p> -->
-            </div>
-
-            {#if errors.email}
-            <div class="error">{errors.email}</div>
+            {#if !isLogin}
+                <div class="switch-button-wrapper">
+                    <SwitchButton bind:isApplicant leftText="Applicant" rightText="Recruiter" />
+                </div>
             {/if}
-            <input type="email" placeholder="Email" bind:value={formData.email} required />
+
 
 
             {#if !isLogin}
+                {#if errors.email}
+                <div class="error">{errors.email}</div>
+                {/if}
+                <input type="email" placeholder="Email" bind:value={registerFormData.email} required />
+
                 {#if errors.lastName}
                 <div class="error">{errors.lastName}</div>
                 {/if}
-                <input type="text" placeholder="First Name" bind:value={formData.firstName} required />
+                <input type="text" placeholder="First Name" bind:value={registerFormData.firstName} required />
                 {#if errors.firstName}
                 <div class="error">{errors.firstName}</div>
                 {/if}
-                <input type="text" placeholder="Last Name" bind:value={formData.lastName} required />
+                <input type="text" placeholder="Last Name" bind:value={registerFormData.lastName} required />
+
+                {#if errors.password}
+                <div class="error">{errors.password}</div>
+                {/if}
+                <input type="password" placeholder="Password" bind:value={registerFormData.password} required />
+                <input type="password" placeholder="Repeat Password" bind:value={registerFormData.confirmPassword} required />
+           {:else}
+                {#if errors.email}
+                    <div class="error">{errors.email}</div>
+                {/if}
+                <input type="email" placeholder="Email" bind:value={loginFormData.email} required />
+
+                {#if errors.password}
+                        <div class="error">{errors.password}</div>
+                {/if}
+                <input type="password" placeholder="Password" bind:value={loginFormData.password} required />
            {/if}
 
-           {#if errors.password}
-           <div class="error">{errors.password}</div>
-           {/if}
-            <input type="password" placeholder="Password" bind:value={formData.password} required />
-
-
-            {#if !isLogin}
-                        <input type="password" placeholder="Repeat Password" bind:value={formData.confirmPassword} required />
-            {/if}
 
             {#if !isLogin && !isApplicant}
-            <!-- New dropdown field for company selection -->
-<!--            <select bind:value={formData.company} required>
-                <option value="" disabled selected>Select Company</option>
-                <option value="TechCorp">TechCorp</option>
-                <option value="DesignPro">DesignPro</option>
-                <option value="MarketMasters">MarketMasters</option>
-                <option value="FinanceGurus">FinanceGurus</option>
-            </select>-->
-
-                        <!-- Dropdown for selecting a company or entering a custom one -->
-            <select on:change={handleCompanyChange} required>
-                <option value="" disabled selected>Select Company</option>
-                <option value="TechCorp">TechCorp</option>
-                <option value="DesignPro">DesignPro</option>
-                <option value="MarketMasters">MarketMasters</option>
-                <option value="FinanceGurus">FinanceGurus</option>
-                <option value="other">Other</option>
-            </select>
-
-            <!-- Custom company input field, shown only if "Other" is selected -->
-            {#if isCustomCompany}
-                <input
-                    type="text"
-                    placeholder="Enter custom company name"
-                    bind:value={formData.company}
-                    required
-                />
-            {/if}
-
+                <h4>Company:</h4>
+                <select on:change={handleCompanyChange} required>
+                    <!-- <option value="" disabled selected>Select Company</option> -->
+                    {#each companies as company}
+                        <option value={company}>{company}</option>
+                    {/each}
+                </select>
             {/if}
 
             {#if justRegistered}
             <div class="registerConfirm">Register request successful, please verify your email.</div>
             {/if}
 
-            <!-- Submit button -->
             <button on:click={handleSubmit}>
                 {isLogin ? 'Login' : 'Register'}
             </button>
 
-            <!-- Error message display -->
             {#if errorMessage}
                 <p class="error-message">{errorMessage}</p>
             {/if}
 
-            <!-- Toggle between login/register -->
             <button class="button-toggle" on:click={toggleForm}>
                 {isLogin ? 'Need an account? Register' : 'Have an account? Login'}
             </button>
+            {#if !isApplicant && !isLogin}
+            <button class="button-toggle" on:click={ () => goto('/register-company')}>
+                Register yout company
+            </button>
+            {/if}
             <text class="info1">
                 This website is still under progress.
                 The login system allows access to the IT services of Job Market webpage. Use email and password to log in.
@@ -214,6 +214,7 @@
     .container {
         display: flex;
         height: 100vh;
+    
     }
 
     .image-side {
@@ -232,8 +233,6 @@
     display:block;
   }
 
-
-        /* Centering the Switch Button and text below the heading */
     .switch-button-wrapper {
         display: flex;
         flex-direction: column;
@@ -247,6 +246,8 @@
         align-items: center;
         justify-content: center;
         background-color: white;
+        overflow-y: auto;
+        scroll-behavior: smooth;
     }
 
     .error {
@@ -268,6 +269,8 @@
         width: 100%;
         padding: 2rem;
         text-align: center;
+        overflow-y: auto;
+        scroll-behavior: smooth;
     }
 
     input[type="email"], input[type="password"], input[type="text"] {
@@ -292,7 +295,7 @@
     .button-toggle {
         background: none;
         color: #007bff;
-        margin-top: 1rem;
+        margin-top: 0.1rem;
         cursor: pointer;
     }
 

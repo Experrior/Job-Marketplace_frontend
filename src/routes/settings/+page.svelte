@@ -5,16 +5,17 @@
     import MyApplications from '$lib/MyApplications.svelte';
     import CVCreator from '$lib/CVCreator.svelte';
     import { goto } from '$app/navigation';
+    import FaRegUserCircle from 'svelte-icons/fa/FaRegUserCircle.svelte'
     import { user } from "../../stores/user.js";
+  import AppBar from '../../lib/AppBar.svelte';
+  import ChatBox from '../../lib/ChatBox.svelte';
 
-
-    let currentPage = 'personalData';
     //todo add settings
     let offers_notification;
     let newsletter_notification;
     let recruiter_messages;
     let push_notification;
-
+    let currentPage = 'userProfile';
     function handleLogout() {
         goto('/login');
     }
@@ -24,26 +25,19 @@
     }
 </script>
 
-<div class="app-bar">
-    <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
-    <button class="user-icon" on:click={goToHome} aria-label="Go to settings">
-        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-            <circle cx="12" cy="8" r="4" />
-            <path d="M12 12c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z" />
-        </svg>
-    </button>
-</div>
+
+<AppBar/>
 
 <div class="settings-container">
-    <!-- Sidebar with navigation links -->
+
     <aside class="sidebar">
         <h2>Settings</h2>
         <ul>
-            <li on:click={() => currentPage = 'personalData'} class:selected={currentPage === 'personalData'}>
-                Personal Data
+            <li on:click={() => currentPage = 'userProfile'} class:selected={currentPage === 'userProfile'}>
+                Your Profile
             </li>
-            <li on:click={() => currentPage = 'accountInformation'} class:selected={currentPage === 'accountInformation'}>
-                Account Information
+            <li on:click={() => currentPage = 'settings'} class:selected={currentPage === 'settings'}>
+                Settings
             </li>
             <li on:click={() => currentPage = 'savedOffers'} class:selected={currentPage === 'savedOffers'}>
                 Saved Offers
@@ -58,16 +52,14 @@
             </li>
             <!-- {/if} -->
         </ul>
-
-        <!-- Log Out button at the bottom of the sidebar -->
+        <ChatBox/>
         <button class="logout-btn" on:click={handleLogout}>Log Out</button>
     </aside>
 
-    <!-- Content area to display the selected subpage -->
     <main class="content">
-        {#if currentPage === 'personalData'}
+        {#if currentPage === 'userProfile'}
             <PersonalData />
-        {:else if currentPage === 'accountInformation'}
+        {:else if currentPage === 'settings'}
             <AccountInformation />
         {:else if currentPage === 'savedOffers'}
             <SavedOffers />
@@ -78,6 +70,8 @@
         {/if}
     </main>
 </div>
+
+
 
 <style>
 

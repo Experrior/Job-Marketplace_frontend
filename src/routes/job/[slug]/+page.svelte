@@ -2,19 +2,27 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
+  import AppBar from '../../../lib/AppBar.svelte';
+  import {user, verifyUser} from '$lib/stores/user'
+  import axios from 'axios';
 
-  let slug = $page.params.slug;
 
-  // Updated job object with requiredExperience and requiredSkills
-  const job = {
-    id: '1',
+  let jobId = $page.params.slug;
+  var newJob = {};
+  let loading = true;
+  let error = null;
+  let skillsList = [];
+  let job = {
+    jobId:'1',
     slug: 'senior-software-engineer',
     title: 'Senior Software Engineer',
     company: 'Tech Corp',
     companyLogo: '/logos/logo2.png',
     location: 'San Francisco, CA',
+    workLocation: '',
     category: 'Engineering',
-    tags: ['Python', 'JavaScript', 'Docker'],
+    employmentType: '',
+    requiredSkills: ['Python', 'JavaScript', 'Docker'],
     description: 'We are looking for a Senior Software Engineer with at least 5 years of experience in software development, particularly in building scalable web applications. The candidate should have a strong understanding of software architecture and design patterns, and experience leading development teams. We are looking for a Senior Software Engineer with at least 5 years of experience in software development, particularly in building scalable web applications. The candidate should have a strong understanding of software architecture and design patterns, and experience leading development teams.',
     requiredExperience: 'We are looking for a Senior Software Engineer with at least 5 years of experience in software development, particularly in building scalable web applications. The candidate should have a strong understanding of software architecture and design patterns, and experience leading development teams.',
     requiredSkills: {
@@ -26,75 +34,175 @@
       'AWS': 3
     }
   };
+  onMount(async () => {
+    verifyUser()
+    console.log($user.jwt)
+
+
+    const query = `
+    query XD($jobIdi: ID!){
+        jobById(jobId: $jobIdi){
+          jobId
+          title
+          location
+          employmentType
+          workLocation
+          requiredExperience
+          salary
+          companyId
+          companyName
+          requiredSkills
+        }
+    }
+    `;
+    const variables = {
+      jobIdi: jobId
+      
+    };
+    try{
+    await fetch('http://localhost:8080/job-service/graphql',{
+      method: 'POST',
+
+    headers:{
+              "Content-Type": "application/json",
+              'Authorization': `Bearer ${$user.jwt}`
+            },
+            body: JSON.stringify({
+              query: query,
+              variables: variables
+            })
+    },
+    {
+
+
+    },
+          {}
+    ).then(r => r.json()).then(data => newJob = data.data.jobById)
+
+    console.log('guwno')
+    console.log(newJob)
+    // const stream = response.body.getReader()
+    // console.log(stream.read())
+    // console.log(response.body)
+    // newJob = response.data.data.jobById
+    console.log('done update')
+
+
+    skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
+    .map(match => ({
+      name: match[1],
+      level: Number(match[2])
+    }));
+        } catch (err) {
+
+          console.error(err);
+          error = err.message || 'An error occurred while fetching the job.';
+      } finally {
+          loading = false;
+      }
+  });
+
+  console.log("test1")
+  console.log(newJob)
+
+  function sanitizeLevel(level) {
+        let num = parseInt(level, 10);
+        if (isNaN(num) || num < 0) return 0;
+        if (num > 5) return 5;
+        return num;
+    }
+  let xd = "[Skill(name=Go, level=2), Skill(name=C++, level=4)]"
+  
+
+  // skillsList = [...skillsList.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
+  // .map(match => ({
+  //   name: match[1],
+  //   level: Number(match[2])
+  // }));
+  console.log('smiec')
+  console.log(skillsList)
 </script>
 
-<div class="app-bar">
-  <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
-  <button class="user-icon" on:click={() => goto('/settings')} aria-label="Go to settings">
-    <!-- User icon as SVG -->
-    <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-      <circle cx="12" cy="8" r="4" />
-      <path d="M12 12c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z" />
-    </svg>
-  </button>
-</div>
+<AppBar/>
 
 <div class="scrollable-page">
   <img src="/images/job_background.webp" alt="Job Background" class="full-width-image" />
 
-  {#if job}
-    <div class="job-description">
-      <img src="{job.companyLogo}" alt="{job.company} Logo" class="company-logo" />
+  {#if loading}
+      <p>Loading...</p>
+  {:else if error}
+      <p class="error-message">{error}</p>
+  {:else if newJob}
+      <div class="job-description">
+          <img src="{newJob.companyLogo}" alt="{newJob.companyName} Logo" class="company-logo" />
 
-      <!-- Job Title and Company -->
-      <h1>{job.title}</h1>
-      <p><strong>{job.company}</strong> - {job.location}</p>
+          <!-- Job Title and Company -->
+          <h1>{newJob.title}</h1>
+          <p><strong>{newJob.companyName}</strong></p>
 
-      <!-- Tags -->
-      {#if job.tags && job.tags.length > 0}
-        <div class="tags">
-          {#each job.tags as tag}
-            <div class="tag">{tag}</div>
+
+
+          <h2>Job Description</h2>
+          <p>{newJob.description}</p>
+
+          <h2>Required Experience</h2>
+          <p>{newJob.requiredExperience}</p>
+
+          <h2>Location</h2>
+          <p>{newJob.location}</p>
+
+          <h2>Work Location</h2>
+          <p>{newJob.workLocation}</p>
+
+          <h2>Employment Type</h2>
+          <p>{newJob.employmentType}</p>
+
+          <h2>Required Skills</h2>
+          {#await newJob.requiredSkills}
+              <p> loading</p>
+        {:then newJob}
+          <!-- Required Skills -->
+          {#if newJob.requiredSkills && newJob.requiredSkills.length > 0}
+              <div class="skills">
+                  {#each newJob.requiredSkills as skill}
+                      <p> name={skill.name} level={skill.level} </p>
+                  {/each}
+              </div>
+          {/if}
+
+
+
+      <!-- {#if newJob.requiredSkils} -->
+        <ul class="required-skills">
+          {#each skillsList as skill}
+              <li>
+                  <span class="skill-name">{skill.name}</span>
+                  <span class="skill-level">
+                      {#each Array(skill.level) as _, index}
+                          <span class="star">&#9733;</span>
+                      {/each}
+                      {#each Array(5 - skill.level) as _, index}
+                          <span class="star empty">&#9734;</span>
+                      {/each}
+                  </span>
+              </li>
           {/each}
-        </div>
-      {/if}
+        </ul>
+        {:catch error}
+          <p style="color: red">{error.message}</p>
+        {/await}
+         
+          <!-- {/if} -->
 
-      <!-- Job Description -->
-      <h2>Job Description</h2>
-      <p>{job.description}</p>
-
-      <!-- Required Experience -->
-      <h2>Required Experience</h2>
-      <p>{job.requiredExperience}</p>
-
-      <!-- Required Skills -->
-      <h2>Required Skills</h2>
-      <ul class="required-skills">
-        {#each Object.entries(job.requiredSkills) as [skill, level]}
-          <li>
-            <span class="skill-name">{skill}</span>
-            <span class="skill-level">
-              {#each Array(level) as _, index}
-                <span class="star">&#9733;</span>
-              {/each}
-              {#each Array(5 - level) as _, index}
-                <span class="star empty">&#9734;</span>
-              {/each}
-            </span>
-          </li>
-        {/each}
-      </ul>
-
-      <!-- Apply Button -->
-      <button class="apply-button" on:click={() => alert('Application process initiated')}>
-        Apply Now
-      </button>
-    </div>
+          <!-- Apply Button -->
+          <button class="apply-button" on:click={() => alert('Application process initiated')}>
+              Apply Now
+          </button>
+      </div>
   {:else}
-    <p class="error-message">Job not found.</p>
+      <p class="error-message">Job not found.</p>
   {/if}
 </div>
-
 <style>
   /* Existing styles */
 
@@ -135,31 +243,6 @@
 
 
 
-  /* App Bar Styles */
-  .app-bar {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #007bff;
-    padding: 0.5rem 1rem;
-    color: white;
-  }
-
-  .app-name {
-    color: white;
-    text-decoration: none;
-    font-size: 1.5rem;
-  }
-
-  .user-icon {
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
 
   /* Job Description Styles */
   .job-description {
@@ -198,7 +281,7 @@
     margin: 0.5rem 0;
   }
 
-  .tags {
+  .requiredSkills {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;

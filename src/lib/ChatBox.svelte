@@ -1,17 +1,13 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import { writable } from "svelte/store";
   import axios from "axios";
-  
-  // Reactive variables
+
   let isOpen = false;
   let currentChatId = null;
   let newMessage = "";
 
-  // Store for chats fetched from the API
   let chats = [];
 
-  // Store for messages; you might want to make this more sophisticated
   let messages = [];
 
   let messagesContainer;
@@ -216,8 +212,7 @@ function handleIncomingMessage(message) {
               <text>{chat}</text>
               <li
                 class:active={chat.id === currentChatId}
-                on:click={() => selectChat(chat.id)}
-              >
+                on:click={() => selectChat(chat.id)}>
                 {chat.name}
               </li>
             {/each}
@@ -267,13 +262,13 @@ function handleIncomingMessage(message) {
     </div>
   {/if}
 </div>
-<!-- 
+
 <style>
-  /* (Your existing styles remain unchanged) */
+
   .chat-box-container {
     position: fixed;
     bottom: 20px;
-    left: 20px;
+    right: 20px;
     font-family: Arial, sans-serif;
     z-index: 1000;
   }
@@ -283,7 +278,7 @@ function handleIncomingMessage(message) {
     color: white;
     padding: 10px;
     cursor: pointer;
-    border-radius: 5px 5px 0 0;
+    border-radius: 5px 5px 5px 5px;
   }
 
   .chat-box {
@@ -400,4 +395,4 @@ function handleIncomingMessage(message) {
     flex: 1;
     min-height: 0;
   }
-</style> -->
+</style>

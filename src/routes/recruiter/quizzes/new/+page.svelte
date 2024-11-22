@@ -1,6 +1,7 @@
 <script>
     import { goto } from '$app/navigation';
-    import { user } from "../../stores/user.js";
+    import AppBar from '$lib/AppBar.svelte';
+    import { user } from "$lib/../stores/user.js";
     import axios from 'axios';
 
     let quizName = '';
@@ -12,9 +13,6 @@
 
     function validateQuizName(event) {
         quizName = event.target.value.replace(/[^\w]/g, '').slice(0, 60);
-  }
-    function goToHome() {
-        goto('/');
     }
 
     function addQuestion() {
@@ -24,8 +22,6 @@
           title: '',
           type: 'single',
           answers: [
-            { text: '', isCorrect: false },
-            { text: '', isCorrect: false },
             { text: '', isCorrect: false },
             { text: '', isCorrect: false }
           ]
@@ -43,11 +39,25 @@
       questions[index].answers.forEach(answer => answer.isCorrect = false);
     }
 
-    function changeAnswerCorrectness(index, answerIndex, questionType) {
+    function changeAnswerCorrectness(questionIndex, answerIndex, questionType) {
       if (questionType === 'single') {
-        for (let i = 0; i < questions[index].answers.length; i++) {
-            questions[index].answers[i].isCorrect = (i === answerIndex);
+        for (let i = 0; i < questions[questionIndex].answers.length; i++) {
+            questions[questionIndex].answers[i].isCorrect = (i === answerIndex);
         }
+      }
+    }
+
+    function addAnswer(questionIndex) {
+        if (questions[questionIndex].answers.length < 10) {
+        questions[questionIndex].answers.push({ text: '', isCorrect: false });
+        questions = [...questions];
+        }
+    }
+
+    function removeAnswer(questionIndex, answerIndex) {
+      if (questions[questionIndex].answers.length > 2) {
+        questions[questionIndex].answers.splice(answerIndex, 1);
+        questions = [...questions];
       }
     }
 
@@ -56,51 +66,34 @@
         jsonOutput = JSON.stringify({ quizName, timeLimit, goBack, questions }, null, 2);
         const blob = new Blob([jsonOutput], { type: 'application/json' });
         const formData = new FormData();
-        formData.append('quizConfig', blob, quizName+".json");
+        formData.append('quizConfig', blob, quizName + ".json");
         try {
-            const response = await axios.post(
-                "http://localhost:8080/job-service/quizzes/createQuiz",
+            const response = await axios.post("http://localhost:8080/job-service/quizzes/createQuiz",
                 formData,
                 {
                     headers: {
                         'Content-Type': 'multipart/form-data',
-                        'Authorization': `Bearer ${$user.jwt}`, // Include JWT if needed
+                        'Authorization': `Bearer ${$user.jwt}`,
                     },
                 }
             );
-
-            // Handle successful response
-            console.log('Quiz created successfully:', response.data);
-            // Redirect or update the UI as needed
+            if (response.status === 201){
+                goto('/recruiter')
+            }else{
+                alert(response)
+            }
         } catch (error) {
-            // Handle error
             console.error('Error creating quiz:', error);
-            // Display error message to the user if necessary
         }
-
-
     }
 </script>
 
-<!-- App Bar -->
-<div class="app-bar">
-    <text>{$user.jwt}</text>
-    <div class="nav-links">
-        <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
-        {#if $user.role === 'recruiter'}
-            <a href="/recruiter/jobs" class="app-name" aria-label="My Job Offers">My Job Offers</a>
-        {/if}
-    </div>
-    <button class="user-icon" on:click={() => goto('/settings')} aria-label="Go to settings">
-        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-            <circle cx="12" cy="8" r="4" />
-            <path d="M12 12c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z" />
-        </svg>
-    </button>
-</div>
 
-<!-- Main Content -->
-<div class="scrollable-page">
+
+ <AppBar/>
+
+
+ <div class="scrollable-page">
     <main>
         <h1>Create a Quiz</h1>
         
@@ -109,13 +102,13 @@
             <div class="form-group">
                 <label for="quiz-name">Quiz Name:</label>
                 <input
-                id="quiz-name"
-                type="text"
-                bind:value={quizName}
-                placeholder="Enter quiz name"
-                required
-                on:input={validateQuizName}
-              />
+                    id="quiz-name"
+                    type="text"
+                    bind:value={quizName}
+                    placeholder="Enter quiz name"
+                    required
+                    on:input={validateQuizName}
+                />
             </div>
         
             <div class="form-group">
@@ -131,24 +124,24 @@
             <h2>Questions</h2>
             
             <!-- Question List -->
-            {#each questions as question, index}
+            {#each questions as question, qIndex}
                 <div class="question">
-                    <h3>Question {index + 1}</h3>
+                    <h3>Question {qIndex + 1}</h3>
                     <div class="form-group">
-                        <label for="question-title-{index}">Title:</label>
-                        <input id="question-title-{index}" type="text" bind:value={question.title} placeholder="Enter question title" />
+                        <label for="question-title-{qIndex}">Title:</label>
+                        <input id="question-title-{qIndex}" type="text" bind:value={question.title} placeholder="Enter question title" />
                     </div>
             
                     <div class="form-group">
                         <label>Type:</label>
-                        <select bind:value={question.type} on:change={() => changeQuestionType(index, question.type)}>
+                        <select bind:value={question.type} on:change={() => changeQuestionType(qIndex, question.type)}>
                             <option value="single">Single Correct Answer</option>
                             <option value="multiple">Multiple Correct Answers</option>
                         </select>
                     </div>
             
                     <h4>Answers</h4>
-                    {#each question.answers as answer, answerIndex}
+                    {#each question.answers as answer, aIndex}
                         <div class="answer">
                             <input
                                 type="text"
@@ -158,14 +151,23 @@
                             <label>
                                 <input
                                     type="checkbox"
-                                    bind:checked={answer.isCorrect} on:change={() => changeAnswerCorrectness(index, answerIndex, question.type)}
+                                    bind:checked={answer.isCorrect}
+                                    on:change={() => changeAnswerCorrectness(qIndex, aIndex, question.type)}
                                 />
                                 Correct
                             </label>
+                            {#if question.answers.length > 2}
+                                <button type="button" class="remove-answer-btn" on:click={() => removeAnswer(qIndex, aIndex)}>
+                                    Remove Answer
+                                </button>
+                            {/if}
                         </div>
                     {/each}
             
-                    <button type="button" class="remove-btn" on:click={() => removeQuestion(index)}>Remove Question</button>
+                    {#if question.answers.length < 10}
+                    <button type="button" class="add-answer-btn" on:click={() => addAnswer(qIndex)}>+ Add Answer</button>
+                    {/if}
+                    <button type="button" class="remove-btn" on:click={() => removeQuestion(qIndex)}>Remove Question</button>
                 </div>
             {/each}
         
@@ -185,51 +187,15 @@
 </div>
 
 <style>
-    /* Reset and base styles */
-    body {
-        margin: 0;
-        padding: 0;
-        overflow-x: hidden;
-    }
 
-    /* App Bar Styles */
-    .app-bar {
-        position: fixed;
-        top: 0;
-        width: 100%;
-        z-index: 1000;
-        background-color: #007bff;
-        padding: 0.5rem 1rem;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .nav-links {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .app-name {
-        color: white;
-        text-decoration: none;
-        font-size: 1.5rem;
-    }
-
-    .user-icon {
-        background: none;
-        border: none;
-        cursor: pointer;
-    }
-
-    /* Main Content Styles */
     .scrollable-page {
-        margin-top: 60px; /* Adjust to the height of your app bar */
-        padding: 1rem;
-        overflow-y: auto;
-        max-height: calc(100vh - 60px); /* Full viewport height minus app bar */
+        max-width: 800px; 
+        margin: 2rem auto; 
+        background-color: #f9f9f9;
+        padding: 2rem; 
+        border-radius: 8px; 
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
     }
 
     main {
@@ -290,13 +256,45 @@
         margin-right: 0.5rem;
         margin-bottom: 0;
     }
-
+/* 
     .question {
+        position: relative;
         background-color: #f2f8ff;
         padding: 1rem;
         border-radius: 5px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         margin-bottom: 1.5rem;
+        padding: 1.5rem 1rem 3rem 1rem;
+    } */
+
+
+    .question .add-answer-btn {
+        margin-bottom: 1rem;
+    }
+
+
+    .question {
+        position: relative;
+        border: 1px solid #ccc;
+        padding: 1.5rem 1rem 3rem 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 8px; 
+        background-color: #f9f9f9;
+    }
+
+    /* Style for the Remove Question button */
+    .remove-btn {
+        position: absolute; /* Positions the button relative to the nearest positioned ancestor (.question) */
+        bottom: 1rem;       /* 1rem from the bottom of the .question container */
+        right: 1rem;        /* 1rem from the right of the .question container */
+        background-color: #e74c3c; /* Red background */
+        color: white;               /* White text */
+        border: none;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        border-radius: 4px;         /* Rounded corners */
+        font-size: 0.9rem;          /* Slightly smaller font size */
+        transition: background-color 0.3s ease; /* Smooth hover transition */
     }
 
     .answer {
@@ -322,7 +320,6 @@
     }
 
     .add-btn,
-    .remove-btn,
     .submit-btn {
         background-color: #007bff;
         color: white;
@@ -333,6 +330,18 @@
         cursor: pointer;
         transition: background-color 0.3s ease;
         margin-top: 1rem;
+    }
+
+    .add-answer-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.0rem;
+        font-size: 0.9rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 0.75rem;
     }
 
     .add-btn:hover,
@@ -376,10 +385,12 @@
             padding: 0.5rem;
         }
 
-        .add-btn,
-        .remove-btn,
-        .submit-btn {
+        /* .remove-btn {
             width: 100%;
-        }
+            right: 0;
+            position: absolute;
+            margin-right: 50px;
+            float: right;
+        } */
     }
 </style>
