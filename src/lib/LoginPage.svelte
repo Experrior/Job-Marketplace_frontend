@@ -2,8 +2,10 @@
     import { goto } from '$app/navigation';
     import ImageRotator from '$lib/ImageRotator.svelte';
     import axios from 'axios';
-    import { user } from "../stores/user.js";
-  import { onMount } from 'svelte';
+    import { user } from "$lib/stores/user.js";
+    import { onMount } from 'svelte';
+    // import Cookies from 'js-cookie'
+
 
     let errors = {};
     let isApplicant = true;
@@ -45,12 +47,11 @@
             errorMessage = 'Passwords do not match.';
             return;
         }
-        const url = !isLogin ? "http://localhost:8080/user-service/register/" + $user.role : 'http://localhost:8080/user-service/login';
+        let role = isApplicant ? 'applicant': 'recruiter'
+        const url = !isLogin ? "http://localhost:8080/user-service/register/" + role : 'http://localhost:8080/user-service/login';
         
         var response = null
         justRegistered = false
-        $user.role = (isApplicant ? 'applicant' : 'recruiter')
-        // $user.role = 'recruiter'
         try {
             $user.username = loginFormData.email
             if (isLogin) {
@@ -61,6 +62,8 @@
                     localStorage.setItem('jwt_expiration', Date.now() + 8 * 60 * 60 * 1000)
                     $user.email = loginFormData.email
                     $user.jwt = response.data.accessToken
+                    $user.role = response.data.role
+                    console.log($user.jwt)
                     goto('/');
                 }else {
                     errors = error.response.data
@@ -84,7 +87,6 @@
                 console.log(tempCopy)
                 response = await axios.post(url, tempCopy);
                 justRegistered = true;
-                errors = error.response.data
                 console.log(response.status)
                 console.log('lkjhgyhu')
                 console.log(response.data.data)

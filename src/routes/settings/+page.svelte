@@ -6,9 +6,10 @@
     import CVCreator from '$lib/CVCreator.svelte';
     import { goto } from '$app/navigation';
     import FaRegUserCircle from 'svelte-icons/fa/FaRegUserCircle.svelte'
-    import { user } from "../../stores/user.js";
+    import { user } from "$lib/stores/user.js";
   import AppBar from '../../lib/AppBar.svelte';
   import ChatBox from '../../lib/ChatBox.svelte';
+  import CvOverview from '../../lib/CVOverview.svelte';
 
     //todo add settings
     let offers_notification;
@@ -50,6 +51,9 @@
             <li on:click={() => currentPage = 'cvCreator'} class:selected={currentPage === 'cvCreator'}>
                 CV Creator
             </li>
+            <li on:click={() => currentPage = 'cvOverview'} class:selected={currentPage === 'cvOverview'}>
+                CV Overview
+            </li>
             <!-- {/if} -->
         </ul>
         <ChatBox/>
@@ -65,8 +69,10 @@
             <SavedOffers />
         {:else if currentPage === 'myApplications'}
             <MyApplications />
-            {:else if currentPage === 'cvCreator'}
-            <CVCreator />
+        {:else if currentPage === 'cvCreator'}
+        <CVCreator />
+        {:else if currentPage === 'cvOverview'}
+        <CvOverview />
         {/if}
     </main>
 </div>

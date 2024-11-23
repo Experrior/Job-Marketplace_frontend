@@ -5,35 +5,22 @@
   import AppBar from '../../../lib/AppBar.svelte';
   import {user, verifyUser} from '$lib/stores/user'
   import axios from 'axios';
-
+  import Cookie from 'js-cookie';
+  
   let jobNotFound = false;
   let jobId = $page.params.slug;
   var newJob = {};
   let loading = true;
   let error = null;
   let skillsList = [];
-  let job = {
-    jobId:'1',
-    slug: 'senior-software-engineer',
-    title: 'Senior Software Engineer',
-    company: 'Tech Corp',
-    companyLogo: '/logos/logo2.png',
-    location: 'San Francisco, CA',
-    workLocation: '',
-    category: 'Engineering',
-    employmentType: '',
-    requiredSkills: ['Python', 'JavaScript', 'Docker'],
-    description: 'We are looking for a Senior Software Engineer with at least 5 years of experience in software development, particularly in building scalable web applications. The candidate should have a strong understanding of software architecture and design patterns, and experience leading development teams. We are looking for a Senior Software Engineer with at least 5 years of experience in software development, particularly in building scalable web applications. The candidate should have a strong understanding of software architecture and design patterns, and experience leading development teams.',
-    requiredExperience: 'We are looking for a Senior Software Engineer with at least 5 years of experience in software development, particularly in building scalable web applications. The candidate should have a strong understanding of software architecture and design patterns, and experience leading development teams.',
-    requiredSkills: {
-      'JavaScript': 5,
-      'TypeScript': 4,
-      'React': 5,
-      'Node.js': 4,
-      'Docker': 3,
-      'AWS': 3
-    }
-  };
+  let resume = {};
+  let resumes = [];
+  let job= {};
+  //TODO add only verified can apply
+    // let isLoggedIn = false;
+  // onMount(() => {
+  //   let isLoggedIn = verifyUser()
+  // })
   onMount(async () => {
     verifyUser()
     console.log($user.jwt)
@@ -52,6 +39,7 @@
           companyId
           companyName
           requiredSkills
+          quizId
         }
     }
     `;
@@ -59,6 +47,8 @@
       jobIdi: jobId
       
     };
+    console.log('gusadfasdfasdf')
+    console.log(jobId)
     try{
     await fetch('http://localhost:8080/job-service/graphql',{
       method: 'POST',
@@ -73,12 +63,14 @@
             })
     },
     {
-
-
     },
           {}
     ).then(r => r.json()).then(data => newJob = data.data.jobById)
+    
 
+
+
+    console.log()
     console.log('guwno')
     console.log(newJob)
     // const stream = response.body.getReader()
@@ -86,13 +78,16 @@
     // console.log(response.body)
     // newJob = response.data.data.jobById
     console.log('done update')
-
-
-    skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
+    console.log(skillsList)
+    console.log(newJob)
+    if (newJob){
+      skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
     .map(match => ({
       name: match[1],
       level: Number(match[2])
     }));
+    }
+
         } catch (err) {
 
           console.log(err);
@@ -101,22 +96,56 @@
       } finally {
           loading = false;
       }
+
+
+      try{
+        const response = await axios.post('http://localhost:8080/user-service/myResumes', {},
+        {headers: 
+            {Authorization: "Bearer "+$user.jwt,
+            "Content-Type": "application/json",
+            }
+        }
+        );
+        console.log(response)
+        resumes = response.data
+        }catch (error) {
+            console.log(error)
+        }
+
+      
   });
 
   console.log("test1")
   console.log(newJob)
 
-  function sanitizeLevel(level) {
-        let num = parseInt(level, 10);
-        if (isNaN(num) || num < 0) return 0;
-        if (num > 5) return 5;
-        return num;
-    }
-  let xd = "[Skill(name=Go, level=2), Skill(name=C++, level=4)]"
-    
+  async function takeQuiz(){
 
-  function takeQuiz(){
-    goto
+    console.log("KAOSODASDIABSD")
+    console.log(localStorage.getItem('jwt'))
+    console.log($user.jwt)
+
+
+
+    // resume.resumeUrl
+    // const response = await axios.get(resume.resumeUrl, {}, {
+    //       headers: {
+    //         'Content-Type': 'multipart/form-data',
+    //       },
+    //     })
+    // console.log('test1')
+    //   console.log(response)
+      Cookie.set('s3Path', resume.resumeUrl)
+      Cookie.set('resumeName', resume.resumeName)
+      Cookie.set('jobId',jobId)
+// const response1 = axios.post(`http://localhost:8080/job-service/applications/${jobId}/apply`,{},
+//       {headers:{
+//                     'Authorization': `Bearer ${$user.jwt}`
+//                   }}
+//       )
+//       console.log('938ryfvjdbkuhi')
+//       console.log(response1)
+
+    goto(`/quiz/${newJob.quizId}`)
   }
 
   // skillsList = [...skillsList.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
@@ -165,17 +194,19 @@
               <p> loading</p>
         {:then newJob}
           <!-- Required Skills -->
-          {#if newJob.requiredSkills && newJob.requiredSkills.length > 0}
-              <div class="skills">
-                  {#each newJob.requiredSkills as skill}
-                      <p> name={skill.name} level={skill.level} </p>
-                  {/each}
-              </div>
-          {/if}
-
-
-
-      <!-- {#if newJob.requiredSkils} -->
+          <!-- {#if newJob.requiredSkills && newJob.requiredSkills.length > 0}
+          <div class="form-group">
+            <label for="quiz">Quiz</label>
+            <select id="quiz" bind:value={quizName}>
+              <option value="" disabled selected>Select quiz for applicants</option>
+              {#each quizzes as quiz}
+                <option value="{quiz.quizName}">{quiz.quizName}</option>
+              {/each}
+            </select>
+          </div> -->
+          <!-- {/if} -->
+          
+      {#if skillsList}
         <ul class="required-skills">
           {#each skillsList as skill}
               <li>
@@ -191,6 +222,20 @@
               </li>
           {/each}
         </ul>
+        {/if}
+
+        <!-- {#if verifyUser()} -->
+        <div class="form-group">
+          <label for="resume">Specify CV</label>
+          <select id="resume" bind:value={resume}>
+            <option value="" disabled selected>Select which cv to use</option>
+            {#each resumes as resume}
+              <option value="{resume}">{resume.resumeName}</option>
+            {/each}
+          </select>
+        </div>
+        <!-- {/if} -->
+
         {:catch error}
           <p style="color: red">{error.message}</p>
         {/await}

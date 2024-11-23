@@ -2,7 +2,7 @@
     import { goto } from '$app/navigation';
     import ImageRotator from '$lib/ImageRotator.svelte';
     import axios from 'axios';
-    import { user } from "../../stores/user.js";
+    import { user } from "$lib/stores/user.js";
 
     let errors = {};
     let formData = { email: '', password: '', confirmPassword: '' };

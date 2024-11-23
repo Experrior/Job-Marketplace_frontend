@@ -91,7 +91,7 @@ let quizzes = []
         };
         console.log(jobRequestValue);
         console.log($user.jwt)
-        let quizId = quizzes.find(item => item.name === quizName);
+        let quizId = quizzes.find(item => item.quizName === quizName).quizId;
 
         const mutation = `
         mutation XD($jobDefinition: JobInput!){
@@ -115,7 +115,7 @@ let quizzes = []
     location: location,
     salary: salary,
     requiredSkills: skillsList,
-    requiredExperience: requiredExperience, // Ensure this is a string
+    requiredExperience: requiredExperience,
     quizId: quizId,
     employmentType: employmentType,
     workLocation: workLocation
@@ -123,6 +123,9 @@ let quizzes = []
 };
 console.log('COTAMSLUCYCHA')
 console.log(skillsList)
+console.log(quizId)
+console.log(quizzes)
+console.log(variables)
         // const variables = {
         //     "jobDefinition": {
         //     "title": title,
