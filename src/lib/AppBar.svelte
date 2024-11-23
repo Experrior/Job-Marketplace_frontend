@@ -1,6 +1,6 @@
 <script>
     import { goto } from '$app/navigation';
-    import { user } from "../stores/user.js";
+    import { user } from "$lib/stores/user.js";
     import FaRegUserCircle from 'svelte-icons/fa/FaRegUserCircle.svelte'
 </script>
 
@@ -8,12 +8,11 @@
 <div class="app-bar">
     <div class="nav-links">
     <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
-    <!-- {#if $user.role === 'recruiter'} -->
+    {#if $user.role === 'RECRUITER'}
     <a href="/recruiter" class="app-name" aria-label="Jobs panel"> My jobs panel</a>
-  <!-- {/if} -->
+    {/if}
   </div>
     <div class="user-icon" on:click={() => goto('/settings')} role="none"><FaRegUserCircle/></div>
-
 </div>
 
 <style>

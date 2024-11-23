@@ -3,7 +3,7 @@
   import CategoryFilter from './CategoryFilter.svelte';
   import JobCard from './JobCard.svelte';
   import ChatBox from './ChatBox.svelte';
-  import { user } from "../stores/user.js";
+  import { user } from "$lib/stores/user.js";
   import axios from 'axios';
   import { onMount } from 'svelte';
   import FaRegUserCircle from 'svelte-icons/fa/FaRegUserCircle.svelte'
@@ -19,7 +19,11 @@
 
   let allJobs = [];
   onMount(async () => {
-    const response = await axios.get('http://localhost:8080/job-service/getJobs')
+    const response = await axios.get('http://localhost:8080/job-service/getJobs', {params: {
+    limit: 50
+  }
+}
+    )
     const totalElements = response.data.content
     console.log('aaaaaaaa 8765432')
     console.log(response.data.content)

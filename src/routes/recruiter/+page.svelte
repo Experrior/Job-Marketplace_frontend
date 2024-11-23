@@ -1,15 +1,17 @@
 <script>
   import { goto } from "$app/navigation";
   import AppBar from "../../lib/AppBar.svelte";
-  import { user } from "../../stores/user";
+  import { user } from "$lib/stores/user";
   import { onMount } from 'svelte';
   import axios from "axios";
 
   let userRole;
   $: userRole = $user.role;
   var quizzes = [];
+  var jobs = 
 
 onMount(async () => {
+  // get quizzes
       try {
           const response = await axios.post('http://localhost:8080/job-service/graphql', {
       query: `query{
@@ -32,6 +34,33 @@ onMount(async () => {
     }catch (error) {
       alert(error)
     }
+    //getJobs
+    try {
+          const response = await axios.post('http://localhost:8080/job-service/graphql', {
+      query: `query {
+  jobsByRecruiter {
+    jobId
+    title
+    description
+    location
+    salary
+    createdAt
+    quizId
+  }
+}`
+ }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${$user.jwt}`
+        }
+      })
+      console.log(response.data.data.jobsByRecruiter)
+      console.log('guwno12')
+      jobs = response.data.data.jobsByRecruiter
+      console.log(quizzes)
+    }catch (error) {
+      alert(error)
+    }
 
 })
 
@@ -46,7 +75,7 @@ onMount(async () => {
       const listOfCopies = [];
 
       for (let i = 0; i < numberOfCopies; i++) {
-          const jobCopy = { ...originalObject, id: `${originalObject.id}-${i}`, slug: `backend-engineer-${i}` };
+          const jobCopy = { ...originalObject, id: `${originalObject.id}-${i}` };
           listOfCopies.push(jobCopy);
       }
 
@@ -72,7 +101,7 @@ onMount(async () => {
       },
   };
 
-  const jobs = createListOfCopies(originalObject, 20);
+  // const jobs = createListOfCopies(originalObject, 20);
 
   function showApplicants(slug) {
       goto(`/recruiter/jobs/${slug}`);
@@ -118,14 +147,14 @@ onMount(async () => {
           <div class="job-actions">
             <button
               class="show-button"
-              on:click={() => showApplicants(job.slug)}
+              on:click={() => showApplicants(job.jobId)}
               aria-label={`Show applicants for ${job.title}`}
             >
               Show Applicants
             </button>
             <button
               class="edit-button"
-              on:click={() => editJobOffer(job.slug)}
+              on:click={() => editJobOffer(job.jobId)}
               aria-label={`Edit ${job.title}`}
             >
               Edit Job Offer

@@ -4,12 +4,14 @@
     export let companyLogo = '';
     export let location = '';
     export let employment_type = '';
-    export let work_location = '';
+    export let workLocation = '';
     export let salary = '';
     export let description = '';
     export let requiredExperience = '';
     export let requiredSkills = {};
     export let skillsList = {};
+    export let employmentType = '';
+          console.log(skillsList)
   </script>
   
   <div class="job-description">
@@ -34,24 +36,28 @@
 {/if}
 
 
+{#if employmentType}
+  <p class="job-text"><strong>Type of employment :</strong>{employmentType}</p>
+{/if}
+
+
 <div class="job-details">
   {#if employment_type}
     <p><strong>Employment Type:</strong> {employment_type}</p>
   {/if}
-  {#if work_location}
-    <p><strong>Work Location:</strong> {work_location}</p>
+  {#if workLocation}
+    <p><strong>Work Location:</strong> {workLocation}</p>
   {/if}
   {#if location}
     <p><strong>Location:</strong> {location}</p>
   {/if}
   {#if salary !== null && salary !== ''}
-    <p><strong>Salary:</strong> ${salary}</p>
+    <p><strong>Salary:</strong> ${salary} / month</p>
   {:else}
     <p><strong>Salary:</strong> Undisclosed</p>
   {/if}
 </div>
   
-
     {#if skillsList && Object.keys(skillsList).length > 0}
       <h2>Required Skills</h2>
       <ul class="required-skills">
@@ -62,15 +68,18 @@
             {#each Array(skill.value) as _, index}
               <span class="star">&#9733;</span>
             {/each}
+            {#if (skill.value !== 0)}
             {#each Array(5 - skill.value) as _, index}
               <span class="star empty">&#9734;</span>
             {/each}
+            {/if}
+
           </span>
         </li>
       {/each}
       </ul>
     {/if}
-  
+
 
     <button class="apply-button">
       Apply Now

@@ -20,6 +20,7 @@
   let skillLevel = '';
   let skillsList = [];
 let quizName = '';
+let skillChange = false;
 let quizzes = []
 
 
@@ -65,12 +66,15 @@ let quizzes = []
   
     function addSkill() {
       if (skillName && skillLevel) {
-        let newSkill = []
+        skillChange = ! skillChange;
+        let newSkill = {}
         newSkill['name'] = skillName;
-        newSkill['value'] = +skillLevel;
+        newSkill['level'] = skillLevel;
         skillsList.push(newSkill)
         skillName = '';
         skillLevel = '';
+        console.log("new skills list:")
+        console.log(skillsList)
       }
     }
   
@@ -87,7 +91,7 @@ let quizzes = []
         };
         console.log(jobRequestValue);
         console.log($user.jwt)
-        let quizId = quizzes.find(item => item.name === quizName);
+        let quizId = quizzes.find(item => item.quizName === quizName).quizId;
 
         const mutation = `
         mutation XD($jobDefinition: JobInput!){
@@ -106,31 +110,22 @@ let quizzes = []
         }`;
         const variables = {
             jobDefinition: {
-    title: "Data Scientist",
-    description: "Analyze data and build predictive models for business insights.",
-    location: "Wroclaw",
-    salary: 10000.0,
-    requiredSkills: [
-      {
-        name: "C++",
-        level: 5
-      },
-      {
-        name: "JavaScript",
-        level: 4
-      },
-      {
-        name: "Java",
-        level: 3
-      }
-    ],
-    requiredExperience: "Senior", // Ensure this is a string
+    title: title,
+    description: description,
+    location: location,
+    salary: salary,
+    requiredSkills: skillsList,
+    requiredExperience: requiredExperience,
     quizId: quizId,
-    employmentType: "test1",
-    workLocation: "test2"
+    employmentType: employmentType,
+    workLocation: workLocation
   }
 };
-
+console.log('COTAMSLUCYCHA')
+console.log(skillsList)
+console.log(quizId)
+console.log(quizzes)
+console.log(variables)
         // const variables = {
         //     "jobDefinition": {
         //     "title": title,
@@ -185,11 +180,15 @@ let quizzes = []
 //               "Content-Type": "application/json",
 //               'Authorization': `Bearer ${$user.jwt}`
 //             } })
+console.log(response)
+        if (response.data.errors) {
 
-            console.log(response)
-            console.log(response.data.data.createJob.jobId)
-            const newJobId = response.data.data.createJob.jobId
-            goto(`/job/${newJobId}`);
+        }else{
+
+        }
+          console.log(response.data.data.createJob.jobId)
+          const newJobId = response.data.data.createJob.jobId
+          goto(`/job/${newJobId}`);
 
         }catch (error) {
             console.log(error)
@@ -200,6 +199,19 @@ let quizzes = []
         // goto('/jobs')
     // goto(`/jobs/${title.toLowerCase().replace(/\s+/g, '-')}`);
   }
+
+  function deleteSkill(index) {
+    skillsList.splice(index, 1);
+    skillsList = [...skillsList];
+    skillChange = !skillChange;
+  }
+
+  $: if (skillLevel < 1) {
+    skillLevel = 1;
+  } else if (skillLevel > 5) {
+    skillLevel = 5;
+  }
+
   </script>
   
   <div class="app-bar">
@@ -290,21 +302,38 @@ let quizzes = []
           <h2>Add Required Skills</h2>
           <div class="skill-inputs">
             <input bind:value={skillName} placeholder="Skill Name" />
-            <input bind:value={skillLevel} type="number" min="1" max="5" placeholder="Level (1-5)" />
+            <input bind:value={skillLevel} type=number min=1 max=5 placeholder="Level (1-5)" />
+            
             <button type="button" on:click={addSkill}>Add Skill</button>
           </div>
-          {#if skillsList.length}
-            <ul class="skills-list">
-              {#each skillsList as [skill, level]}
-                <li>{skill}: Level {level}</li>
-              {/each}
-            </ul>
-          {/if}
+          
+          {#key skillChange}
+          {#if Object.keys(skillsList).length > 0}
+          <h2>Required Skills</h2>
+          <ul class="required-skills">
+            {#each skillsList as skill, index}
+              <li>
+                <span class="skill-name">{skill.name}</span>
+                <span class="skill-level">
+                  {#each Array(skill.value) as _, i}
+                    <span class="star">&#9733;</span>
+                  {/each}
+                  {#each Array(5 - skill.value) as _, i}
+                    <span class="star empty">&#9734;</span>
+                  {/each}
+                </span>
+                <!-- Delete Button -->
+                <button class="delete-button" on:click={() => deleteSkill(index)}>X</button>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+        {/key}
         </div>
   
         <button type="submit" class="submit-button">Submit Job Offer</button>
       </form>
-  
+    {#key skillChange}
   <div class="live-preview">
     <JobDescription
       {title}
@@ -319,10 +348,29 @@ let quizzes = []
       {skillsList}
     />
   </div>
+  {/key}
 </div>
 </div>
   
   <style>
+
+.delete-button {
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 2px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-weight: bold;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  .delete-button:hover {
+    background-color: darkred;
+  }
 
     .app-bar {
       position: fixed;
@@ -470,7 +518,7 @@ let quizzes = []
       border-radius: 8px;
       border: 1px solid #ced4da;
       overflow-y: auto;
-      max-height: calc(100vh - 200px);
+      /* max-height: calc(100vh - 200px); */
     }
   
     @media (max-width: 228px) {
@@ -487,5 +535,47 @@ let quizzes = []
         max-height: none;
       }
     }
+
+
+
+
+
+
+
+    .required-skills li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.skill-name {
+  flex: 1;
+}
+
+.skill-level {
+  display: flex;
+  flex: 0;
+}
+
+.star, .star.empty {
+  font-size: 40px;
+  margin-right: 2px;
+}
+
+.star {
+  color: #f1c40f;
+}
+
+.star.empty {
+  color: #ccc;
+}
+  
+    .star.empty {
+      color: #ccc;
+      font-size: 40px;
+    }
+
+
+
   </style>
   

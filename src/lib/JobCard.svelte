@@ -65,11 +65,9 @@
   }
 </script>
 
-<div class="job-card">
-  <!-- Location -->
+<button class="job-card" on:click={navigateToJob}>
   <span class="job-location">{job.location}</span>
 
-  <!-- Company Logo Placeholder -->
   <div
     class="company-logo"
     style="background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;"
@@ -77,8 +75,7 @@
     <span>{job.companyName ? job.companyName.charAt(0) : 'C'}</span>
   </div>
 
-  <!-- Job Information -->
-  <div class="job-info">
+  <div class="job-info" >
     <div class="job-header">
       <h2 class="job-title">{job.title}</h2>
     </div>
@@ -87,7 +84,7 @@
     <p><strong>Work Location:</strong> {job.workLocation}</p>
     <p><strong>Salary:</strong> {job.salary ? `$${job.salary}` : 'Undisclosed'}</p>
 
-    <!-- Required Skills -->
+
     {#if requiredSkills.length > 0}
       <div class="tags">
         {#each requiredSkills as skill}
@@ -99,20 +96,19 @@
     {/if}
   </div>
 
-  <!-- Apply Button -->
-  <button class="apply-button" on:click={navigateToJob}>Apply Now</button>
-</div>
+  <!-- <button class="apply-button" on:click={navigateToJob}>Apply Now</button> -->
+</button>
 
 <style>
 
-.apply-button {
+/* .apply-button {
     position: absolute;
     bottom: 1rem;
     right: 1rem;
-    padding: 1rem 2rem; /* Increased padding to make the button bigger */
-    font-size: 1rem; /* Increased font size */
+    padding: 1rem 2rem; 
+    font-size: 1rem;
     border: none;
-    background-color: #007bff; /* Changed color for better visibility */
+    background-color: #007bff; 
     color: white;
     border-radius: 4px;
     cursor: pointer;
@@ -120,7 +116,7 @@
 
   .apply-button:hover {
     background-color: blue;
-  }
+  } */
 
   .job-card {
     position: relative;
@@ -155,6 +151,7 @@
 
   .job-info {
     flex: 1;
+    color: black;
   }
 
   .job-title {
@@ -187,6 +184,6 @@
   }
 
   button:hover {
-    background-color: #0056b3;
+    background-color: #f7f7f7;
   }
 </style>

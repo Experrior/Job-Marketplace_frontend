@@ -3,85 +3,144 @@
   import { goto } from '$app/navigation';
   import { writable } from 'svelte/store';
   import JobDescription from '$lib/JobDescription.svelte';
-  import FaRegUserCircle from 'svelte-icons/fa/FaRegUserCircle.svelte'
-  import { user } from "../../../../stores/user.js";
-  import AppBar from '../../../../lib/AppBar.svelte';
+  import { user } from "$lib/stores/user";
+  import AppBar from '$lib/AppBar.svelte';
+  import { page } from '$app/stores';
+  import axios from 'axios';
 
-  const job = {
-    id: '1',
-    slug: 'frontend-developer',
-    title: 'Frontend Developer',
-    company: 'Tech Solutions',
-    companyLogo: '/logos/logo1.png',
-    location: 'New York, NY',
-    category: 'Engineering',
-    description:
-      'Seeking a skilled Frontend Developer with experience in modern web technologies. Must be proficient in Svelte and have a strong eye for design.',
-    requiredExperience: 'Minimum 3 years of experience in frontend development.',
-    requiredSkills: {
-      HTML: 5,
-      CSS: 5,
-      JavaScript: 4,
-      Svelte: 4,
-      'Responsive Design': 3
-    },
-    employment_type: 'Full-time',
-    work_location: 'Remote',
-    salary: '80000'
-  };
 
-  function getRandomTime() {
-  return Math.floor(Math.random() * (680 - 40 + 1)) + 40;
-}
-const sortBy = writable('score');
+  let jobId = $page.params.slug;
+  let applicants = [];  
+  let job = {};
+
   const sortedApplicants = writable([]);
-  let applicantsToShow = 5;
+ onMount(async() => {
+  
+  const query=`query XD($jobId: ID!) {
+  jobApplications(jobId: $jobId) {
+    applicationId
+    userId
+    job {
+      jobId
+      title
+      description
+      location
+      salary
+      createdAt
+    }
+    status
+    quizResult{
+        score
+        timeTaken
+    }
+    fullName
+    resumeUrl
+  }
+}
+`
+    const variables = {
+      jobId : jobId
+    }
+    try {
+    const response = await axios.post('http://localhost:8080/job-service/graphql',
+      {
+        query: query,
+        variables: variables
+      }, {headers:{
+                    "Content-Type": "application/json",
+                    'Authorization': `Bearer ${$user.jwt}`
+                  }}
+    )
+    console.log('5k46mjy5ethrge')
+    console.log(response.data.data.jobApplications)
+    console.log($user.jwt)
+    applicants = response.data.data.jobApplications
+    sortApplicants()
+    } catch (error) {
+      alert(error)
+    }
 
-  let applicants = [];
+        const query2 = `
+    query XD($jobIdi: ID!){
+        jobById(jobId: $jobIdi){
+          jobId
+          title
+          location
+          employmentType
+          workLocation
+          requiredExperience
+          salary
+          companyId
+          companyName
+          requiredSkills
+          quizId
+        }
+    }
+    `;
+    const variables2 = {
+      jobIdi: jobId
+      
+    };
+    console.log('gusadfasdfasdf')
+    console.log(jobId)
+    try{
+    await fetch('http://localhost:8080/job-service/graphql',{
+      method: 'POST',
 
-  onMount(() => {
-    applicants = [
-      {
-        applicantName: 'Alice Johnson',
-        score: 85,
-        time: getRandomTime(),
-        photo: '/images/profile4.png',
-        cv: '/cvs/alice.pdf'
-      },
-      {
-        applicantName: 'Bob Smith',
-        score: 90,
-        time: getRandomTime(),
-        photo: '/images/profile2.png',
-        cv: '/cvs/bob.pdf'
-      },
-      {
-        applicantName: 'Charlie Davis',
-        score: 75,
-        time: getRandomTime(),
-        photo: '/images/profile1.png',
-        cv: '/cvs/charlie.pdf'
-      },
-      {
-        applicantName: 'Diana Prince',
-        score: 95,
-        time: getRandomTime(),
-        photo: '/images/profile4.png',
-        cv: '/cvs/diana.pdf'
-      },
-      {
-        applicantName: 'Ethan Hunt',
-        score: 89,
-        time: getRandomTime(),
-        photo: '/images/profile3.png',
-        cv: '/cvs/ethan.pdf'
+    headers:{
+              "Content-Type": "application/json",
+              'Authorization': `Bearer ${$user.jwt}`
+            },
+            body: JSON.stringify({
+              query: query2,
+              variables: variables2
+            })
+    },
+    {
+    },
+          {}
+    ).then(r => r.json()).then(data => job = data.data.jobById)
+    
+
+
+
+    console.log()
+    console.log('guwno')
+    console.log(job)
+    // const stream = response.body.getReader()
+    // console.log(stream.read())
+    // console.log(response.body)
+    // job = response.data.data.jobById
+    console.log('done update')
+    console.log(skillsList)
+    console.log(job)
+    if (job){
+      skillsList = [...job.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
+    .map(match => ({
+      name: match[1],
+      level: Number(match[2])
+    }));
+    }
+
+        } catch (err) {
+
+          console.log(err);
+          error = err.message || 'An error occurred while fetching the job.';
+          jobNotFound =true;
+      } finally {
+          loading = false;
       }
 
-    ];
 
-    sortApplicants();
-  });
 
+})
+
+const sortBy = writable('score');
+
+  let applicantsToShow = 5;
+
+
+ 
   function getDuration(totalSeconds) {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -109,6 +168,8 @@ const sortBy = writable('score');
   function handleSortChange(criteria) {
     sortBy.set(criteria);
   }
+
+
 </script>
 
 <AppBar/>
@@ -134,7 +195,7 @@ const sortBy = writable('score');
           requiredSkills={job.requiredSkills}
         />
       </div>
-
+<!-- 
       <div class="applicants-overview">
         <h2>Applicants Overview</h2>
         <p>Total Applicants: {applicants.length}</p>
@@ -189,6 +250,72 @@ const sortBy = writable('score');
               <td>{getDuration(applicant.time)}</td>
               <td>
                 <a href="{applicant.cv}" download class="cv-download-button">Download</a>
+              </td>
+            </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div> -->
+      <div class="applicants-overview">
+        <h2>Applicants Overview</h2>
+        <p>Total Applicants: {applicants.length}</p>
+      
+        <div class="applicants-number">
+          <label for="applicantsToShow">Number of applicants to display:</label>
+          <input
+            type="number"
+            id="applicantsToShow"
+            min="1"
+            max={applicants.length}
+            bind:value={applicantsToShow}
+          />
+        </div>
+      
+        <div class="sorting-options">
+          <span>Sort by:</span>
+          <button
+            class="{ $sortBy === 'time' ? 'active' : '' }"
+            on:click={() => handleSortChange('time')}
+            aria-label="Sort applicants by time"
+          >
+            Time
+          </button>
+          <button
+            class="{ $sortBy === 'score' ? 'active' : '' }"
+            on:click={() => handleSortChange('score')}
+            aria-label="Sort applicants by score"
+          >
+            Score
+          </button>
+        </div>
+      
+        <table class="applicants-table">
+          <thead>
+            <tr>
+              <th>Photo</th>
+              <th>Applicant Name</th>
+              <th>Score</th>
+              <th>Time (MM:SS)</th>
+              <th>CV</th>
+              <th>Start chat</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each $sortedApplicants.slice(0, applicantsToShow) as applicant}
+            <tr>
+              <td>
+                <img
+                  src="{applicant.photo || '/images/profile2.png'}"
+                  class="applicant-photo"
+                />
+              </td>
+              <td>{applicant.fullName}</td>
+              <td>{applicant.quizResult?.score ?? 'N/A'}</td>
+              <td>{getDuration(applicant.quizResult?.timeTaken)}</td>
+              <td>
+                <a href="{applicant.resumeUrl || '#'}" download class="cv-download-button">
+                  {applicant.resumeUrl ? 'Download' : 'N/A'}
+                </a>
               </td>
             </tr>
             {/each}

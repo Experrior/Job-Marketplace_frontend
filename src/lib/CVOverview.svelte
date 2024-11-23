@@ -1,35 +1,43 @@
-<!-- CVOverview.svelte -->
 <script>
-    // Import necessary modules and stores
     import { onMount } from 'svelte';
+    import axios from 'axios';
+    import {user, verifyUser} from '$lib/stores/user'
     let cvs = [];
 
-    // Fetch CV data (replace with actual data fetching logic)
-    onMount(() => {
-        cvs = [
-            { id: 1, title: 'CV - John Doe', date: '2023-10-01' },
-            { id: 2, title: 'CV - Jane Smith', date: '2023-11-15' },
-        ];
+    onMount(async() => {
+        verifyUser();
+        try{
+        const response = await axios.post('http://localhost:8080/user-service/myResumes', {},
+        {headers: 
+            {Authorization: "Bearer "+$user.jwt,
+            "Content-Type": "application/json",
+            }
+        }
+        );
+        console.log(response)
+        cvs = response.data
+        }catch (error) {
+            console.log(error)
+        }
+        
     });
 
     function viewCV(id) {
-        // Logic to view the CV
     }
 
     function deleteCV(id) {
-        // Logic to delete the CV
     }
 </script>
 
 <div class="cv-overview-container">
-    <h2>CV Overview</h2>
+    <h2>My Resumes</h2>
     {#if cvs.length > 0}
         <ul class="cv-list">
             {#each cvs as cv}
                 <li class="cv-item">
                     <div class="cv-info">
-                        <strong>{cv.title}</strong>
-                        <p>Date Created: {cv.date}</p>
+                        <strong>{cv.resumeName}</strong>
+                        <p>Date Created: {cv.createdAt}</p>
                     </div>
                     <div class="cv-actions">
                         <button class="btn view-btn" on:click={() => viewCV(cv.id)}>View</button>

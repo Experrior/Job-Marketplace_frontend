@@ -1,10 +1,11 @@
 <script>
     import { goto } from '$app/navigation';
     import ImageRotator from '$lib/ImageRotator.svelte';
-    import SwitchButton from './SwitchButton.svelte';
     import axios from 'axios';
-    import { user } from "../stores/user.js";
-  import { onMount } from 'svelte';
+    import { user } from "$lib/stores/user.js";
+    import { onMount } from 'svelte';
+    // import Cookies from 'js-cookie'
+
 
     let errors = {};
     let isApplicant = true;
@@ -42,19 +43,15 @@
         // alert('hello')
         errors = {};
         errorMessage = '';
-        if (!isLogin && loginFormData.password !== loginFormData.confirmPassword) {
-            errorMessage = 'Passwords do not match.';
-            return;
-        }else if (registerFormData.password !== registerFormData.confirmPassword){
+       if (!isLogin && registerFormData.password !== registerFormData.confirmPassword){
             errorMessage = 'Passwords do not match.';
             return;
         }
-        const url = !isLogin ? "http://localhost:8080/user-service/register/" + $user.role : 'http://localhost:8080/user-service/login';
+        let role = isApplicant ? 'applicant': 'recruiter'
+        const url = !isLogin ? "http://localhost:8080/user-service/register/" + role : 'http://localhost:8080/user-service/login';
         
         var response = null
         justRegistered = false
-        $user.role = (isApplicant ? 'applicant' : 'recruiter')
-        $user.role = 'recruiter'
         try {
             $user.username = loginFormData.email
             if (isLogin) {
@@ -65,8 +62,11 @@
                     localStorage.setItem('jwt_expiration', Date.now() + 8 * 60 * 60 * 1000)
                     $user.email = loginFormData.email
                     $user.jwt = response.data.accessToken
+                    $user.role = response.data.role
+                    console.log($user.jwt)
                     goto('/');
                 }else {
+                    errors = error.response.data
                     errorMessage = data.message || 'An error occurred. Please try again.';
                 }
 
@@ -75,15 +75,27 @@
                 // console.log(companyId)
                 // registerFormData.company = companyId
                 console.log(registerFormData.company)
-                response = await axios.post(url,registerFormData);
+                let tempCopy= {};
+                if (isApplicant){
+                    tempCopy = Object.fromEntries(
+                    Object.entries(registerFormData).filter(([key]) => key !== 'company')
+                    );
+
+                }else{
+                    tempCopy = registerFormData;
+                }
+                console.log(tempCopy)
+                response = await axios.post(url, tempCopy);
                 justRegistered = true;
                 console.log(response.status)
+                console.log('lkjhgyhu')
+                console.log(response.data.data)
 
             }
 
             console.log(response)
             console.log("1235")
-            const data = await response.json();
+            // const data = await response.json();
 
             console.log(data)
             if (response.ok) {
@@ -104,9 +116,15 @@
             // } else {
             //     errorMessage = error.response.data
             // }
+            // errorMessage = error.response.data
+            // console.log(error.response.data)
+            // console.error('Error during login:', error);
+            if (error.response){
+                errors = error.response.data
+                console.log(error.response)
+            }
             errorMessage = error.response.data
-            console.log(error.response.data)
-            console.error('Error during login:', error);
+
         }
     }
 
@@ -114,6 +132,16 @@
     function handleCompanyChange(event) {
         registerFormData.company = event.target.value;
     }
+
+    let leftText = "Applicant";
+    let rightText = "Recruiter";
+
+    function toggle() {
+        isApplicant = !isApplicant;
+        errors = {};
+        errorMessage = '';
+    }
+
 </script>
 
 
@@ -131,7 +159,11 @@
 
             {#if !isLogin}
                 <div class="switch-button-wrapper">
-                    <SwitchButton bind:isApplicant leftText="Applicant" rightText="Recruiter" />
+                    <div class="switch-button" on:click={toggle}>
+                        <div class="option" class:selected={isApplicant}>{leftText}</div>
+                        <div class="option" class:selected={!isApplicant}>{rightText}</div>
+                    </div>
+                    <!-- <button bind:isApplicant on:click{toggle} leftText="Applicant" rightText="Recruiter" /> -->
                 </div>
             {/if}
 
@@ -143,18 +175,20 @@
                 {/if}
                 <input type="email" placeholder="Email" bind:value={registerFormData.email} required />
 
-                {#if errors.lastName}
-                <div class="error">{errors.lastName}</div>
-                {/if}
-                <input type="text" placeholder="First Name" bind:value={registerFormData.firstName} required />
                 {#if errors.firstName}
                 <div class="error">{errors.firstName}</div>
                 {/if}
-                <input type="text" placeholder="Last Name" bind:value={registerFormData.lastName} required />
+                <input type="text" placeholder="First Name" bind:value={registerFormData.firstName} required />
 
+                {#if errors.lastName}
+                <div class="error">{errors.lastName}</div>
+                {/if}
+                <input type="text" placeholder="Last Name" bind:value={registerFormData.lastName} required />
+                {#key errors}
                 {#if errors.password}
                 <div class="error">{errors.password}</div>
                 {/if}
+                {/key}
                 <input type="password" placeholder="Password" bind:value={registerFormData.password} required />
                 <input type="password" placeholder="Repeat Password" bind:value={registerFormData.confirmPassword} required />
            {:else}
@@ -211,6 +245,38 @@
 </div>
 
 <style>
+    .switch-button {
+        display: flex;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        overflow: hidden;
+        cursor: pointer;
+                min-width: 230px;
+    }
+
+    .option {
+        flex: 1;
+        padding: 0.5rem;
+        text-align: center;
+        background-color: #e0e0e0;
+        color: #333;
+        transition: background-color 0.3s;
+    }
+
+    .option.selected {
+        background-color: #007bff;
+        color: white;
+    }
+
+
+
+
+
+
+
+
+
+
     .container {
         display: flex;
         height: 100vh;
