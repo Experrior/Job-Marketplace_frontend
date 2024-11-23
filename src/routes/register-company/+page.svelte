@@ -1,7 +1,6 @@
 <script>
     import { goto } from '$app/navigation';
     import ImageRotator from '$lib/ImageRotator.svelte';
-    import SwitchButton from '$lib/SwitchButton.svelte';
     import axios from 'axios';
     import { user } from "../../stores/user.js";
 

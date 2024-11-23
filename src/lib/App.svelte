@@ -19,7 +19,11 @@
 
   let allJobs = [];
   onMount(async () => {
-    const response = await axios.get('http://localhost:8080/job-service/getJobs')
+    const response = await axios.get('http://localhost:8080/job-service/getJobs', {params: {
+    limit: 50
+  }
+}
+    )
     const totalElements = response.data.content
     console.log('aaaaaaaa 8765432')
     console.log(response.data.content)

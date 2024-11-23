@@ -113,7 +113,11 @@
         return num;
     }
   let xd = "[Skill(name=Go, level=2), Skill(name=C++, level=4)]"
-  
+    
+
+  function takeQuiz(){
+    goto
+  }
 
   // skillsList = [...skillsList.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
   // .map(match => ({
@@ -140,8 +144,6 @@
           <!-- Job Title and Company -->
           <h1>{newJob.title}</h1>
           <p><strong>{newJob.companyName}</strong></p>
-
-
 
           <h2>Job Description</h2>
           <p>{newJob.description}</p>
@@ -196,7 +198,7 @@
           <!-- {/if} -->
 
           <!-- Apply Button -->
-          <button class="apply-button" on:click={() => alert('Application process initiated')}>
+          <button class="apply-button" on:click={takeQuiz}>
               Apply Now
           </button>
       </div>

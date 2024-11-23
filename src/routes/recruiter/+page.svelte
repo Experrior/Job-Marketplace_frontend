@@ -8,8 +8,10 @@
   let userRole;
   $: userRole = $user.role;
   var quizzes = [];
+  var jobs = [];
 
 onMount(async () => {
+  // get quizzes
       try {
           const response = await axios.post('http://localhost:8080/job-service/graphql', {
       query: `query{
@@ -28,6 +30,32 @@ onMount(async () => {
       })
       console.log(response.data.data.quizzesByRecruiter)
       quizzes = response.data.data.quizzesByRecruiter
+      console.log(quizzes)
+    }catch (error) {
+      alert(error)
+    }
+    //getJobs
+    try {
+          const response = await axios.post('http://localhost:8080/job-service/graphql', {
+      query: `query {
+  jobsByRecruiter {
+    jobId
+    title
+    description
+    location
+    salary
+    createdAt
+    quizId
+  }
+}`
+ }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${$user.jwt}`
+        }
+      })
+      console.log(response.data.data.jobsByRecruiter)
+      jobs = response.data.data.jobsByRecruiter
       console.log(quizzes)
     }catch (error) {
       alert(error)
@@ -72,7 +100,7 @@ onMount(async () => {
       },
   };
 
-  const jobs = createListOfCopies(originalObject, 20);
+  // const jobs = createListOfCopies(originalObject, 20);
 
   function showApplicants(slug) {
       goto(`/recruiter/jobs/${slug}`);

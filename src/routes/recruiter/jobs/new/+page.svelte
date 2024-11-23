@@ -69,7 +69,7 @@ let quizzes = []
         skillChange = ! skillChange;
         let newSkill = {}
         newSkill['name'] = skillName;
-        newSkill['value'] = skillLevel;
+        newSkill['level'] = skillLevel;
         skillsList.push(newSkill)
         skillName = '';
         skillLevel = '';
@@ -110,31 +110,19 @@ let quizzes = []
         }`;
         const variables = {
             jobDefinition: {
-    title: "Data Scientist",
-    description: "Analyze data and build predictive models for business insights.",
-    location: "Wroclaw",
-    salary: 10000.0,
-    requiredSkills: [
-      {
-        name: "C++",
-        level: 5
-      },
-      {
-        name: "JavaScript",
-        level: 4
-      },
-      {
-        name: "Java",
-        level: 3
-      }
-    ],
-    requiredExperience: "Senior", // Ensure this is a string
+    title: title,
+    description: description,
+    location: location,
+    salary: salary,
+    requiredSkills: skillsList,
+    requiredExperience: requiredExperience, // Ensure this is a string
     quizId: quizId,
-    employmentType: "test1",
-    workLocation: "test2"
+    employmentType: employmentType,
+    workLocation: workLocation
   }
 };
-
+console.log('COTAMSLUCYCHA')
+console.log(skillsList)
         // const variables = {
         //     "jobDefinition": {
         //     "title": title,
@@ -189,11 +177,15 @@ let quizzes = []
 //               "Content-Type": "application/json",
 //               'Authorization': `Bearer ${$user.jwt}`
 //             } })
+console.log(response)
+        if (response.data.errors) {
 
-            console.log(response)
-            console.log(response.data.data.createJob.jobId)
-            const newJobId = response.data.data.createJob.jobId
-            goto(`/job/${newJobId}`);
+        }else{
+
+        }
+          console.log(response.data.data.createJob.jobId)
+          const newJobId = response.data.data.createJob.jobId
+          goto(`/job/${newJobId}`);
 
         }catch (error) {
             console.log(error)

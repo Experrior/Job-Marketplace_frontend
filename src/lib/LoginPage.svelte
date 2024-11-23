@@ -1,7 +1,6 @@
 <script>
     import { goto } from '$app/navigation';
     import ImageRotator from '$lib/ImageRotator.svelte';
-    import SwitchButton from './SwitchButton.svelte';
     import axios from 'axios';
     import { user } from "../stores/user.js";
   import { onMount } from 'svelte';
@@ -122,6 +121,7 @@
                 errors = error.response.data
                 console.log(error.response)
             }
+            errorMessage = error.response.data
 
         }
     }
