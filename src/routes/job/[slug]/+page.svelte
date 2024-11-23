@@ -134,9 +134,11 @@
     //     })
     // console.log('test1')
     //   console.log(response)
-      Cookie.set('s3Path', resume.resumeUrl)
-      Cookie.set('resumeName', resume.resumeName)
-      Cookie.set('jobId',jobId)
+
+    //todo fix, now is workaround
+      Cookie.set('s3Path', resume.resumeUrl, { sameSite: 'strict' })
+      Cookie.set('resumeName', resume.resumeName, { sameSite: 'strict' })
+      Cookie.set('jobId',jobId, { sameSite: 'strict' })
 // const response1 = axios.post(`http://localhost:8080/job-service/applications/${jobId}/apply`,{},
 //       {headers:{
 //                     'Authorization': `Bearer ${$user.jwt}`
