@@ -1,11 +1,5 @@
 <script>
-    export let isApplicant = true;
-    export let leftText = "Applicant";
-    export let rightText = "Recruiter";
 
-    function toggle() {
-        isApplicant = !isApplicant;
-    }
 </script>
 
 <div class="switch-button" on:click={toggle}>

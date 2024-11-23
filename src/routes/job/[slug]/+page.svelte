@@ -6,7 +6,7 @@
   import {user, verifyUser} from '$lib/stores/user'
   import axios from 'axios';
 
-
+  let jobNotFound = false;
   let jobId = $page.params.slug;
   var newJob = {};
   let loading = true;
@@ -95,8 +95,9 @@
     }));
         } catch (err) {
 
-          console.error(err);
+          console.log(err);
           error = err.message || 'An error occurred while fetching the job.';
+          jobNotFound =true;
       } finally {
           loading = false;
       }
@@ -131,7 +132,7 @@
   {#if loading}
       <p>Loading...</p>
   {:else if error}
-      <p class="error-message">{error}</p>
+      <p class="error-message">Job not found</p>
   {:else if newJob}
       <div class="job-description">
           <img src="{newJob.companyLogo}" alt="{newJob.companyName} Logo" class="company-logo" />
@@ -314,6 +315,7 @@
     color: red;
     text-align: center;
     margin-top: 2rem;
+    font-size: 60px;
   }
 
   /* Responsive Adjustments */

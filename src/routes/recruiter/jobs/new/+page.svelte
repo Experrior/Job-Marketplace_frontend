@@ -20,6 +20,7 @@
   let skillLevel = '';
   let skillsList = [];
 let quizName = '';
+let skillChange = false;
 let quizzes = []
 
 
@@ -65,12 +66,15 @@ let quizzes = []
   
     function addSkill() {
       if (skillName && skillLevel) {
-        let newSkill = []
+        skillChange = ! skillChange;
+        let newSkill = {}
         newSkill['name'] = skillName;
-        newSkill['value'] = +skillLevel;
+        newSkill['value'] = skillLevel;
         skillsList.push(newSkill)
         skillName = '';
         skillLevel = '';
+        console.log("new skills list:")
+        console.log(skillsList)
       }
     }
   
@@ -200,6 +204,19 @@ let quizzes = []
         // goto('/jobs')
     // goto(`/jobs/${title.toLowerCase().replace(/\s+/g, '-')}`);
   }
+
+  function deleteSkill(index) {
+    skillsList.splice(index, 1);
+    skillsList = [...skillsList];
+    skillChange = !skillChange;
+  }
+
+  $: if (skillLevel < 1) {
+    skillLevel = 1;
+  } else if (skillLevel > 5) {
+    skillLevel = 5;
+  }
+
   </script>
   
   <div class="app-bar">
@@ -290,21 +307,38 @@ let quizzes = []
           <h2>Add Required Skills</h2>
           <div class="skill-inputs">
             <input bind:value={skillName} placeholder="Skill Name" />
-            <input bind:value={skillLevel} type="number" min="1" max="5" placeholder="Level (1-5)" />
+            <input bind:value={skillLevel} type=number min=1 max=5 placeholder="Level (1-5)" />
+            
             <button type="button" on:click={addSkill}>Add Skill</button>
           </div>
-          {#if skillsList.length}
-            <ul class="skills-list">
-              {#each skillsList as [skill, level]}
-                <li>{skill}: Level {level}</li>
-              {/each}
-            </ul>
-          {/if}
+          
+          {#key skillChange}
+          {#if Object.keys(skillsList).length > 0}
+          <h2>Required Skills</h2>
+          <ul class="required-skills">
+            {#each skillsList as skill, index}
+              <li>
+                <span class="skill-name">{skill.name}</span>
+                <span class="skill-level">
+                  {#each Array(skill.value) as _, i}
+                    <span class="star">&#9733;</span>
+                  {/each}
+                  {#each Array(5 - skill.value) as _, i}
+                    <span class="star empty">&#9734;</span>
+                  {/each}
+                </span>
+                <!-- Delete Button -->
+                <button class="delete-button" on:click={() => deleteSkill(index)}>X</button>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+        {/key}
         </div>
   
         <button type="submit" class="submit-button">Submit Job Offer</button>
       </form>
-  
+    {#key skillChange}
   <div class="live-preview">
     <JobDescription
       {title}
@@ -319,10 +353,29 @@ let quizzes = []
       {skillsList}
     />
   </div>
+  {/key}
 </div>
 </div>
   
   <style>
+
+.delete-button {
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 2px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-weight: bold;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  .delete-button:hover {
+    background-color: darkred;
+  }
 
     .app-bar {
       position: fixed;
@@ -470,7 +523,7 @@ let quizzes = []
       border-radius: 8px;
       border: 1px solid #ced4da;
       overflow-y: auto;
-      max-height: calc(100vh - 200px);
+      /* max-height: calc(100vh - 200px); */
     }
   
     @media (max-width: 228px) {
@@ -487,5 +540,47 @@ let quizzes = []
         max-height: none;
       }
     }
+
+
+
+
+
+
+
+    .required-skills li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.skill-name {
+  flex: 1;
+}
+
+.skill-level {
+  display: flex;
+  flex: 0;
+}
+
+.star, .star.empty {
+  font-size: 40px;
+  margin-right: 2px;
+}
+
+.star {
+  color: #f1c40f;
+}
+
+.star.empty {
+  color: #ccc;
+}
+  
+    .star.empty {
+      color: #ccc;
+      font-size: 40px;
+    }
+
+
+
   </style>
   
