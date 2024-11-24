@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, afterUpdate } from "svelte";
   import axios from "axios";
   import {user, verifyUser} from '$lib/stores/user';
   // import { io } from "socket.io-client";
@@ -10,6 +10,7 @@
   let currentChatId = null;
   let newMessage = "";
   let chatMessages = {};
+  let gotNewMessage = false;
   let chatId = '';
   let chats = [];
   let chatList = [];
@@ -27,8 +28,29 @@
     console.log("CHATTY", chatList)
     console.log("livetowin!", chatMessages)
 
+    scrollToBottom();
+
+
     // awaitinitializeWebSocketConn();
   });
+
+  afterUpdate(() => {
+		console.log("afterUpdate");
+		scrollToBottom(element);
+  });
+
+  // function scrollToBottom() {
+  //   if (messagesContainer) {
+  //     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  //   }
+  // }
+
+  // Reactive to currentChatId or messages update
+  $: {
+    if (currentChatId !== null) {
+      scrollToBottom();
+    }
+  }
 
   async function getUserChats(){
     try {
@@ -141,8 +163,10 @@
               chatMessages[currentChatId] = [...(chatMessages[currentChatId] || []), messages];
               console.log('Updated chat messages:', chatMessages[currentChatId]);
             }
-            console.log("MESAŻĘ:", chatMessages)
-            console.log("i to ", messages)
+            console.log("MESAŻĘ:", chatMessages);
+            console.log("i to ", messages);
+            gotNewMessage = ! gotNewMessage;
+            scrollToBottom();
           }else{
             console.log("co my tu mamy: ", messages)
           }
@@ -181,13 +205,13 @@
 
 
   // Function to scroll the messages container to the bottom
-  function scrollToBottom() {
-    setTimeout(() => {
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-    }, 0);
-  }
+  // function scrollToBottom() {
+  //   setTimeout(() => {
+  //     if (messagesContainer) {
+  //       messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  //     }
+  //   }, 0);
+  // }
 
 
   async function sendManualRequest() {
@@ -239,7 +263,9 @@
   }
 
 
-
+  const scrollToBottom = async (node) => {
+    node.scroll({ top: 0, behavior: 'smooth' });
+  }; 
 
 
 
@@ -272,6 +298,8 @@
         <div class="chat-list-container">
           <ul class="chat-list">
             {#each chatList as chat}
+
+            <!-- {#each Object.keys(chatMessages) as chat} -->
               <!-- <text>{chat}</text> -->
               <li
                 class:active={chat.id === currentChatId}
@@ -282,16 +310,19 @@
           </ul>
         </div>
 
+
+
         <!-- Message area --> 
         <div class="message-area">
           {#if currentChatId !== null}
           <!-- <text>`${chatMessages}`</text> -->
             <!-- Messages -->
+            {#key gotNewMessage}
             <div class="messages-container" bind:this={messagesContainer}>
               <ul class="messages">
-                {#each messages.filter((msg) => msg.chatId === currentChatId) as message}
+                {#each chatMessages[currentChatId] as message}
                   <li
-                    class="message {message.sender === 'You'
+                    class="message {message.createdBy === $user.userId
                       ? 'right'
                       : 'left'}"
                   >
@@ -302,6 +333,7 @@
                 {/each}
               </ul>
             </div>
+            {/key}
 
             <!-- Input area -->
             <div class="input-area">

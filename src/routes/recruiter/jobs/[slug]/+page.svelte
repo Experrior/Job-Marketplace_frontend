@@ -175,14 +175,16 @@ const sortBy = writable('score');
   async function startChat(applicantId, applicantName) {
     console.log($user.jwt)
     console.log('creatin chat', applicantId, applicantName)
+    // TODO add $user.name
+    if (! $user.name) {
+      $user.name = "John Snow"
+    }
     fetch(`http://localhost:8080/chat-service/startChat?targetUserId=${applicantId}&recruiterName=${$user.name}&applicantName=${applicantName}`,
      {headers: {"Authorization": "Bearer "+$user.jwt}})
       .then((response) => response.text())
       .then((data) => {
         console.log(data);
-
-        // Parse chatId from response (assuming the response contains a chat list)
-        chatList = JSON.parse(data); // Assuming the response is JSON containing chat list
+        chatList = JSON.parse(data);
         chatId = chatList[0];
         });
     }

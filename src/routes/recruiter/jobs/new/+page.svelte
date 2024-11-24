@@ -15,9 +15,8 @@
   let salary = '';
   let description = '';
   let requiredExperience = '';
-  let requiredSkills = {};
   let skillName = '';
-  let skillLevel = '';
+  let skillLevel = 1;
   let skillsList = [];
 let quizName = '';
 let skillChange = false;
@@ -66,7 +65,6 @@ let quizzes = []
   
     function addSkill() {
       if (skillName && skillLevel) {
-        skillChange = ! skillChange;
         let newSkill = {}
         newSkill['name'] = skillName;
         newSkill['level'] = skillLevel;
@@ -75,6 +73,7 @@ let quizzes = []
         skillLevel = '';
         console.log("new skills list:")
         console.log(skillsList)
+        skillChange = ! skillChange;
       }
     }
   
@@ -126,19 +125,7 @@ console.log(skillsList)
 console.log(quizId)
 console.log(quizzes)
 console.log(variables)
-        // const variables = {
-        //     "jobDefinition": {
-        //     "title": title,
-        //     "description": description,
-        //     "location": location,
-        //     "salary": 10000.0,
-        //     "requiredSkills": skillsList,
-        //     "requiredExperience": requiredExperience,
-        //     "quizId": quizId,
-        //     "employmentType": employmentType,
-        //     "workLocation": workLocation
-        //     }
-        // };
+
         try {
             const response = await axios.post('http://localhost:8080/job-service/graphql', {
       query: mutation,
@@ -148,38 +135,7 @@ console.log(variables)
                'Authorization': `Bearer ${$user.jwt}`
             } }
 )
-//         const response = await axios.post('http://localhost:8080/job-service/graphql', {query: 
-//             `mutation ($requiredSkills) {
-//   createJob(jobRequest: {
-//     title: "${title}",
-//     description: "${description}",
-//     location: "${location}",
-//     salary: ${salary},
-//     requiredSkills: $requiredSkills,
-//     requiredExperience: "${requiredExperience}",
-//     quizId: "${quizId}",
-//     workLocation: "${workLocation}",
-//     employmentType: "${employmentType}",
-//   }) {
-//     jobId
-//     companyId
-//     title
-//     description
-//     requiredSkills
-//     requiredExperience
-//     location
-//     salary
-//     createdAt
-//     quizId
-//   }
-// }
-// `,   variables: {
-// 	requiredSkills: JSON.stringify(requiredSkills)
-//   } },
-//           {headers:{
-//               "Content-Type": "application/json",
-//               'Authorization': `Bearer ${$user.jwt}`
-//             } })
+
 console.log(response)
         if (response.data.errors) {
 
@@ -308,19 +264,23 @@ console.log(response)
           </div>
           
           {#key skillChange}
-          {#if Object.keys(skillsList).length > 0}
+          {#if skillsList.length > 0}
+          <text>some exmpal: `${skillsList.length}`</text>
           <h2>Required Skills</h2>
           <ul class="required-skills">
             {#each skillsList as skill, index}
               <li>
                 <span class="skill-name">{skill.name}</span>
                 <span class="skill-level">
-                  {#each Array(skill.value) as _, i}
+                  <!-- {#each Array(skill.value) as _, i}
                     <span class="star">&#9733;</span>
-                  {/each}
-                  {#each Array(5 - skill.value) as _, i}
-                    <span class="star empty">&#9734;</span>
-                  {/each}
+                  {/each} -->
+                  {#each Array(Math.min(5, (skill.level || 0))) as _, i}
+                  <span class="star">&#9733;</span>
+                {/each}
+                  {#each Array(Math.max(0, 5 - (skill.level || 0))) as _, i}
+                  <span class="star empty">&#9734;</span>
+                {/each}
                 </span>
                 <!-- Delete Button -->
                 <button class="delete-button" on:click={() => deleteSkill(index)}>X</button>
@@ -535,10 +495,6 @@ console.log(response)
         max-height: none;
       }
     }
-
-
-
-
 
 
 
