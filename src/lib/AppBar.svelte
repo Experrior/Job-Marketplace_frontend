@@ -2,6 +2,8 @@
     import { goto } from '$app/navigation';
     import { user } from "$lib/stores/user.js";
     import FaRegUserCircle from 'svelte-icons/fa/FaRegUserCircle.svelte'
+    import SavedOffers from '$lib/SavedOffers.svelte';
+    import MyApplications from '$lib/MyApplications.svelte';
 </script>
 
 
@@ -13,6 +15,8 @@
     {/if}
   </div>
     <div class="user-icon" on:click={() => goto('/settings')} role="none"><FaRegUserCircle/></div>
+     
+
 </div>
 
 <style>

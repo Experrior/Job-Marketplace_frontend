@@ -55,7 +55,7 @@ onMount(async () => {
         }
       })
       console.log(response.data.data.jobsByRecruiter)
-      console.log('guwno12')
+      console.log('g12')
       jobs = response.data.data.jobsByRecruiter
       console.log(quizzes)
     }catch (error) {

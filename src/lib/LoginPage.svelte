@@ -28,14 +28,14 @@
         errorMessage = '';
 
     }
-    let companies = ["TechCorp", "DesignPro", "MarketMasters", "FinanceGurus"];
-
+    let companies = [];
 	onMount(async () => {
 		const res = await axios.get('http://localhost:8080/user-service/getCompanies')
         companies = res.data.map(comp => comp.name)
         console.log(res.data)
 
         companies = companies.sort()
+        registerFormData.company = companies[0]
 
 	});
 
@@ -63,6 +63,7 @@
                     $user.email = loginFormData.email
                     $user.jwt = response.data.accessToken
                     $user.role = response.data.role
+                    $user.userId = response.data.userId
                     console.log($user.jwt)
                     goto('/');
                 }else {

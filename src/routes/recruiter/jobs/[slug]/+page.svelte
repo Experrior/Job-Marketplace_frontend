@@ -7,12 +7,13 @@
   import AppBar from '$lib/AppBar.svelte';
   import { page } from '$app/stores';
   import axios from 'axios';
-
+  import ChatBox from '$lib/ChatBox.svelte';
 
   let jobId = $page.params.slug;
   let applicants = [];  
   let job = {};
-
+  let chatList = [];
+  let chatId = '';
   const sortedApplicants = writable([]);
  onMount(async() => {
   
@@ -105,7 +106,7 @@
 
 
     console.log()
-    console.log('guwno')
+    console.log('gw54')
     console.log(job)
     // const stream = response.body.getReader()
     // console.log(stream.read())
@@ -169,6 +170,22 @@ const sortBy = writable('score');
     sortBy.set(criteria);
   }
 
+
+
+  async function startChat(applicantId, applicantName) {
+    console.log($user.jwt)
+    console.log('creatin chat', applicantId, applicantName)
+    fetch(`http://localhost:8080/chat-service/startChat?targetUserId=${applicantId}&recruiterName=${$user.name}&applicantName=${applicantName}`,
+     {headers: {"Authorization": "Bearer "+$user.jwt}})
+      .then((response) => response.text())
+      .then((data) => {
+        console.log(data);
+
+        // Parse chatId from response (assuming the response contains a chat list)
+        chatList = JSON.parse(data); // Assuming the response is JSON containing chat list
+        chatId = chatList[0];
+        });
+    }
 
 </script>
 
@@ -317,6 +334,9 @@ const sortBy = writable('score');
                   {applicant.resumeUrl ? 'Download' : 'N/A'}
                 </a>
               </td>
+              <td>
+                <button on:click={() => startChat(applicant.userId, applicant.fullName)}>StartChat</button>
+              </td>
             </tr>
             {/each}
           </tbody>
@@ -327,7 +347,7 @@ const sortBy = writable('score');
     <p class="error-message">Job not found.</p>
   {/if}
 </div>
-
+<ChatBox/>
 <style>
 
 

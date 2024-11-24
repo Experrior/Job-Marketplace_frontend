@@ -50,33 +50,25 @@
     console.log('gusadfasdfasdf')
     console.log(jobId)
     try{
-    await fetch('http://localhost:8080/job-service/graphql',{
-      method: 'POST',
-
-    headers:{
-              "Content-Type": "application/json",
-              'Authorization': `Bearer ${$user.jwt}`
-            },
-            body: JSON.stringify({
-              query: query,
-              variables: variables
-            })
-    },
-    {
-    },
-          {}
-    ).then(r => r.json()).then(data => newJob = data.data.jobById)
+    const response = await axios.post('http://localhost:8080/job-service/graphql',
+      {
+        query: query,
+        variables: variables
+      }, {headers:{
+                    "Content-Type": "application/json",
+                    'Authorization': `Bearer ${$user.jwt}`
+                  }}
+    )
+    // .then(r => r.json()).then(data => newJob = data.data.jobById)
     
 
 
 
     console.log()
-    console.log('guwno')
-    console.log(newJob)
-    // const stream = response.body.getReader()
-    // console.log(stream.read())
-    // console.log(response.body)
-    // newJob = response.data.data.jobById
+    console.log('gw')
+    console.log(response)
+    newJob = response.data.data.jobById
+    
     console.log('done update')
     console.log(skillsList)
     console.log(newJob)
@@ -136,9 +128,10 @@
     //   console.log(response)
 
     //todo fix, now is workaround
-      Cookie.set('s3Path', resume.resumeUrl, { sameSite: 'strict' })
-      Cookie.set('resumeName', resume.resumeName, { sameSite: 'strict' })
-      Cookie.set('jobId',jobId, { sameSite: 'strict' })
+      Cookie.set('s3Path', resume.resumeUrl)
+      Cookie.set('resumeName', resume.resumeName)
+      Cookie.set('jobId',jobId)
+      
 // const response1 = axios.post(`http://localhost:8080/job-service/applications/${jobId}/apply`,{},
 //       {headers:{
 //                     'Authorization': `Bearer ${$user.jwt}`

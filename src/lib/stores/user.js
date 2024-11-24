@@ -4,6 +4,7 @@ import { browser } from '$app/environment';
 const template = {
   displayName: '',
   photoURL: 'icons/user.svg',
+  userId: '',
   email: '',
   firstName: '',
   jwt: '',
