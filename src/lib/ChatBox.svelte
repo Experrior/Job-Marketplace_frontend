@@ -2,8 +2,6 @@
   import { onMount, onDestroy, afterUpdate } from "svelte";
   import axios from "axios";
   import {user, verifyUser} from '$lib/stores/user';
-  // import { io } from "socket.io-client";
-
 
 
   let isOpen = false;
@@ -22,6 +20,7 @@
   let socket;
 
   onMount(async () => {
+    console.log("MYUSERID: ", $user.jwt)
 
     await initializeWebSocketConn();
     await getUserChats()
@@ -36,14 +35,14 @@
 
   afterUpdate(() => {
 		console.log("afterUpdate");
-		scrollToBottom(element);
+		// scrollToBottom(element);
   });
 
-  // function scrollToBottom() {
-  //   if (messagesContainer) {
-  //     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  //   }
-  // }
+  function scrollToBottom() {
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }
 
   // Reactive to currentChatId or messages update
   $: {
@@ -105,6 +104,7 @@
   // Function to select a chat
   async function selectChat(chatId) {
     currentChatId = chatId;
+    gotNewMessage = false;
     await fetchMessages(chatId);
   }
 
@@ -127,13 +127,11 @@
   }
 }
 
-  // Function to initialize WebSocket connection
   async function initializeWebSocketConn() {
-    socket = await new WebSocket("ws://localhost:8080/chat_service/ws",);
+    socket = await new WebSocket(`ws://localhost:8080/chat_service/ws/?userId=${$user.userId}`);
     console.log("DEBUGGG1")
     socket.onopen = () => {
       console.log("WebSocket connection established");
-      // Optionally, authenticate or send initial messages
     };
 
     socket.onmessage = (event) => {
@@ -263,9 +261,9 @@
   }
 
 
-  const scrollToBottom = async (node) => {
-    node.scroll({ top: 0, behavior: 'smooth' });
-  }; 
+  // const scrollToBottom = async (node) => {
+  //   node.scroll({ top: 0, behavior: 'smooth' });
+  // }; 
 
 
 
@@ -289,6 +287,9 @@
   >
     {isOpen ? "Hide Chat" : "Open Chat"}
   </div>
+  {#if gotNewMessage && !isOpen}
+    <span class="new-message-indicator"></span>
+  {/if}
 
   <!-- Chat box content -->
   {#if isOpen}

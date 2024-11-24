@@ -108,7 +108,7 @@ onMount(async () => {
   }
 
   function editJobOffer(slug) {
-      goto(`/recruiter/jobs/${slug}/edit`);
+      goto(`/recruiter/jobs/edit/${slug}`);
   }
 
   function navigateToQuiz(slug) {
