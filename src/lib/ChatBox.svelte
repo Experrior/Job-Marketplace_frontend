@@ -128,7 +128,7 @@
 }
 
   async function initializeWebSocketConn() {
-    socket = await new WebSocket(`ws://localhost:8080/chat_service/ws/?userId=${$user.userId}`);
+    socket = await new WebSocket(`ws://localhost:8080/chat_service/ws?userId=${$user.userId}`);
     console.log("DEBUGGG1")
     socket.onopen = () => {
       console.log("WebSocket connection established");
@@ -137,14 +137,16 @@
     socket.onmessage = (event) => {
           const messages = JSON.parse(event.data);
           console.log("aiujhygt",messages)
-          var isMessage='';
+          var isMessage=true;
           try {
-             isMessage = (messages[0].content)
+            if (Array.isArray(messages)){
+              isMessage = (messages[0].content)
+            }else{
+              isMessage = messages.content
+            }
           }catch (error) {
              isMessage = false
           }
-          
-
           if (isMessage) {
             console.log("STARE WIEŚCI", chatMessages)
             if (Array.isArray(messages)) {
