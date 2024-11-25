@@ -130,6 +130,13 @@
             <path d="M7 8h10v2H7zm0 4h6v2H7zm0 4h10v2H7z" />
         </svg>
     </button>
+    <button class="test-icon" on:click={() => goto('/analyticsTest')} aria-label="Go to analyticsTest page">
+        <!-- Test icon as SVG -->
+        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+            <rect x="4" y="4" width="16" height="16" rx="4" />
+            <path d="M7 8h10v2H7zm0 4h6v2H7zm0 4h10v2H7z" />
+        </svg>
+    </button>
 </div>
 
 
