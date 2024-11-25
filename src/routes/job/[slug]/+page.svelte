@@ -160,7 +160,7 @@
   {#if loading}
       <p>Loading...</p>
   {:else if error}
-      <p class="error-message">Job not found</p>
+      <p class="error-message">You need to log in to view this offer</p>
   {:else if newJob}
       <div class="job-description">
           <img src="{newJob.companyLogo}" alt="{newJob.companyName} Logo" class="company-logo" />
