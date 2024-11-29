@@ -1,93 +1,77 @@
 <script>
-  import { goto } from '$app/navigation';
-  import CategoryFilter from './CategoryFilter.svelte';
   import JobCard from './JobCard.svelte';
-  import ChatBox from './ChatBox.svelte';
-  import { user } from "$lib/stores/user.js";
-  import axios from 'axios';
-  import { onMount } from 'svelte';
-  import FaRegUserCircle from 'svelte-icons/fa/FaRegUserCircle.svelte'
+  import Filters from './Filters.svelte';
   import AppBar from './AppBar.svelte';
+  import { onMount } from 'svelte';
+  import axios from 'axios';
 
   let searchQuery = '';
-  let selectedCategory = '';
   let filteredJobs = [];
   let currentPage = 1;
   let jobsPerPage = 10;
   let totalPages = 1;
 
-
   let allJobs = [];
+  let filters = {
+    location: '',
+    requiredExperience: '',
+    requiredSkills: [],
+    companyId: '',
+    hasSalary: false,
+    minSalary: null,
+    maxSalary: null,
+  };
+
+  let skillsList = [
+    'JavaScript', 'Python', 'Java', 'React', 'Vue', 'Angular', 'Node.js', 'Express.js', 'Django',
+    'Flask', 'Spring', 'Hibernate', 'JPA', 'SQL', 'NoSQL', 'MongoDB', 'PostgreSQL', 'MySQL',
+    'Docker', 'Kubernetes', 'AWS', 'Azure', 'GCP', 'CI/CD', 'Jenkins', 'Git', 'Agile', 'Scrum',
+    'Kanban', 'TDD', 'BDD', 'DDD', 'Microservices', 'REST', 'GraphQL', 'OAuth', 'JWT', 'SAML',
+    'SSE', 'WebSockets', 'WebRTC', 'HTML', 'CSS'
+  ];
+
   onMount(async () => {
-    const response = await axios.get('http://localhost:8080/job-service/getJobs', {params: {
-    limit: 50
-  }
-}
-    )
-    const totalElements = response.data.content
-    console.log('aaaaaaaa 8765432')
-    console.log(response.data.content)
-
-    allJobs = response.data.content
-
-//     try {
-//           const response = await axios.post('http://localhost:8080/job-service/graphql', {
-//       query: `query MyQuery {
-//   jobs(limit: 50) {
-//     totalElements
-//     totalPages
-//     content {
-//       companyId
-//       companyName
-//       jobId
-//       requiredExperience
-//       salary
-//       requiredSkills
-//       title
-//       workLocation
-//       employmentType
-//       location
-//         }
-//       }
-//     }`
-//  }, {
-//         headers: {
-//           'Content-Type': 'application/json',
-//           'Authorization': `Bearer ${$user.jwt}`
-//         }
-//       })
-      
-//       console.log("XD")
-//       console.log(response.data)
-//       console.log(response.data.data)
-//       const totalElements = response.data.data.jobs.totalElements
-//       console.log(totalElements)
-//       console.log(response.data.data.jobs.content)
-//       allJobs = response.data.data.jobs.content
-//     }catch  (error) {
-//       console.log("XD2")
-//       console.log(error)
-//     }
-
-    filteredJobs = allJobs;
-    console.log(filteredJobs)
-    totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
-    console.log('as')
-    console.log(filteredJobs)
-  }
-  );
-
-  function filterJobs() {
-  filteredJobs = allJobs.filter((job) => {
-    const matchesQuery =
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.companyName.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesQuery;
+    await fetchJobs();
   });
-  totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
-  currentPage = 1;
-}
 
+  function cleanFilters(filters) {
+    const cleanedFilters = {};
+    Object.keys(filters).forEach((key) => {
+      const value = filters[key];
+      if (Array.isArray(value) && value.length > 0) {
+        cleanedFilters[key] = value;
+      } else if (value !== null && value !== '' && value !== false) {
+        cleanedFilters[key] = value;
+      }
+    });
+    return cleanedFilters;
+  }
+
+  async function fetchJobs() {
+    try {
+      const activeFilters = cleanFilters(filters);
+      const response = await axios.post(
+              'http://localhost:8080/job-service/getJobs',
+              activeFilters,
+              {
+                params: { limit: 50 },
+              }
+      );
+      if (response.status === 200) {
+        allJobs = response.data.content;
+        filteredJobs = allJobs;
+        totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+      } else {
+        console.error('Error fetching jobs:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Network or server error:', error);
+    }
+  }
+
+  function applyFilters() {
+    fetchJobs();
+  }
 
   function changePage(pageNumber) {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
@@ -95,85 +79,166 @@
     }
   }
 
-  $: paginatedJobs = filteredJobs.slice(
-  (currentPage - 1) * jobsPerPage,
-  currentPage * jobsPerPage
-);
+  function toggleSkill(skill) {
+    if (filters.requiredSkills.includes(skill)) {
+      filters.requiredSkills = filters.requiredSkills.filter((s) => s !== skill);
+    } else {
+      filters.requiredSkills = [...filters.requiredSkills, skill];
+    }
 
-  console.log('xd4')
-  console.log(paginatedJobs)
+    applyFilters();
+  }
+
+  $: paginatedJobs = filteredJobs.slice(
+          (currentPage - 1) * jobsPerPage,
+          currentPage * jobsPerPage
+  );
 </script>
 
-
-<AppBar/>
+<AppBar />
 
 <main>
-  <div class="search-container">
-    <h1>Find Your Next Job</h1>
-    <input
-      type="text"
-      placeholder="Search for jobs..."
-      bind:value={searchQuery}
-      on:input={filterJobs}
-    />
-  </div>
-
-
-  <div class="job-list-container">
-    {#if paginatedJobs.length > 0}
-      <div class="job-list">
-        {#each paginatedJobs as job}
-          <JobCard {job} />
+  <div class="content">
+    <div class="job-list-section">
+      <div class="search-bar">
+        <input
+                type="text"
+                placeholder="Search for jobs..."
+                bind:value={searchQuery}
+                on:input={() => {
+            filteredJobs = allJobs.filter((job) =>
+              job.title.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+          }}
+        />
+      </div>
+      <div class="skills-bar">
+        {#each skillsList as skill}
+          <div
+                  class="skill-chip {filters.requiredSkills.includes(skill) ? 'selected' : ''}"
+                  on:click={() => toggleSkill(skill)}
+          >
+            {skill}
+          </div>
         {/each}
       </div>
-    {:else}
-      <p>No jobs found for your search criteria.</p>
-    {/if}
-      
-    {#if totalPages > 1}
-      <div class="pagination">
-        <button on:click={() => changePage(currentPage - 1)} disabled={currentPage === 1}>
-          Previous
-        </button>
-        <span>Page {currentPage} of {totalPages}</span>
-        <button on:click={() => changePage(currentPage + 1)} disabled={currentPage === totalPages}>
-          Next
-        </button>
-      </div>
-    {/if}
+      <div class="job-list-container">
+        {#if paginatedJobs.length > 0}
+          <div class="job-list">
+            {#each paginatedJobs as job}
+              <JobCard {job} />
+            {/each}
+          </div>
+        {:else}
+          <p>No jobs found for your search criteria.</p>
+        {/if}
 
-    <ChatBox />
+        {#if totalPages > 1}
+          <div class="pagination">
+            <button on:click={() => changePage(currentPage - 1)} disabled={currentPage === 1}>
+              Previous
+            </button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button on:click={() => changePage(currentPage + 1)} disabled={currentPage === totalPages}>
+              Next
+            </button>
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <Filters {filters} {skillsList} onApplyFilters={applyFilters} />
   </div>
 </main>
 
 <style>
-
   main {
-    margin-top: 60px;
+    padding-top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+    background-color: #f8f9fa;
+  }
+
+  .content {
+    display: flex;
+    flex: 1;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .job-list-section {
+    overflow-x: hidden;
+    flex: 3;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 60px);
   }
 
-
-  .search-container {
-
-    padding: 1rem;
-    background-color: #f9f9f9;
-    border-bottom: 1px solid #ddd;
+  .search-bar input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 0.375rem;
+    background-color: #ffffff;
+    color: #333;
   }
 
+  .search-bar input::placeholder {
+    color: #aaa;
+  }
+
+  .skills-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    overflow-x: auto; /* Enable horizontal scrolling only for the skills bar */
+    white-space: nowrap; /* Prevent skills from wrapping to a new line */
+    padding-bottom: 0.5rem; /* Optional: Add space below */
+    -ms-overflow-style: none; /* Hide scrollbar for Internet Explorer and Edge */
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+  }
+
+  .skills-bar::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari, and Edge */
+  }
+
+  .skill-chip {
+    flex: 0 0 auto; /* Prevent chips from shrinking or wrapping */
+    padding: 0.5rem 1rem;
+    border: 1px solid #848d91;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #848d91;
+    background-color: #ffffff;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  .skill-chip:hover {
+    background-color: #848d91;
+    color: #ffffff;
+  }
+
+  .skill-chip.selected {
+    background-color: #758c96;
+    color: #ffffff;
+  }
 
   .job-list-container {
     flex: 1;
     overflow-y: auto;
+    background-color: #ffffff;
     padding: 1rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   .job-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0;
+    margin: 0;
+    padding: 0;
   }
 
   .pagination {
@@ -181,33 +246,22 @@
     justify-content: center;
     align-items: center;
     gap: 1rem;
-    margin: 1rem 0;
+    margin: 1.5rem 0 0;
   }
 
   .pagination button {
     padding: 0.5rem 1rem;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #007bff;
+    background-color: transparent;
+    border: 1px solid #007bff;
+    border-radius: 0.375rem;
     cursor: pointer;
   }
 
   .pagination button:disabled {
-    background-color: #cccccc;
+    color: #ccc;
+    border-color: #ccc;
     cursor: not-allowed;
-  }
-
-
-  input[type='text'] {
-    width: 100%;
-    padding: 0.5rem;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-  }
-
-
-  h1 {
-    margin-bottom: 1rem;
   }
 </style>

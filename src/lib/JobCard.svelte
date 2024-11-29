@@ -4,186 +4,141 @@
   function navigateToJob() {
     window.location.href = `/job/${job.jobId}`;
   }
-
-
-  function parseRequiredSkillsOld(skillsString) {
-    // Remove the enclosing square brackets
-    skillsString = skillsString.slice(1, -1);
-
-    // Split the string into individual skill strings
-    const skillStrings = skillsString.split('), ');
-
-    // Map each skill string to a skill object
-    const skills = skillStrings.map((skillStr) => {
-      // Remove 'Skill(' prefix and ')' suffix if present
-      skillStr = skillStr.replace('Skill(', '').replace(')', '');
-
-      // Split the skill string into name and level
-      const [namePart, levelPart] = skillStr.split(', ');
-
-      // Extract the name and level values
-      const name = namePart.split('=')[1];
-      const level = levelPart.split('=')[1];
-
-      return { name, level: parseInt(level) };
-    });
-
-    return skills;
-  }
-
-  function parseRequiredSkills(skillsArray) {
-  if (!Array.isArray(skillsArray)) {
-    throw new TypeError("Input must be an array of skill objects.");
-  }
-
-  // Optionally, validate and process each skill object
-  const processedSkills = skillsArray.map((skill, index) => {
-    if (typeof skill !== 'object' || skill === null) {
-      throw new TypeError(`Skill at index ${index} is not a valid object.`);
-    }
-
-    const { name, level } = skill;
-
-    if (typeof name !== 'string') {
-      throw new TypeError(`'name' property at index ${index} must be a string.`);
-    }
-
-    if (typeof level !== 'number' || !Number.isInteger(level)) {
-      throw new TypeError(`'level' property at index ${index} must be an integer.`);
-    }
-
-    return { name, level };
-  });
-
-  return processedSkills;
-}
-
-  // Parse requiredSkills string
-  let requiredSkills = [];
-  if (job.requiredSkills) {
-    requiredSkills = parseRequiredSkills(job.requiredSkills);
-  }
 </script>
 
-<button class="job-card" on:click={navigateToJob}>
-  <span class="job-location">{job.location}</span>
-
-  <div
-    class="company-logo"
-    style="background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;"
-  >
+<div class="job-card" on:click={navigateToJob}>
+  <div class="company-logo">
     <span>{job.companyName ? job.companyName.charAt(0) : 'C'}</span>
   </div>
 
-  <div class="job-info" >
+  <div class="job-info">
     <div class="job-header">
-      <h2 class="job-title">{job.title}</h2>
+      <h3 class="job-title">{job.title}</h3>
+      <p class="company-name">{job.companyName}</p>
     </div>
-    <p><strong>{job.companyName}</strong></p>
-    <p><strong>Employment Type:</strong> {job.employmentType}</p>
-    <p><strong>Work Location:</strong> {job.workLocation}</p>
-    <p><strong>Salary:</strong> {job.salary ? `$${job.salary}` : 'Undisclosed'}</p>
-
-
-    {#if requiredSkills.length > 0}
-      <div class="tags">
-        {#each requiredSkills as skill}
-          <div class="tag">
-            {skill.name} (Level {skill.level})
+    <div class="job-details">
+      <span class="detail"><strong>Location:</strong> {job.location || 'Not specified'}</span>
+      <span class="detail"><strong>Work Type:</strong> {job.workLocation || 'Not specified'}</span>
+      <span class="detail"><strong>Employment Type:</strong> {job.employmentType || 'Not specified'}</span>
+      <span class="salary">{job.salary ? `$${job.salary.toLocaleString()}` : 'Salary undisclosed'}</span>
+    </div>
+    {#if job.requiredSkills?.length > 0}
+      <div class="skills">
+        {#each job.requiredSkills as skill}
+          <div class="skill">
+            <span class="skill-name">{skill.name}</span>
+            <span class="skill-level">Level {skill.level}</span>
           </div>
         {/each}
       </div>
     {/if}
   </div>
-
-  <!-- <button class="apply-button" on:click={navigateToJob}>Apply Now</button> -->
-</button>
+</div>
 
 <style>
-
-/* .apply-button {
-    position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    padding: 1rem 2rem; 
-    font-size: 1rem;
-    border: none;
-    background-color: #007bff; 
-    color: white;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .apply-button:hover {
-    background-color: blue;
-  } */
-
   .job-card {
-    position: relative;
-    border: 1px solid #ddd;
-    padding: 1rem;
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
+    align-items: center;
+    margin: 0.5rem 0;
+    padding: 1rem 1rem;
+    border: 1px solid #e5e5e5;
     border-radius: 8px;
-    background-color: #fff;
+    background-color: #ffffff;
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+    cursor: pointer;
+    gap: 1.5rem;
+    min-height: 120px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
 
-  .job-location {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    font-size: 0.9rem;
-    color: #555;
+  .job-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
   }
 
   .company-logo {
-    width: 80px;
-    height: 80px;
-    border-radius: 8px;
-    overflow: hidden;
+    width: 50px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    color: #333;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #007bff;
+    border-radius: 50%;
+    text-transform: uppercase;
   }
 
   .job-info {
     flex: 1;
-    color: black;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .job-title {
+    font-size: 1.2rem;
+    font-weight: 600;
     margin: 0;
-    font-size: 1.5rem;
+    color: #333333;
   }
 
-  .tags {
+  .company-name {
+    font-size: 0.9rem;
+    color: #555555;
+    margin: 0.25rem 0 0;
+  }
+
+  .job-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #666666;
+  }
+
+  .detail {
+    display: inline-block;
+  }
+
+  .salary {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #666666;
+  }
+
+  .skills {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 0.5rem;
   }
 
-  .tag {
-    background-color: #e0e0e0;
+  .skill {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background-color: #f0f8ff;
+    color: #666666;
+    font-size: 0.85rem;
     padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
+    border-radius: 12px;
+    white-space: nowrap;
   }
 
-  button {
-    margin-top: 1rem;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    background-color: #007bff;
-    color: white;
-    border-radius: 4px;
-    cursor: pointer;
+  .skill-name {
+    font-weight: 600;
   }
 
-  button:hover {
-    background-color: #f7f7f7;
+  .skill-level {
+    font-size: 0.8rem;
+    color: #555;
   }
 </style>
