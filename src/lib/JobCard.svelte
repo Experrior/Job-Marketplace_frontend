@@ -1,19 +1,65 @@
 <script>
-  import HeartIcon from './HeartIcon.svelte';
+  import {user, verifyUser} from "$lib/stores/user.js";
+  import {goto} from "$app/navigation";
 
   export let job;
 
-  let isLiked = false;
+  export let isLiked = false;
+
+  const API_URL = "http://localhost:8080/job-service/graphql";
+
+  async function callGraphQL(query, variables = {}) {
+    if (!verifyUser()) {
+      goto('/login');
+    }
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${$user.jwt}`,
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+      const data = await response.json();
+      if (data.errors) {
+        console.error("GraphQL errors:", data.errors);
+        return null;
+      }
+      return data.data;
+    } catch (error) {
+      console.error("Error calling GraphQL API:", error);
+      return null;
+    }
+  }
 
   function navigateToJob() {
     window.location.href = `/job/${job.jobId}`;
   }
 
-  function toggleLike(event) {
-    event.stopPropagation();
-    isLiked = !isLiked;
-    console.log(`${isLiked ? "Liked" : "Unliked"} job: ${job.jobId}`);
+  async function toggleLike(event) {
+    event.stopPropagation(); // Prevent the job card click event from triggering
+    const query = `
+    mutation ToggleFollowJob($jobId: ID!) {
+      toggleFollowJob(jobId: $jobId) {
+        success
+        message
+        isFollowed
+      }
+    }
+  `;
+    const variables = { jobId: job.jobId };
+
+    const result = await callGraphQL(query, variables);
+
+    if (result?.toggleFollowJob?.success) {
+      isLiked = result.toggleFollowJob.isFollowed;
+    } else {
+      console.error("Failed to toggle like:", result?.toggleFollowJob?.message || "Unknown error");
+    }
   }
+
+
 </script>
 
 <div class="job-card" on:click={navigateToJob}>
@@ -46,9 +92,20 @@
       </div>
     {/if}
   </div>
+  <button class="like-button" on:click={toggleLike} aria-label="Toggle Like">
+    <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            class={isLiked ? "liked" : "unliked"}
+    >
+      <path
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+      />
+    </svg>
+  </button>
 
-  <!-- Use the HeartIcon component -->
-  <HeartIcon {isLiked} toggleLike={toggleLike} />
 </div>
 
 <style>
@@ -165,4 +222,53 @@
     font-size: 0.8rem;
     color: #555;
   }
+
+  .like-button {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    width: 40px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border-radius: 50%;
+  }
+
+  .like-button:hover {
+    background: rgba(255, 82, 82, 0.1);
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(255, 82, 82, 0.2);
+  }
+
+  .like-button:active {
+    transform: scale(0.9);
+    box-shadow: 0 3px 6px rgba(255, 82, 82, 0.3);
+  }
+
+  .liked {
+    fill: #ff5252;
+    transition: fill 0.3s ease, transform 0.3s ease;
+  }
+
+  .liked:hover {
+    transform: scale(1.2);
+    fill: #e60000;
+  }
+
+  .unliked {
+    fill: #cccccc;
+    transition: fill 0.3s ease, transform 0.3s ease;
+  }
+
+  .unliked:hover {
+    fill: #ff5252;
+    transform: scale(1.1);
+  }
+
 </style>

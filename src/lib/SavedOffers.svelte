@@ -1,91 +1,115 @@
 <script>
-  import { auth } from '../stores/auth';
-    import { onDestroy } from 'svelte';
-    import { format } from 'date-fns';
-  
-    let user;
-    const userDataList = [{
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john.doe@example.com',
-  photoUrl: '/images/front1.png', 
-  accountCreatedAt: '2023-01-01T10:00:00Z',
-  lastLoginAt: '2023-05-15T14:30:00Z',
-  cvUpdatedAt: '2023-05-10T09:15:00Z', 
-    },
-    {
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john.doe@example.com',
-  photoUrl: '/images/front1.png', 
-  accountCreatedAt: '2023-01-01T10:00:00Z',
-  lastLoginAt: '2023-05-15T14:30:00Z',
-  cvUpdatedAt: '2023-05-10T09:15:00Z', 
-    },];
+    import { onMount } from 'svelte';
+    import {user, verifyUser} from "$lib/stores/user.js";
+    import {goto} from "$app/navigation";
+    import JobCard from "$lib/JobCard.svelte";
+    import AppBar from "$lib/AppBar.svelte";
 
-    function formatDate(dateString) {
-      return format(new Date(dateString), 'PPPpp');
+    const API_URL = "http://localhost:8080/job-service/graphql";
+
+    let savedOffers = [];
+    let error = '';
+
+    async function callGraphQL(query, variables = {}) {
+        if (!verifyUser()) {
+            goto('/login');
+        }
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${$user.jwt}`,
+                },
+                body: JSON.stringify({ query, variables }),
+            });
+            const data = await response.json();
+            if (data.errors) {
+                console.error("GraphQL errors:", data.errors);
+                return null;
+            }
+            return data.data;
+        } catch (error) {
+            console.error("Error calling GraphQL API:", error);
+            return null;
+        }
+    }
+
+    async function fetchSavedOffers() {
+        const query = `
+        query {
+            followedJobs {
+                jobId
+                title
+                location
+                salary
+                createdAt
+            }
+        }
+    `;
+
+        try {
+            const result = await callGraphQL(query); // Await the result of the GraphQL call
+
+            if (result && result.followedJobs) { // Ensure result and followedJobs are not null
+                savedOffers = result.followedJobs;
+            } else {
+                console.error('GraphQL error:', result.errors);
+                error = 'Could not load saved offers. Please try again later.';
+            }
+        } catch (err) {
+            console.error('Failed to fetch saved offers:', err);
+            error = 'Could not load saved offers. Please try again later.';
+        }
     }
 
 
-
-
+    onMount(fetchSavedOffers);
 </script>
-{#each userDataList as user}
-{#key user.id}
-{console.log('Rendering user:', user)}
-<div class="personal-data-widget">
 
-    {#if user.photoUrl}
-      <img src="{user.photoUrl}" alt="{user.firstName} {user.lastName}" class="user-photo" />
+<AppBar />
+
+<div class="container">
+    {#if savedOffers.length === 0 && !error}
+        <p class="no-offers">You haven't saved any offers yet.</p>
     {:else}
-      <div class="user-photo placeholder">
-        <span>{user.firstName.charAt(0)}{user.lastName.charAt(0)}</span>
-      </div>
+        <div class="job-list-container">
+            <ul class="job-list">
+                {#each savedOffers as job}
+                    <JobCard {job} isLiked={true} />
+                {/each}
+            </ul>
+        </div>
     {/if}
-
-    <div class="user-details">
-      <h2>{user.firstName} {user.lastName}</h2>
-      <p><strong>Email:</strong> {user.email}</p>
-      <p><strong>Account Created:</strong> {formatDate(user.accountCreatedAt)}</p>
-      <p><strong>Last Login:</strong> {formatDate(user.lastLoginAt)}</p>
-      
-      {#if user.cvUpdatedAt}
-        <p><strong>CV Updated:</strong> {formatDate(user.cvUpdatedAt)}</p>
-      {:else}
-        <p><strong>CV Updated:</strong> Not updated yet</p>
-      {/if}
-    </div>
-  </div>
-  {/key}
-{/each}
+</div>
 
 <style>
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-top: 4rem;
+    }
 
-.user-photo {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-right: 1.5rem;
-      background-color: #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .job-list-container {
+        padding: 1rem;
+        border-radius: 0.375rem;
+        width: 70%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
-    .user-details {
-      flex: 1;
+
+    .job-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin: 0;
+        padding: 0;
     }
-  
-    .user-details h2 {
-      font-size: 1.75rem;
-      margin: 0 0 0.5rem 0;
+
+    .no-offers {
+        color: #555;
+        font-size: 1rem;
+        margin-top: 1rem;
     }
-  
-    .user-details p {
-      font-size: 1rem;
-      margin: 0.25rem 0;
-      color: #555;
-    }
-  
 </style>

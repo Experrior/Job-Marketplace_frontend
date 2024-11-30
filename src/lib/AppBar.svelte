@@ -28,6 +28,8 @@
                 <a href="/recruiter" class="app-name recruiter-link" aria-label="Jobs panel">My Jobs Panel</a>
             {/if}
         {/if}
+        <a on:click={() => goto('/savedOffers')} class="app-link" aria-label="Saved Offers">Saved Offers</a>
+        <a on:click={() => navigateToSettings('myApplications')} class="app-link" aria-label="My Applications">My Applications</a>
     </div>
 
     {#if $user }
@@ -81,16 +83,19 @@
         gap: 1.5rem;
     }
 
-    .app-name {
+    .app-name,
+    .app-link {
         color: #333333;
         text-decoration: none;
-        font-size: 1.25rem;
+        font-size: 1rem;
         font-weight: 600;
         transition: color 0.2s ease-in-out;
+        cursor: pointer;
     }
 
-    .app-name:hover {
-        color: #758c96;
+    .app-name:hover,
+    .app-link:hover {
+        color: #007bff;
     }
 
     .recruiter-link {

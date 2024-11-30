@@ -79,6 +79,7 @@
     const data = await callGraphQL(query);
     if (data && data.currentUserProfile) {
       const profile = data.currentUserProfile;
+      console.log('Profile picture: ', profile.profilePictureUrl)
       return {
         firstName: profile.user.firstName,
         lastName: profile.user.lastName,
@@ -115,6 +116,7 @@
       skills.set(userProfile.skills || []);
       educations.set(userProfile.educations || []);
       experiences.set(userProfile.experiences || []);
+      user.set({profilePicture: userProfile.profilePicture})
     }
   });
 

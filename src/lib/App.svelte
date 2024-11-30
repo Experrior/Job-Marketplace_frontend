@@ -4,6 +4,9 @@
   import AppBar from './AppBar.svelte';
   import { onMount } from 'svelte';
   import axios from 'axios';
+  import ChatBox from "$lib/ChatBox.svelte";
+  import { user, verifyUser } from "$lib/stores/user.js";
+  import { fetchSavedOffers } from './services.jobService.js';
 
   let searchQuery = '';
   let filteredJobs = [];
@@ -12,6 +15,8 @@
   let totalPages = 1;
 
   let allJobs = [];
+  let followedJobIds = new Set();
+
   let filters = {
     location: '',
     requiredExperience: '',
@@ -32,6 +37,15 @@
 
   onMount(async () => {
     await fetchJobs();
+
+    console.log(verifyUser())
+    if (verifyUser()) {
+      console.log("Fetching saved offers...");
+      const savedOffers = await fetchSavedOffers($user.jwt);
+      followedJobIds = new Set(savedOffers.map((job) => job.jobId));
+      console.log("Saved offers:", savedOffers);
+      console.log("Followed job IDs:", followedJobIds);
+    }
   });
 
   function cleanFilters(filters) {
@@ -77,8 +91,6 @@
       console.error('Network or server error:', error);
     }
   }
-
-
 
   function applyFilters() {
     fetchJobs();
@@ -137,7 +149,7 @@
         {#if paginatedJobs.length > 0}
           <div class="job-list">
             {#each paginatedJobs as job}
-              <JobCard {job} />
+              <JobCard {job} isLiked={followedJobIds.has(job.jobId)} />
             {/each}
           </div>
         {:else}
@@ -160,6 +172,7 @@
 
     <Filters {filters} {skillsList} onApplyFilters={applyFilters} />
   </div>
+  <ChatBox/>
 </main>
 
 <style>

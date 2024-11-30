@@ -48,12 +48,6 @@
             <li on:click={() => navigateTo('settings')} class:selected={currentPage === 'settings'}>
                 Settings
             </li>
-            <li on:click={() => navigateTo('savedOffers')} class:selected={currentPage === 'savedOffers'}>
-                Saved Offers
-            </li>
-            <li on:click={() => navigateTo('myApplications')} class:selected={currentPage === 'myApplications'}>
-                My Applications
-            </li>
             <li on:click={() => navigateTo('cvCreator')} class:selected={currentPage === 'cvCreator'}>
                 CV Creator
             </li>
