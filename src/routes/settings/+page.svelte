@@ -1,17 +1,15 @@
 <script>
     import { onMount } from 'svelte';
-    import { page } from '$app/stores';
     import PersonalData from '$lib/PersonalData.svelte';
     import AccountInformation from '$lib/AccountInformation.svelte';
     import SavedOffers from '$lib/SavedOffers.svelte';
     import MyApplications from '$lib/MyApplications.svelte';
     import CVCreator from '$lib/CVCreator.svelte';
     import { goto } from '$app/navigation';
-    import FaRegUserCircle from 'svelte-icons/fa/FaRegUserCircle.svelte';
-    import { user } from "$lib/stores/user.js";
     import AppBar from '../../lib/AppBar.svelte';
     import ChatBox from '../../lib/ChatBox.svelte';
     import CvOverview from '../../lib/CVOverview.svelte';
+    import { verifyUser } from "$lib/stores/user.js";
 
     let currentPage = 'userProfile';
 
@@ -25,6 +23,11 @@
     }
 
     onMount(() => {
+        const isAuthenticated = verifyUser();
+
+        if (!isAuthenticated) {
+            goto('/login');
+        }
         const urlParams = new URLSearchParams(window.location.search);
         const tab = urlParams.get('tab');
         if (tab) {

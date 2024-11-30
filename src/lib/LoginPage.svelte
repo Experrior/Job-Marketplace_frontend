@@ -40,96 +40,111 @@
 	});
 
     async function handleSubmit() {
-        // alert('hello')
         errors = {};
         errorMessage = '';
-       if (!isLogin && registerFormData.password !== registerFormData.confirmPassword){
+        if (!isLogin && registerFormData.password !== registerFormData.confirmPassword) {
             errorMessage = 'Passwords do not match.';
             return;
         }
-        let role = isApplicant ? 'applicant': 'recruiter'
+        let role = isApplicant ? 'applicant' : 'recruiter';
         const url = !isLogin ? "http://localhost:8080/user-service/register/" + role : 'http://localhost:8080/user-service/login';
-        
-        var response = null
-        justRegistered = false
+
+        var response = null;
+        justRegistered = false;
         try {
-            $user.username = loginFormData.email
+            if ($user) {
+                $user.username = loginFormData.email;
+            }
             if (isLogin) {
                 response = await axios.post(url, loginFormData);
 
-                if (response.status == 200) {
+                if (response && response.status == 200) {
                     localStorage.setItem('jwt', response.data.accessToken);
-                    localStorage.setItem('jwt_expiration', Date.now() + 8 * 60 * 60 * 1000)
-                    $user.email = loginFormData.email
-                    $user.jwt = response.data.accessToken
-                    $user.role = response.data.role
-                    $user.firstName = response.data.firstName
-                    $user.lastName = response.data.lastName
-                    console.log($user.jwt)
+                    localStorage.setItem('jwt_expiration', Date.now() + 8 * 60 * 60 * 1000);
+
+                    let profilePicture = '';
+                    try {
+                        const profileData = await fetchUserProfilePicture();
+                        profilePicture = profileData.profilePicture;
+                    } catch (profileError) {
+                        console.error('Error fetching profile picture:', profileError);
+                    }
+                    user.set({
+                        email: loginFormData.email,
+                        jwt: response.data.accessToken,
+                        role: response.data.role,
+                        firstName: response.data.firstName,
+                        lastName: response.data.lastName,
+                        profilePicture: profilePicture,
+                        refreshToken: response.data.refreshToken,
+                        isAuthenticated: true
+                    });
+
                     goto('/');
-                }else {
-                    errors = error.response.data
-                    errorMessage = data.message || 'An error occurred. Please try again.';
+                } else {
+                    errors = response.data;
+                    errorMessage = response.data.message || 'An error occurred. Please try again.';
                 }
-
             } else {
-                // let companyId = companies.find(x => x.name === registerFormData.company)
-                // console.log(companyId)
-                // registerFormData.company = companyId
-                console.log(registerFormData.company)
-                let tempCopy= {};
-                if (isApplicant){
+                let tempCopy = {};
+                if (isApplicant) {
                     tempCopy = Object.fromEntries(
-                    Object.entries(registerFormData).filter(([key]) => key !== 'company')
+                        Object.entries(registerFormData).filter(([key]) => key !== 'company')
                     );
-
-                }else{
+                } else {
                     tempCopy = registerFormData;
                 }
-                console.log(tempCopy)
                 response = await axios.post(url, tempCopy);
                 justRegistered = true;
-                console.log(response.status)
-                console.log('lkjhgyhu')
-                console.log(response.data.data)
-
             }
 
-            console.log(response)
-            console.log("1235")
-            // const data = await response.json();
-
-            console.log(data)
-            if (response.ok) {
-                $user.username=loginFormData.email
-                $user.jwt = data.accessToken
-                
+            if (response && response.ok) {
+                if ($user) {
+                    $user.username = loginFormData.email;
+                    $user.jwt = response.data.accessToken;
+                }
             } else {
-                // alert(response)
-                errorMessage = data.message || 'An error occurred. Please try again.';
+                errorMessage = response.data.message || 'An error occurred. Please try again.';
             }
         } catch (error) {
-            console.log("1234")
-            console.log(error.status)
-            console.log(error)
-            // alert(response)
-            // if (error.status === 400) {
-            //     errors = error.response.data
-            // } else {
-            //     errorMessage = error.response.data
-            // }
-            // errorMessage = error.response.data
-            // console.log(error.response.data)
-            // console.error('Error during login:', error);
-            if (error.response){
-                errors = error.response.data
-                console.log(error.response)
+            console.log(error.status);
+            console.log(error);
+            if (error.response) {
+                errors = error.response.data;
+                errorMessage = error.response.data.message || 'An error occurred. Please try again.';
             }
-            errorMessage = error.response.data
-
         }
     }
 
+    async function fetchUserProfilePicture() {
+        const query = `
+        query {
+            currentUserProfile {
+                profilePictureUrl
+            }
+        }
+    `;
+
+        try {
+            const response = await axios.post('http://localhost:8080/user-service/graphql', { query }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('jwt')}`
+                }
+            });
+
+            if (response.data && response.data.data && response.data.data.currentUserProfile) {
+                return {
+                    profilePicture: response.data.data.currentUserProfile.profilePictureUrl
+                };
+            } else {
+                throw new Error('Failed to fetch profile picture');
+            }
+        } catch (error) {
+            console.error('Error fetching profile picture:', error);
+            throw error;
+        }
+    }
 
     function handleCompanyChange(event) {
         registerFormData.company = event.target.value;

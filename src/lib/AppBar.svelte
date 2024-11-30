@@ -2,49 +2,63 @@
     import { goto } from '$app/navigation';
     import { user } from "$lib/stores/user.js";
 
+    console.log('refresh: ', $user.refreshToken);
     function navigateToSettings(page) {
         goto(`/settings?tab=${page}`);
     }
 
     function handleLogout() {
+        user.set(null);
+        localStorage.removeItem('authToken');
+
+        // Redirect to login page
         goto('/login');
     }
 
-    console.log("User firstName: ", $user.firstName);
-    console.log("User lastName: ", $user.lastName);
-    console.log("User profile picture: ", $user.profilePicture);
+    function handleLogin() {
+        goto('/login');
+    }
 </script>
 
 <div class="app-bar">
     <div class="nav-links">
         <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
-        {#if $user.role === 'RECRUITER'}
-            <a href="/recruiter" class="app-name recruiter-link" aria-label="Jobs panel">My Jobs Panel</a>
+        {#if $user }
+            {#if $user.role === 'RECRUITER'}
+                <a href="/recruiter" class="app-name recruiter-link" aria-label="Jobs panel">My Jobs Panel</a>
+            {/if}
         {/if}
     </div>
-    <div class="user-icon-container">
-        <div class="user-icon">
-            {#if $user.profilePicture}
-                <img
-                        src={$user.profilePicture}
-                        alt="User Profile"
-                        class="user-photo"
-                />
-            {:else if $user.firstName && $user.lastName}
-                <div class="placeholder-photo">
-                    <span>{$user.firstName.charAt(0)}{$user.lastName.charAt(0)}</span>
-                </div>
-            {/if}
+
+    {#if $user }
+        <!-- User Icon and Dropdown (Authenticated) -->
+        <div class="user-icon-container">
+            <div class="user-icon">
+                {#if $user.profilePicture}
+                    <img
+                            src={$user.profilePicture}
+                            alt="User Profile"
+                            class="user-photo"
+                    />
+                {:else if $user.firstName && $user.lastName}
+                    <div class="placeholder-photo">
+                        <span>{$user.firstName.charAt(0)}{$user.lastName.charAt(0)}</span>
+                    </div>
+                {/if}
+            </div>
+            <!-- Dropdown menu -->
+            <ul class="dropdown">
+                <li on:click={() => navigateToSettings('userProfile')}>Profile</li>
+                <li on:click={() => navigateToSettings('settings')}>Settings</li>
+                <li on:click={() => navigateToSettings('cvCreator')}>CV Creator</li>
+                <li on:click={() => navigateToSettings('cvOverview')}>CV Overview</li>
+                <li on:click={handleLogout} class="logout">Logout</li>
+            </ul>
         </div>
-        <!-- Dropdown menu -->
-        <ul class="dropdown">
-            <li on:click={() => navigateToSettings('userProfile')}>Profile</li>
-            <li on:click={() => navigateToSettings('settings')}>Settings</li>
-            <li on:click={() => navigateToSettings('cvCreator')}>CV Creator</li>
-            <li on:click={() => navigateToSettings('cvOverview')}>CV Overview</li>
-            <li on:click={handleLogout} class="logout">Logout</li>
-        </ul>
-    </div>
+    {:else}
+        <!-- Login Button (Unauthenticated) -->
+        <button class="login-btn" on:click={handleLogin}>Login</button>
+    {/if}
 </div>
 
 <style>
@@ -163,5 +177,20 @@
     .dropdown li.logout:hover {
         background-color: #f8d7da; /* Light red background on hover */
         color: #c9302c; /* Darker red for logout text */
+    }
+
+    .login-btn {
+        padding: 0.5rem 1rem;
+        background-color: #758c96;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+    }
+
+    .login-btn:hover {
+        background-color: #8697C4;
     }
 </style>

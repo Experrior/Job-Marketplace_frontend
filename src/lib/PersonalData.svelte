@@ -22,7 +22,6 @@
   async function callGraphQL(query, variables = {}) {
     verifyUser()
     try {
-      console.log("Calling GraphQL API:", query, variables);
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
@@ -111,13 +110,11 @@
 
   onMount(async () => {
     userProfile = await fetchUserProfile();
-    console.log("User Profile:", userProfile);
     if (userProfile) {
       auth.setUser(userProfile);
       skills.set(userProfile.skills || []);
       educations.set(userProfile.educations || []);
       experiences.set(userProfile.experiences || []);
-      user.update(current => ({ ...current, profilePicture: userProfile.profilePicture }));
     }
   });
 
