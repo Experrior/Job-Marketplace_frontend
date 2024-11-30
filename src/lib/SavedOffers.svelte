@@ -49,9 +49,9 @@
     `;
 
         try {
-            const result = await callGraphQL(query); // Await the result of the GraphQL call
+            const result = await callGraphQL(query);
 
-            if (result && result.followedJobs) { // Ensure result and followedJobs are not null
+            if (result && result.followedJobs) {
                 savedOffers = result.followedJobs;
             } else {
                 console.error('GraphQL error:', result.errors);
@@ -96,6 +96,8 @@
         padding: 1rem;
         border-radius: 0.375rem;
         width: 70%;
+        max-height: calc(100vh - 8rem); /* Dynamic max-height relative to viewport */
+        overflow-y: auto; /* Enable vertical scrolling */
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
