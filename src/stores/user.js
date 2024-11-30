@@ -3,7 +3,7 @@ import { browser } from '$app/environment';
 
 const template = {
   displayName: '',
-  photoURL: 'icons/user.svg',
+  profilePicture: '',
   email: '',
   firstName: '',
   jwt: '',

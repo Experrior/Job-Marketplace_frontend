@@ -32,7 +32,7 @@
 
             if (response.ok) {
                 const data = await response.json();
-                profilePicture = data.profilePictureUrl; // Update the profile picture URL
+                $user.profilePicture = data.profilePictureUrl; // Update the profile picture URL
                 uploadError = ""; // Clear any previous errors
             } else {
                 uploadError = "Failed to upload the profile picture. Please try again.";

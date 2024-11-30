@@ -63,6 +63,8 @@
                     $user.email = loginFormData.email
                     $user.jwt = response.data.accessToken
                     $user.role = response.data.role
+                    $user.firstName = response.data.firstName
+                    $user.lastName = response.data.lastName
                     console.log($user.jwt)
                     goto('/');
                 }else {

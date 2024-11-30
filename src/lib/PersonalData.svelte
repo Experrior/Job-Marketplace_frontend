@@ -117,6 +117,7 @@
       skills.set(userProfile.skills || []);
       educations.set(userProfile.educations || []);
       experiences.set(userProfile.experiences || []);
+      user.update(current => ({ ...current, profilePicture: userProfile.profilePicture }));
     }
   });
 
@@ -334,9 +335,9 @@
 {#if userProfile}
   <div class="personal-data-widget">
     <ProfilePicture
-            profilePicture={userProfile.profilePicture}
-            firstName={userProfile.firstName}
-            lastName={userProfile.lastName}
+            profilePicture={$user.profilePicture}
+            firstName={$user.firstName}
+            lastName={$user.lastName}
     />
 
     <div class="user-details">
