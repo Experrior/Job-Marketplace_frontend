@@ -1,21 +1,34 @@
 <script>
+  import HeartIcon from './HeartIcon.svelte';
+
   export let job;
+
+  let isLiked = false;
 
   function navigateToJob() {
     window.location.href = `/job/${job.jobId}`;
+  }
+
+  function toggleLike(event) {
+    event.stopPropagation();
+    isLiked = !isLiked;
+    console.log(`${isLiked ? "Liked" : "Unliked"} job: ${job.jobId}`);
   }
 </script>
 
 <div class="job-card" on:click={navigateToJob}>
   <div class="company-logo">
-    <span>{job.companyName ? job.companyName.charAt(0) : 'C'}</span>
+    <img src="/images/visa-logo.png" alt="Visa Logo" />
   </div>
 
   <div class="job-info">
     <div class="job-header">
       <h3 class="job-title">{job.title}</h3>
-      <p class="company-name">{job.companyName}</p>
+      {#if job.isNew}
+        <span class="new-label">New</span>
+      {/if}
     </div>
+    <p class="company-name">{job.companyName}</p>
     <div class="job-details">
       <span class="detail"><strong>Location:</strong> {job.location || 'Not specified'}</span>
       <span class="detail"><strong>Work Type:</strong> {job.workLocation || 'Not specified'}</span>
@@ -33,6 +46,9 @@
       </div>
     {/if}
   </div>
+
+  <!-- Use the HeartIcon component -->
+  <HeartIcon {isLiked} toggleLike={toggleLike} />
 </div>
 
 <style>
@@ -49,6 +65,7 @@
     gap: 1.5rem;
     min-height: 120px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    position: relative;
   }
 
   .job-card:hover {
@@ -62,12 +79,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: #ffffff;
-    background-color: #007bff;
     border-radius: 50%;
-    text-transform: uppercase;
+    overflow: hidden;
   }
 
   .job-info {
@@ -104,6 +117,17 @@
     color: #666666;
   }
 
+  .new-label {
+    background-color: #ff5252;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    margin-left: 1rem;
+    text-transform: uppercase;
+  }
+
   .detail {
     display: inline-block;
   }
@@ -125,7 +149,7 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    background-color: #f0f8ff;
+    background-color: #cee5f2;
     color: #666666;
     font-size: 0.85rem;
     padding: 0.25rem 0.5rem;

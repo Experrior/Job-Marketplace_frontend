@@ -47,18 +47,27 @@
     return cleanedFilters;
   }
 
+  function isNewJob(createdAt) {
+    const now = new Date();
+    const jobDate = new Date(createdAt);
+    const timeDifference = now - jobDate; // Difference in milliseconds
+    const oneDayInMilliseconds = 24 * 60 * 60 * 1000;
+    return timeDifference <= oneDayInMilliseconds;
+  }
+
   async function fetchJobs() {
     try {
       const activeFilters = cleanFilters(filters);
       const response = await axios.post(
               'http://localhost:8080/job-service/getJobs',
               activeFilters,
-              {
-                params: { limit: 50 },
-              }
+              { params: { limit: 50 } }
       );
       if (response.status === 200) {
-        allJobs = response.data.content;
+        allJobs = response.data.content.map(job => ({
+          ...job,
+          isNew: isNewJob(job.createdAt),
+        }));
         filteredJobs = allJobs;
         totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
       } else {
@@ -68,6 +77,8 @@
       console.error('Network or server error:', error);
     }
   }
+
+
 
   function applyFilters() {
     fetchJobs();
