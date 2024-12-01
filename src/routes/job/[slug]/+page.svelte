@@ -6,7 +6,7 @@
   import {user, verifyUser} from '$lib/stores/user'
   import axios from 'axios';
   import Cookie from 'js-cookie';
-  
+
   let jobNotFound = false;
   let jobId = $page.params.slug;
   var newJob = {};
@@ -39,76 +39,89 @@
           companyId
           companyName
           requiredSkills
+          description
+          createdAt
           quizId
         }
     }
     `;
     const variables = {
       jobIdi: jobId
-      
+
     };
     console.log('gusadfasdfasdf')
     console.log(jobId)
     try{
-    const response = await axios.post('http://localhost:8080/job-service/graphql',
-      {
-        query: query,
-        variables: variables
-      }, {headers:{
-                    "Content-Type": "application/json",
-                    'Authorization': `Bearer ${$user.jwt}`
-                  }}
-    )
-    // .then(r => r.json()).then(data => newJob = data.data.jobById)
-    
+        await fetch('http://localhost:8080/job-service/graphql',{
+        method: 'POST',
+
+        headers:{
+                "Content-Type": "application/json",
+                'Authorization': `Bearer ${$user.jwt}`
+                },
+                body: JSON.stringify({
+                query: query,
+                variables: variables
+                })
+        },
+        {
+        },
+          {}
+        ).then(r => r.json()).then(data => newJob = data.data.jobById)
 
 
 
-    console.log()
-    console.log('gw')
-    console.log(response)
-    newJob = response.data.data.jobById
-    
-    console.log('done update')
-    console.log(skillsList)
-    console.log(newJob)
-    if (newJob){
-      skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
-    .map(match => ({
-      name: match[1],
-      level: Number(match[2])
-    }));
+
+        console.log()
+        console.log('gw')
+        console.log(response)
+        newJob = response.data.data.jobById
+        
+        console.log('done update')
+        console.log(skillsList)
+        console.log(newJob)
+        if (newJob){
+        skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
+        .map(match => ({
+        name: match[1],
+        level: Number(match[2])
+        }));
+        }
+
+    } catch (err) {
+
+        console.log(err);
+        error = err.message || 'An error occurred while fetching the job.';
+        jobNotFound =true;
+    } finally {
+        loading = false;
     }
 
-        } catch (err) {
 
-          console.log(err);
-          error = err.message || 'An error occurred while fetching the job.';
-          jobNotFound =true;
-      } finally {
-          loading = false;
-      }
-
-
-      try{
-        const response = await axios.post('http://localhost:8080/user-service/myResumes', {},
-        {headers: 
-            {Authorization: "Bearer "+$user.jwt,
-            "Content-Type": "application/json",
-            }
+try{
+    const response = await axios.post('http://localhost:8080/user-service/myResumes', {},
+    {headers:
+        {Authorization: "Bearer "+$user.jwt,
+        "Content-Type": "application/json",
         }
-        );
-        console.log(response)
-        resumes = response.data
-        }catch (error) {
-            console.log(error)
-        }
+    }
+    );
+    console.log(response)
+    resumes = response.data
+    }catch (error) {
+        console.log(error)
+    }
 
-      
+
   });
 
   console.log("test1")
   console.log(newJob)
+
+  function formatDate(dateString) {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString(undefined, options);
+  }
 
   async function takeQuiz(){
 
@@ -154,9 +167,12 @@
 
 <AppBar/>
 
-<div class="scrollable-page">
-  <img src="/images/job_background.webp" alt="Job Background" class="full-width-image" />
 
+
+<div class="scrollable-page">
+    <img src="/images/job_background.webp" alt="Job Background" class="full-width-image" />
+
+<<<<<<< HEAD
   {#if loading}
       <p>Loading...</p>
   {:else if error}
@@ -164,212 +180,276 @@
   {:else if newJob}
       <div class="job-description">
           <img src="{newJob.companyLogo}" alt="{newJob.companyName} Logo" class="company-logo" />
+=======
+    {#if loading}
+        <p class="loading-message">Loading...</p>
+    {:else if error}
+        <p class="error-message">Job not found</p>
+    {:else if newJob}
+        <div class="job-description">
+            {#if newJob.companyLogo}
+                <img src="{newJob.companyLogo}" alt="{newJob.companyName} Logo" class="company-logo" />
+            {/if}
+>>>>>>> origin
 
-          <!-- Job Title and Company -->
-          <h1>{newJob.title}</h1>
-          <p><strong>{newJob.companyName}</strong></p>
+            <h1 class="job-title">{newJob.title}</h1>
+            <p class="company-name">{newJob.companyName}</p>
 
-          <h2>Job Description</h2>
-          <p>{newJob.description}</p>
+            <div class="job-details">
+                {#if newJob.location}
+                    <p><strong>Location:</strong> {newJob.location}</p>
+                {/if}
+                {#if newJob.workLocation}
+                    <p><strong>Work Type:</strong> {newJob.workLocation}</p>
+                {/if}
+                {#if newJob.employmentType}
+                    <p><strong>Employment Type:</strong> {newJob.employmentType}</p>
+                {/if}
+                {#if newJob.salary}
+                    <p><strong>Salary:</strong> ${newJob.salary.toLocaleString()}</p>
+                {:else}
+                    <p><strong>Salary:</strong> Undisclosed</p>
+                {/if}
+                {#if newJob.createdAt}
+                    <p><strong>Posted On:</strong> {formatDate(newJob.createdAt)}</p>
+                {/if}
+            </div>
 
-          <h2>Required Experience</h2>
-          <p>{newJob.requiredExperience}</p>
+            {#if newJob.description}
+                <h2>Job Description</h2>
+                <p class="job-text">{newJob.description}</p>
+            {/if}
 
-          <h2>Location</h2>
-          <p>{newJob.location}</p>
+            {#if newJob.requiredExperience}
+                <h2>Required Experience</h2>
+                <p class="job-text">{newJob.requiredExperience}</p>
+            {/if}
 
-          <h2>Work Location</h2>
-          <p>{newJob.workLocation}</p>
+            {#if skillsList?.length > 0}
+                <h2>Required Skills</h2>
+                <ul class="required-skills">
+                    {#each skillsList as skill}
+                        <li class="skill-item">
+                            <span class="skill-name">{skill.name}</span>
+                            <span class="skill-level">
+                {#each Array(skill.level) as _}
+                  <span class="star">&#9733;</span>
+                {/each}
+                                {#each Array(5 - skill.level) as _}
+                  <span class="star empty">&#9734;</span>
+                {/each}
+              </span>
+                        </li>
+                    {/each}
+                </ul>
+            {/if}
 
-          <h2>Employment Type</h2>
-          <p>{newJob.employmentType}</p>
+            {#if resumes?.length > 0}
+                <div class="form-group">
+                    <label for="resume">Specify CV</label>
+                    <select id="resume" bind:value={resume} class="resume-dropdown">
+                        <option value="" disabled selected>Select a CV</option>
+                        {#each resumes as resume}
+                            <option value="{resume}">{resume.resumeName}</option>
+                        {/each}
+                    </select>
+                </div>
+            {/if}
 
-          <h2>Required Skills</h2>
-          {#await newJob.requiredSkills}
-              <p> loading</p>
-        {:then newJob}
-          <!-- Required Skills -->
-          <!-- {#if newJob.requiredSkills && newJob.requiredSkills.length > 0}
-          <div class="form-group">
-            <label for="quiz">Quiz</label>
-            <select id="quiz" bind:value={quizName}>
-              <option value="" disabled selected>Select quiz for applicants</option>
-              {#each quizzes as quiz}
-                <option value="{quiz.quizName}">{quiz.quizName}</option>
-              {/each}
-            </select>
-          </div> -->
-          <!-- {/if} -->
-          
-      {#if skillsList}
-        <ul class="required-skills">
-          {#each skillsList as skill}
-              <li>
-                  <span class="skill-name">{skill.name}</span>
-                  <span class="skill-level">
-                      {#each Array(skill.level) as _, index}
-                          <span class="star">&#9733;</span>
-                      {/each}
-                      {#each Array(5 - skill.level) as _, index}
-                          <span class="star empty">&#9734;</span>
-                      {/each}
-                  </span>
-              </li>
-          {/each}
-        </ul>
-        {/if}
-
-        <!-- {#if verifyUser()} -->
-        <div class="form-group">
-          <label for="resume">Specify CV</label>
-          <select id="resume" bind:value={resume}>
-            <option value="" disabled selected>Select which cv to use</option>
-            {#each resumes as resume}
-              <option value="{resume}">{resume.resumeName}</option>
-            {/each}
-          </select>
+            <button class="apply-button" on:click={takeQuiz}>
+                Apply Now
+            </button>
         </div>
-        <!-- {/if} -->
-
-        {:catch error}
-          <p style="color: red">{error.message}</p>
-        {/await}
-         
-          <!-- {/if} -->
-
-          <!-- Apply Button -->
-          <button class="apply-button" on:click={takeQuiz}>
-              Apply Now
-          </button>
-      </div>
-  {:else}
-      <p class="error-message">Job not found.</p>
-  {/if}
+    {:else}
+        <p class="error-message">Job not found.</p>
+    {/if}
 </div>
+
 <style>
-  /* Existing styles */
+    .scrollable-page {
+        height: 90vh; /* Make the page fill the entire viewport */
+        overflow-y: auto; /* Enable vertical scrolling */
+        overflow-x: hidden; /* Prevent horizontal scrolling */
+    }
 
-  /* Required Skills Styles */
-  .required-skills {
-    list-style: none;
-    padding: 0;
-    margin: 1rem 0;
-  }
+    .full-width-image {
+        width: 100%;
+        max-height: 300px;
+        object-fit: cover;
+        display: block;
+        position: relative;
+        z-index: 0;
+    }
 
-  .required-skills li {
-    display: flex;
-    /* align-items: center; */
-    margin-bottom: 0.5rem;
-  }
-
-  .skill-name {
-    flex: 2;
-  }
-
-  .skill-level {
-    display: flex;
-    width: 70px;
-    flex:0.5;
-  }
-
-  .star {
-    color: #f1c40f;
-    margin-right: 10px;
-    font-size: 40px;
-    margin-left: -20px;
-  }
-
-  .star.empty {
-    color: #ccc;
-    font-size: 40px;
-  }
-
-
-
-
-  /* Job Description Styles */
-  .job-description {
-    max-width: 800px;
-    margin: -80px auto 2rem; /* Negative top margin for overlap */
-    padding: 1.5rem;
-    background-color: #f0f0f0;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    position: relative;
-    z-index: 1; /* Brings job-description above the image */
-  }
-
-  /* Image Styles */
-  .full-width-image {
-    width: 100%;
-    max-height: 350px;
-    object-fit: cover;
-    display: block;
-    position: relative;
-    z-index: 0; /* Ensures image stays behind job-description */
-  }
-
-  .company-logo {
-    width: 100px;
-    height: 100px;
-    object-fit: contain;
-    margin-bottom: 1rem;
-  }
-
-  .job-description h1 {
-    margin-top: 0;
-  }
-
-  .job-description p {
-    margin: 0.5rem 0;
-  }
-
-  .requiredSkills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .tag {
-    background-color: #e0e0e0;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
-  }
-
-  .apply-button {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    background-color: #28a745;
-    color: white;
-    cursor: pointer;
-    font-size: 1rem;
-    margin-top: 1rem;
-  }
-
-  .apply-button:hover {
-    background-color: #218838;
-  }
-
-  .error-message {
-    color: red;
-    text-align: center;
-    margin-top: 2rem;
-    font-size: 60px;
-  }
-
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
     .job-description {
-      width: 90%;
-      margin: -60px auto 1.5rem; /* Adjusted for smaller screens */
+        max-width: 800px;
+        margin: -80px auto 2rem;
+        padding: 2rem;
+        background-color: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        z-index: 1;
+        position: relative;
     }
 
     .company-logo {
-      width: 80px;
-      height: 80px;
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 50%;
+        margin-bottom: 1rem;
+        border: 1px solid #e5e5e5;
     }
-  }
+
+    .job-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+        text-align: center;
+    }
+
+    .company-name {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #7f8c8d;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .job-details p {
+        font-size: 1rem;
+        color: #4a4a4a;
+        margin: 0.5rem 0;
+        line-height: 1.6;
+    }
+
+    h2 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #34495e;
+        margin: 1.5rem 0 1rem;
+    }
+
+    .job-text {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #495057;
+        margin-bottom: 1.5rem;
+    }
+
+    .required-skills {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .skill-item {
+        display: flex;
+        align-items: center;
+        background-color: #eef6ff;
+        border: 1px solid #d1e9ff;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: #0073e6;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+        cursor: pointer;
+    }
+
+    .skill-item:hover {
+        background-color: #cde4ff;
+        transform: translateY(-2px);
+    }
+
+    .skill-name {
+        font-weight: 600;
+        color: #0056b3;
+        margin-right: 0.5rem;
+    }
+
+    .skill-level {
+        display: flex;
+    }
+
+    .star {
+        color: #f4b400;
+        font-size: 1rem;
+    }
+
+    .star.empty {
+        color: #e0e0e0;
+    }
+
+    .resume-dropdown {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+        border: 1px solid #e1e1e1;
+        border-radius: 12px;
+        margin-top: 1rem;
+        background-color: #ffffff;
+        color: #495057;
+        transition: border-color 0.2s ease;
+    }
+
+    .resume-dropdown:focus {
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+    }
+
+    .apply-button {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #ffffff;
+        background-color: #758c96;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+        margin-top: 1rem;
+    }
+
+    .apply-button:hover {
+        background-color: #8697C4;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .loading-message,
+    .error-message {
+        font-size: 1.2rem;
+        color: #666666;
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .error-message {
+        color: #e74c3c;
+    }
+
+    @media (max-width: 768px) {
+        .job-description {
+            width: 90%;
+            margin: -60px auto 1.5rem;
+        }
+
+        .company-logo {
+            width: 60px;
+            height: 60px;
+        }
+
+        .job-title {
+            font-size: 1.6rem;
+        }
+    }
+
 </style>

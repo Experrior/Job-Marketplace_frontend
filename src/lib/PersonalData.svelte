@@ -1,224 +1,395 @@
 <script>
-  import { auth } from "../stores/auth";
-  import { writable } from 'svelte/store';
-  import { onDestroy } from "svelte";
+  import { writable } from "svelte/store";
+  import { onDestroy, onMount } from "svelte";
   import { format } from "date-fns";
+  import {user, verifyUser} from '$lib/stores/user'
+  import { auth } from "../stores/auth";
+  import ProfilePicture from './ProfilePicture.svelte';
 
-  let user;
-  const userData = {
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    profilePicture: "/images/profile.png",
-    skills: [
-      { name: "Python", level: 3 },
-      { name: "Java", level: 2 },
-      { name: "Golang", level: 2 }
-    ],
-    educations: [
-      {
-        institution_name: "University of Example",
-        degree: "B.Sc. Computer Science",
-        start_date: "2015-09-01",
-        end_date: "2019-06-30"
-      }
-    ],
-    experiences: [
-      {
-        company_name: "Example Corp",
-        role: "Software Engineer",
-        start_date: "2019-07-01",
-        end_date: "2023-08-31"
-      }
-    ],
-    accountCreatedAt: "2023-01-01T10:00:00Z",
-    lastLoginAt: "2023-05-15T14:30:00Z",
-  };
+  const API_URL = "http://localhost:8080/user-service/graphql";
 
-  auth.setUser(userData);
-  const unsubscribe = auth.subscribe((value) => {
-    user = value.user;
+  const skills = writable([]);
+  const educations = writable([]);
+  const experiences = writable([]);
+
+  let userProfile = null;
+  let newSkillName = "", newSkillLevel = "1";
+  let newEducationInstitution = "", newEducationDegree = "", newEducationStartDate = "2023-01", newEducationEndDate = "2023-12";
+  let newExperienceCompany = "", newExperienceRole = "", newExperienceStartDate = "2023-01", newExperienceEndDate = "2023-12";
+
+
+  // Utility function to call GraphQL API
+  async function callGraphQL(query, variables = {}) {
+    verifyUser()
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${$user.jwt}`,
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+      const data = await response.json();
+      if (data.errors) {
+        console.error("GraphQL errors:", data.errors);
+        return null;
+      }
+      return data.data;
+    } catch (error) {
+      console.error("Error calling GraphQL API:", error);
+      return null;
+    }
+  }
+
+  async function fetchUserProfile() {
+    const query = `
+      query {
+        currentUserProfile {
+          profileId
+          user {
+            firstName
+            lastName
+            email
+          }
+          skills {
+            skillId
+            skillName
+            proficiencyLevel
+          }
+          educations {
+            educationId
+            institutionName
+            degree
+            startDate
+            endDate
+          }
+          experiences {
+            experienceId
+            companyName
+            role
+            startDate
+            endDate
+          }
+          profilePictureUrl
+          createdAt
+        }
+      }
+    `;
+    const data = await callGraphQL(query);
+    if (data && data.currentUserProfile) {
+      const profile = data.currentUserProfile;
+      console.log('Profile picture: ', profile.profilePictureUrl)
+      return {
+        firstName: profile.user.firstName,
+        lastName: profile.user.lastName,
+        email: profile.user.email,
+        profilePicture: profile.profilePictureUrl,
+        skills: profile.skills.map(skill => ({
+          skillId: skill.skillId,
+          skillName: skill.skillName,
+          proficiencyLevel: skill.proficiencyLevel,
+        })),
+        educations: profile.educations.map(education => ({
+          educationId: education.educationId,
+          institutionName: education.institutionName,
+          degree: education.degree,
+          startDate: education.startDate,
+          endDate: education.endDate,
+        })),
+        experiences: profile.experiences.map(experience => ({
+          experienceId: experience.experienceId,
+          companyName: experience.companyName,
+          role: experience.role,
+          startDate: experience.startDate,
+          endDate: experience.endDate,
+        })),
+        accountCreatedAt: profile.createdAt,
+      };
+    }
+  }
+
+  onMount(async () => {
+    userProfile = await fetchUserProfile();
+    if (userProfile) {
+      auth.setUser(userProfile);
+      skills.set(userProfile.skills || []);
+      educations.set(userProfile.educations || []);
+      experiences.set(userProfile.experiences || []);
+      user.update(currentUser => ({
+        ...currentUser,
+        profilePicture: userProfile.profilePicture
+      }));
+    }
   });
 
   onDestroy(() => {
-    unsubscribe();
+    userProfile = null;
   });
 
-
-  function formatDate(dateString) {
-    return format(new Date(dateString), "PPPpp");
-  }
-
-  const skills = writable([...userData.skills]);
-  const educations = writable([...userData.educations]);
-  const experiences = writable([...userData.experiences]);
-
-
-  let skillError = "";
-  let educationError = "";
-  let experienceError = "";
-
-
-  let newSkillName = "";
-  let newSkillLevel = 1;
-
-  // New Education Inputs
-  let newEducationInstitution = "";
-  let newEducationDegree = "";
-  let newEducationStartDate = "";
-  let newEducationEndDate = "";
-
-
-  let newExperienceCompany = "";
-  let newExperienceRole = "";
-  let newExperienceStartDate = "";
-  let newExperienceEndDate = "";
-
-  function addSkill() {
-    if (!newSkillName.trim()) {
-      skillError = "Skill name is required.";
+  // Skill API integration
+  async function addSkill() {
+    if(!validateSkill()) {
       return;
     }
-    if (!(newSkillLevel >= 1 && newSkillLevel <= 5)) {
-      skillError = "Skill level must be between 1 and 5.";
-      return;
+
+    const mutation = `
+      mutation {
+        addSkill(skillRequest: { skillName: "${newSkillName}", proficiencyLevel: "${newSkillLevel}" }) {
+          skillId
+          skillName
+          proficiencyLevel
+        }
+      }
+    `;
+    const variables = { skillName: newSkillName, proficiencyLevel: newSkillLevel };
+    const data = await callGraphQL(mutation, variables);
+    if (data && data.addSkill) {
+        skills.update(current => [...current, data.addSkill]);
     }
-    skills.update(current => [...current, { name: newSkillName.trim(), level: newSkillLevel }]);
 
     newSkillName = "";
-    newSkillLevel = 1;
-    skillError = "";
+    newSkillLevel = "1";
   }
 
-  function removeSkill(index) {
-    skills.update(current => current.filter((_, i) => i !== index));
+  async function removeSkill(skillId) {
+    const mutation = `
+      mutation {
+        deleteSkillById(skillId: "${skillId}") {
+          skillId
+        }
+      }
+    `;
+    const data = await callGraphQL(mutation, { skillId });
+    if (data && data.deleteSkillById) {
+      skills.update(current => current.filter(skill => skill.skillId !== skillId));
+    }
   }
 
-  function addEducation() {
-    if (
-      !newEducationInstitution.trim() ||
-      !newEducationDegree.trim() ||
-      !newEducationStartDate ||
-      !newEducationEndDate
-    ) {
-      educationError = "All education fields are required.";
+  // Education API integration
+  async function addEducation() {
+    if(!validateEducation()) {
       return;
     }
-    educations.update(current => [
-      ...current,
-      {
-        institution_name: newEducationInstitution.trim(),
-        degree: newEducationDegree.trim(),
-        start_date: newEducationStartDate,
-        end_date: newEducationEndDate
+
+    const mutation = `
+      mutation {
+        addEducation(educationRequest: {
+          institutionName: "${newEducationInstitution}",
+          degree: "${newEducationDegree}",
+          startDate: "${newEducationStartDate}",
+          endDate: "${newEducationEndDate}"
+        }) {
+          educationId
+          institutionName
+          degree
+          startDate
+          endDate
+        }
       }
-    ]);
+    `;
+    const data = await callGraphQL(mutation, { newEducationInstitution, newEducationDegree, newEducationStartDate, newEducationEndDate });
+    if (data && data.addEducation) {
+      educations.update(current => [...current, data.addEducation]);
+    }
 
     newEducationInstitution = "";
     newEducationDegree = "";
     newEducationStartDate = "";
     newEducationEndDate = "";
-    educationError = "";
   }
 
-  function removeEducation(index) {
-    educations.update(current => current.filter((_, i) => i !== index));
+  async function removeEducation(educationId) {
+    const mutation = `
+      mutation{
+        deleteEducationById(educationId: "${educationId}") {
+          success
+          message
+        }
+      }
+    `;
+    const data = await callGraphQL(mutation, { educationId });
+    if (data && data.deleteEducationById) {
+      educations.update(current => current.filter(edu => edu.educationId !== educationId));
+    }
   }
 
-
-  function addExperience() {
-    if (
-      !newExperienceCompany.trim() ||
-      !newExperienceRole.trim() ||
-      !newExperienceStartDate ||
-      !newExperienceEndDate
-    ) {
-      experienceError = "All experience fields are required.";
+  // Experience API integration
+  async function addExperience() {
+    if(!validateExperience()) {
       return;
     }
-    experiences.update(current => [
-      ...current,
-      {
-        company_name: newExperienceCompany.trim(),
-        role: newExperienceRole.trim(),
-        start_date: newExperienceStartDate,
-        end_date: newExperienceEndDate
+
+    const mutation = `
+      mutation {
+        addExperience(experienceRequest: {
+          companyName: "${newExperienceCompany}",
+          role: "${newExperienceRole}",
+          startDate: "${newExperienceStartDate}",
+          endDate: "${newExperienceEndDate}"
+        }) {
+          experienceId
+          companyName
+          role
+          startDate
+          endDate
+        }
       }
-    ]);
+    `;
+    const data = await callGraphQL(mutation, { newExperienceCompany, newExperienceRole, newExperienceStartDate, newExperienceEndDate });
+    if (data && data.addExperience) {
+      experiences.update(current => [...current, data.addExperience]);
+    }
     newExperienceCompany = "";
     newExperienceRole = "";
     newExperienceStartDate = "";
     newExperienceEndDate = "";
-    experienceError = "";
   }
 
-  function removeExperience(index) {
-    experiences.update(current => current.filter((_, i) => i !== index));
+  async function removeExperience(experienceId) {
+    const mutation = `
+      mutation {
+        deleteExperienceById(experienceId: "${experienceId}") {
+            success
+            message
+        }
+      }
+    `;
+    const data = await callGraphQL(mutation, { experienceId });
+    if (data && data.deleteExperienceById) {
+      experiences.update(current => current.filter(exp => exp.experienceId !== experienceId));
+    }
+  }
+
+  function formatDate(dateString) {
+    return format(new Date(dateString), "PPPpp");
+  }
+
+  // Form Handling Variables
+  let skillError = "", educationError = "", experienceError = "";
+
+  function validateSkill() {
+    if (!newSkillName.trim()) {
+      skillError = "Skill name is required.";
+      return false;
+    }
+    if (!newSkillLevel) {
+      skillError = "Skill level is required.";
+      return false;
+    }
+    skillError = "";
+    return true;
+  }
+
+  function validateEducation() {
+    if (!newEducationInstitution.trim()) {
+      educationError = "Institution name is required.";
+      return false;
+    }
+    if (!newEducationDegree.trim()) {
+      educationError = "Degree is required.";
+      return false;
+    }
+    if (!newEducationStartDate) {
+      educationError = "Start date is required.";
+      return false;
+    }
+    if (!newEducationEndDate) {
+      educationError = "End date is required.";
+      return false;
+    }
+    if (newEducationStartDate > newEducationEndDate) {
+      educationError = "End date cannot be before start date.";
+      return false;
+    }
+    educationError = "";
+    return true;
+  }
+
+  function validateExperience() {
+    if (!newExperienceCompany.trim()) {
+      experienceError = "Company name is required.";
+      return false;
+    }
+    if (!newExperienceRole.trim()) {
+      experienceError = "Role is required.";
+      return false;
+    }
+    if (!newExperienceStartDate) {
+      experienceError = "Start date is required.";
+      return false;
+    }
+    if (!newExperienceEndDate) {
+      experienceError = "End date is required.";
+      return false;
+    }
+    if (newExperienceStartDate > newExperienceEndDate) {
+      experienceError = "End date cannot be before start date.";
+      return false;
+    }
+    experienceError = "";
+    return true;
   }
 </script>
 
-{#if user}
-  <div class="personal-data-widget">
-    {#if user.profilePicture}
-      <img
-        src={user.profilePicture}
-        alt="{user.firstName} {user.lastName}"
-        class="user-photo"
-      />
-    {:else}
-      <div class="user-photo placeholder">
-        <span>{user.firstName.charAt(0)}{user.lastName.charAt(0)}</span>
-      </div>
-    {/if}
 
+
+{#if userProfile}
+  <div class="personal-data-widget">
+    <ProfilePicture
+            profilePicture={$user.profilePicture}
+            firstName={$user.firstName}
+            lastName={$user.lastName}
+    />
 
     <div class="user-details">
-      <h2>{user.firstName} {user.lastName}</h2>
-      <p><strong>Email:</strong> {user.email}</p>
+      <h2>{userProfile.firstName} {userProfile.lastName}</h2>
+      <p><strong>Email:</strong> {userProfile.email}</p>
       <p>
         <strong>Account Created:</strong>
-        {formatDate(user.accountCreatedAt)}
+        {formatDate(userProfile.accountCreatedAt)}
       </p>
-      <p><strong>Last Login:</strong> {formatDate(user.lastLoginAt)}</p>
     </div>
 
     <div class="section">
       <h3>Skills</h3>
-      {#each $skills as skill, index}
+      {#each $skills as skill}
         <div class="list-item">
-          <span>{skill.name} (Level {skill.level})</span>
-          <button type="button" on:click={() => removeSkill(index)}>Remove</button>
+          <span>{skill.skillName} (Level {skill.proficiencyLevel})</span>
+          <button type="button" on:click={() => removeSkill(skill.skillId)}>Remove</button>
         </div>
       {/each}
 
-      <!-- Add New Skill Form -->
       <div class="add-form">
         <input
-          type="text"
-          placeholder="Skill Name"
-          bind:value={newSkillName}
+                type="text"
+                placeholder="Skill Name"
+                bind:value={newSkillName}
         />
         <select bind:value={newSkillLevel}>
-          <option value="1">1 - Entry-level</option>
-          <option value="2">2 - Junior</option>
-          <option value="3">3 - Mid-level</option>
-          <option value="4">4 - Senior</option>
-          <option value="5">5 - Expert</option>
+          <option value="" disabled selected hidden>Select Level</option>
+          <option value="1">1 -> Beginner</option>
+          <option value="2">2 -> Junior</option>
+          <option value="3">3 -> Mid-level</option>
+          <option value="4">4 -> Senior</option>
+          <option value="5">5 -> Expert</option>
         </select>
         <button type="button" on:click={addSkill}>Add Skill</button>
         {#if skillError}
           <p class="error">{skillError}</p>
         {/if}
       </div>
+
+
     </div>
 
     <!-- Educations Section -->
     <div class="section">
       <h3>Educations</h3>
-      {#each $educations as edu, index}
+      {#each $educations as edu}
         <div class="list-item">
-          <span>{edu.degree} at {edu.institution_name} ({edu.start_date} - {edu.end_date})</span>
-          <button type="button" on:click={() => removeEducation(index)}>Remove</button>
+          <span>{edu.degree} at {edu.institutionName} ({edu.startDate} - {edu.endDate})</span>
+          <button type="button" on:click={() => removeEducation(edu.educationId)}>Remove</button>
         </div>
       {/each}
 
@@ -235,11 +406,11 @@
           bind:value={newEducationDegree}
         />
         <input
-          type="date"
+          type="month"
           bind:value={newEducationStartDate}
         />
         <input
-          type="date"
+          type="month"
           bind:value={newEducationEndDate}
         />
         <button type="button" on:click={addEducation}>Add Education</button>
@@ -252,10 +423,10 @@
     <!-- Experiences Section -->
     <div class="section">
       <h3>Experiences</h3>
-      {#each $experiences as exp, index}
+      {#each $experiences as exp}
         <div class="list-item">
-          <span>{exp.role} at {exp.company_name} ({exp.start_date} - {exp.end_date})</span>
-          <button type="button" on:click={() => removeExperience(index)}>Remove</button>
+          <span>{exp.role} at {exp.companyName} ({exp.startDate} - {exp.endDate})</span>
+          <button type="button" on:click={() => removeExperience(exp.experienceId)}>Remove</button>
         </div>
       {/each}
 
@@ -272,11 +443,11 @@
           bind:value={newExperienceRole}
         />
         <input
-          type="date"
+          type="month"
           bind:value={newExperienceStartDate}
         />
         <input
-          type="date"
+          type="month"
           bind:value={newExperienceEndDate}
         />
         <button type="button" on:click={addExperience}>Add Experience</button>
@@ -298,24 +469,6 @@
     padding: 2rem;
     background-color: #f9f9f9;
     border-radius: 8px;
-  }
-
-  .user-photo {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 1.5rem;
-    background-color: #ddd;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .user-photo.placeholder {
-    background-color: #007bff;
-    color: #fff;
-    font-size: 2rem;
   }
 
   .user-details {

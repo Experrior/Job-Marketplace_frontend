@@ -5,16 +5,17 @@
     import MyApplications from '$lib/MyApplications.svelte';
     import Educations from '$lib/Educations.svelte';
     import Experiences from '$lib/Experiences.svelte';
-    import CVCreator from '$lib/CVCreator.svelte';
     import CVOverview from '$lib/CVOverview.svelte';
     import { goto } from '$app/navigation';
-    import { onMount } from 'svelte';
     import { user } from "../../stores/user.js";
   import CvCreator from '../../lib/CVCreator.svelte';
 
     let currentPage = 'personalData';
 
     function handleLogout() {
+        user.set(null);
+        localStorage.removeItem('authToken');
+
         goto('/login');
     }
 
