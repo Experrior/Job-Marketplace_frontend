@@ -1,60 +1,59 @@
 <script>
+    import { onMount } from 'svelte';
     import PersonalData from '$lib/PersonalData.svelte';
     import AccountInformation from '$lib/AccountInformation.svelte';
     import SavedOffers from '$lib/SavedOffers.svelte';
     import MyApplications from '$lib/MyApplications.svelte';
     import CVCreator from '$lib/CVCreator.svelte';
     import { goto } from '$app/navigation';
-    import FaRegUserCircle from 'svelte-icons/fa/FaRegUserCircle.svelte'
-    import { user } from "$lib/stores/user.js";
-  import AppBar from '../../lib/AppBar.svelte';
-  import ChatBox from '../../lib/ChatBox.svelte';
-  import CvOverview from '../../lib/CVOverview.svelte';
+    import AppBar from '../../lib/AppBar.svelte';
+    import ChatBox from '../../lib/ChatBox.svelte';
+    import CvOverview from '../../lib/CVOverview.svelte';
+    import { verifyUser } from "$lib/stores/user.js";
 
-    //todo add settings
-    let offers_notification;
-    let newsletter_notification;
-    let recruiter_messages;
-    let push_notification;
     let currentPage = 'userProfile';
+
     function handleLogout() {
         goto('/login');
     }
 
-    function goToHome() {
-        goto('/');
+    function navigateTo(page) {
+        currentPage = page;
+        goto(`/settings?tab=${page}`);
     }
-</script>
 
+    onMount(() => {
+        const isAuthenticated = verifyUser();
+
+        if (!isAuthenticated) {
+            goto('/login');
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab');
+        if (tab) {
+            currentPage = tab;
+        }
+    });
+</script>
 
 <AppBar/>
 
 <div class="settings-container">
-
     <aside class="sidebar">
         <h2>Settings</h2>
         <ul>
-            <li on:click={() => currentPage = 'userProfile'} class:selected={currentPage === 'userProfile'}>
+            <li on:click={() => navigateTo('userProfile')} class:selected={currentPage === 'userProfile'}>
                 Your Profile
             </li>
-            <li on:click={() => currentPage = 'settings'} class:selected={currentPage === 'settings'}>
+            <li on:click={() => navigateTo('settings')} class:selected={currentPage === 'settings'}>
                 Settings
             </li>
-            <li on:click={() => currentPage = 'savedOffers'} class:selected={currentPage === 'savedOffers'}>
-                Saved Offers
-            </li>
-            <li on:click={() => currentPage = 'myApplications'} class:selected={currentPage === 'myApplications'}>
-                My Applications
-            </li>
-            <!-- TODO UNCOMMENT IF-->
-            <!-- {#if $user.role === 'applicant'} -->
-            <li on:click={() => currentPage = 'cvCreator'} class:selected={currentPage === 'cvCreator'}>
+            <li on:click={() => navigateTo('cvCreator')} class:selected={currentPage === 'cvCreator'}>
                 CV Creator
             </li>
-            <li on:click={() => currentPage = 'cvOverview'} class:selected={currentPage === 'cvOverview'}>
+            <li on:click={() => navigateTo('cvOverview')} class:selected={currentPage === 'cvOverview'}>
                 CV Overview
             </li>
-            <!-- {/if} -->
         </ul>
         <ChatBox/>
         <button class="logout-btn" on:click={handleLogout}>Log Out</button>
@@ -70,17 +69,14 @@
         {:else if currentPage === 'myApplications'}
             <MyApplications />
         {:else if currentPage === 'cvCreator'}
-        <CVCreator />
+            <CVCreator />
         {:else if currentPage === 'cvOverview'}
-        <CvOverview />
+            <CvOverview />
         {/if}
     </main>
 </div>
 
-
-
 <style>
-
     .settings-container {
         display: flex;
         height: calc(100vh - 60px);

@@ -4,5 +4,4 @@
   import AppBar from "../lib/AppBar.svelte";
 </script>
 
-<AppBar/>
 <App />

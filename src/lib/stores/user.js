@@ -3,7 +3,7 @@ import { browser } from '$app/environment';
 
 const template = {
   displayName: '',
-  photoURL: 'icons/user.svg',
+  profilePicture: '',
   email: '',
   firstName: '',
   jwt: '',
@@ -37,6 +37,9 @@ function verifyUser() {
   if (!browser) return;
 
   const currentUser = get(user);
+  if (!currentUser) {
+    return false;
+  }
 
   const userExists = currentUser.jwt;
 
