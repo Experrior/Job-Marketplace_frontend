@@ -2,7 +2,6 @@
     import { goto } from '$app/navigation';
     import { user } from "$lib/stores/user.js";
 
-    console.log('refresh: ', $user.refreshToken);
     function navigateToSettings(page) {
         goto(`/settings?tab=${page}`);
     }

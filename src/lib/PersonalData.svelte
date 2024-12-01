@@ -116,7 +116,10 @@
       skills.set(userProfile.skills || []);
       educations.set(userProfile.educations || []);
       experiences.set(userProfile.experiences || []);
-      user.set({profilePicture: userProfile.profilePicture})
+      user.update(currentUser => ({
+        ...currentUser,
+        profilePicture: userProfile.profilePicture
+      }));
     }
   });
 
