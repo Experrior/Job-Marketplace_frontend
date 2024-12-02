@@ -55,7 +55,7 @@ onMount(async () => {
         }
       })
       console.log(response.data.data.jobsByRecruiter)
-      console.log('guwno12')
+      console.log('g12')
       jobs = response.data.data.jobsByRecruiter
       console.log(quizzes)
     }catch (error) {
@@ -108,7 +108,7 @@ onMount(async () => {
   }
 
   function editJobOffer(slug) {
-      goto(`/recruiter/jobs/${slug}/edit`);
+      goto(`/recruiter/jobs/edit/${slug}`);
   }
 
   function navigateToQuiz(slug) {

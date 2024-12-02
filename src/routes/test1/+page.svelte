@@ -6,7 +6,7 @@
   let chatList; // Store chat IDs for the user
   let newMessage;
   import ChatBox from "../../lib/ChatBox.svelte";
-  import { user } from "../../stores/user.js";
+  import { user } from "$lib/stores/user.js";
   console.log($user.jwt)
   function startChat() {
     if (!userId) {
@@ -37,7 +37,14 @@
           chatMessages[chatId] = [];
         }
 
-        socket = new WebSocket("ws://localhost:8080/chat-service/ws");
+        // More of an alternate solution, but all modern browsers send the domain cookies along with the connection, so using:
+        document.cookie = 'Authorization=' + $user.jwt + '; path=/';
+        socket = new WebSocket("ws://localhost:8080/chat_service/ws", {
+          headers: {            
+            Authorization: {
+              "Bearer":$user.jwt,
+            }}
+          });
 
         socket.onopen = () => {
           console.log("WebSocket connection established");
@@ -97,6 +104,7 @@
       alert("WebSocket is not connected. Please start the chat first.");
     }
   }
+  
 
   function sendMessage() {
     if (!newMessage) {

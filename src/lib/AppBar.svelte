@@ -5,7 +5,7 @@
     function navigateToSettings(page) {
         goto(`/settings?tab=${page}`);
     }
-
+    console.log("THIS IS USER NOW: ", $user)
     function handleLogout() {
         user.set(null);
         localStorage.removeItem('authToken');
@@ -60,6 +60,7 @@
         <!-- Login Button (Unauthenticated) -->
         <button class="login-btn" on:click={handleLogin}>Login</button>
     {/if}
+
 </div>
 
 <style>

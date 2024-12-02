@@ -1,187 +1,273 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, afterUpdate } from "svelte";
   import axios from "axios";
+  import {user, verifyUser} from '$lib/stores/user';
 
+  verifyUser();
   let isOpen = false;
   let currentChatId = null;
   let newMessage = "";
-
-  let chats = [];
-
-  let messages = [];
-
+  let chatMessages = {};
+  let gotNewMessage = false;
+  let chatId = '';
+  let chatList = [];
+  let chatsMap = {};
   let messagesContainer;
 
   let socket;
 
-  const user_id = "aa18e40c-4862-4918-af91-e742d29afc7e";
-
   onMount(async () => {
+    console.log("MYUSERID: ", $user.userId)
 
-    initializeWebSocket();
+    await initializeWebSocketConn();
+    await getUserChats()
+    console.log("CHATTY", chatList)
+    console.log("livetowin!", chatMessages)
+
+    scrollToBottom();
+
+
+    // awaitinitializeWebSocketConn();
+  });
+
+  afterUpdate(() => {
+		console.log("afterUpdate");
+		// scrollToBottom(element);
+  });
+
+  function scrollToBottom() {
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }
+
+  // Reactive to currentChatId or messages update
+  $: {
+    if (currentChatId !== null) {
+      scrollToBottom();
+    }
+  }
+
+  async function getUserChats(){
     try {
       const response = await axios.get(
-        "http://localhost:8080/chat-service/getUserChats?userId=" + user_id,
+        "http://localhost:8080/chat-service/getUserChats",
         {
           headers: {
             "Content-Type": "application/json",
+            'Authorization': `Bearer ${$user.jwt}`
           },
         }
       );
-      console.log(response);
+      console.log("getUserChats:", response);
 
       if (response.status !== 200) {
         throw new Error(`Error fetching chats: ${response.statusText}`);
       }
 
-      chats = response.data; // Adjust based on your API response structure
-
-      // Optionally, select the first chat by default
-      if (chats.length > 0) {
-        selectChat(chats[0]);
+      console.log('chattts')
+      chatList = response.data;
+      if (chatList.length > 0) {
+        selectChat(chatList[0].ChatId);
+        for (const chat in chatList) {
+          chatsMap[chat.ChatId] = chat
+        }
       }
     } catch (error) {
       console.error(error);
     }
 
-    initializeWebSocket();
-  });
+  }
 
   // Clean up WebSocket connection on component destroy
   onDestroy(() => {
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.close();
+      console.log("CLOOOOOOSED WEEBSOCKT!!!!")
     }
   });
 
   // Function to toggle the chat box visibility
-  function toggleChatBox() {
+  async function toggleChatBox() {
     isOpen = !isOpen;
+    await getUserChats()
 
     // Optionally, fetch messages for the current chat when opening
-    if (isOpen && currentChatId !== null) {
-      fetchMessages(currentChatId);
-    }
+    // if (isOpen && currentChatId !== null) {
+    //   fetchMessages(currentChatId);
+    // }
   }
 
   // Function to select a chat
-  function selectChat(chatId) {
+  async function selectChat(chatId) {
     currentChatId = chatId;
-    fetchMessages(chatId);
+    gotNewMessage = false;
+    await fetchMessages(chatId);
   }
 
   async function fetchMessages(chatId) {
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    // Send a message to the WebSocket server requesting the messages for a specific chat
+    console.log("BAMBUS", socket.readyState)
+    console.log(chatId)
+  if (socket && socket.readyState) {
     const request = {
-      type: "getAll",
-      chatId: chatId,
-      userId: user_id, // Include user ID for identification
+      operation: "get",
+        message: {
+          ChatId: chatId,
+          CreatedBy: $user.userId,
+        },
     };
+    
     socket.send(JSON.stringify(request));
+    
   } else {
     console.error("WebSocket is not connected or not open");
-    // Optionally, you can attempt reconnection logic here
   }
 }
 
-function handleIncomingMessage(message) {
-  switch (message.type) {
-    case "chatMessages":
-      if (message.chatId === currentChatId) {
-        // Update messages when we receive them
-        messages = message.messages;
-        scrollToBottom();
-      }
-      break;
-
-    case "newMessage":
-      if (message.chatId === currentChatId) {
-        messages = [...messages, message.message];
-        scrollToBottom();
-      }
-      break;
-
-    default:
-      console.warn("Unknown message type:", message.type);
-  }
-}
-  // Function to initialize WebSocket connection
-  function initializeWebSocket() {
-    socket = new WebSocket("ws://localhost:8080/chat-service/ws");
+  async function initializeWebSocketConn() {
+    socket = await new WebSocket(`ws://localhost:8080/chat_service/ws?userId=${$user.userId}`);
     console.log("DEBUGGG1")
     socket.onopen = () => {
       console.log("WebSocket connection established");
-      // Optionally, authenticate or send initial messages
     };
 
     socket.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        console.log(event)
-        handleIncomingMessage(message);
-      } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
-      }
-    };
+          const messages = JSON.parse(event.data);
+          console.log("aiujhygt",messages)
+          var isMessage=true;
+          try {
+            if (Array.isArray(messages)){
+              isMessage = (messages[0].content)
+            }else{
+              isMessage = messages.content
+            }
+          }catch (error) {
+             isMessage = false
+          }
+          if (isMessage) {
+            console.log("STARE WIEŚCI", chatMessages)
+            if (Array.isArray(messages)) {
+              console.log("Messages received:", messages, "for chatId: ", currentChatId);
+              // Add new messages to in-memory storage
+              chatMessages[currentChatId] = [
+                ...(chatMessages[currentChatId] || []),
+                ...messages,
+              ];
+                console.log('Updated chat messages:', chatMessages[currentChatId]);
+              // alert("Messages: " + JSON.stringify(messages));
+            } else {
+              console.log("Single message received:", messages);
+              chatMessages[currentChatId] = [...(chatMessages[currentChatId] || []), messages];
+              console.log('Updated chat messages:', chatMessages[currentChatId]);
+            }
+            console.log("MESAŻĘ:", chatMessages);
+            console.log("i to ", messages);
+            gotNewMessage = ! gotNewMessage;
+            scrollToBottom();
+          }else{
+            console.log("co my tu mamy: ", messages)
+          }
+          
 
-    socket.onclose = (event) => {
+        };
+
+    socket.onclose = async (event) => {
       console.log("WebSocket connection closed:", event.reason);
-      // Optionally, attempt to reconnect
     };
 
-    socket.onerror = (error) => {
+    socket.onerror = async (error) => {
       console.error("WebSocket error:", error);
-      // Handle error
     };
+
+    socket.onopen = async () => {
+      console.log('oneopen:')
+      if (currentChatId){
+        const request = {
+        operation: "getAll",
+          message: {
+          chatId: chatId,
+          CreatedBy: $user.userId,
+        },
+      };
+      socket.send(JSON.stringify(request));
+      console.log('sent getAll')
+      }else{
+        console.log("onopen ot actived")
+      }
+
+    }
+
   }
 
-  // Function to handle incoming WebSocket messages
-  // function handleIncomingMessage(message) {
-  //   // Assuming the message structure matches your messages array
-  //   // You might need to adjust based on your actual message format
-  //   messages = [...messages, message];
-  //   scrollToBottom();
+
+
+  // Function to scroll the messages container to the bottom
+  // function scrollToBottom() {
+  //   setTimeout(() => {
+  //     if (messagesContainer) {
+  //       messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  //     }
+  //   }, 0);
   // }
 
-  // Function to send a message via WebSocket
-  function sendMessage() {
-    if (newMessage.trim() !== "" && currentChatId !== null) {
-      const message = {
-        createdBy: user_id,
-        chatId: currentChatId,
-        content: newMessage.trim(),
-      };
 
-      // Send the message through WebSocket
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify(message));
-        // Optionally, add the message to the local state immediately
-        messages = [
-          ...messages,
-          {
-            ...message,
-            sender: "You",
-            id: messages.length + 1, // Or use a unique ID generator
-          },
-        ];
-        newMessage = "";
-        scrollToBottom();
-      } else {
-        console.error("WebSocket is not connected");
-        // Optionally, queue the message or notify the user
-      }
+  async function sendManualRequest() {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      const request = {
+        operation: "get",
+        message: {
+          ChatId: chatId,
+          CreatedBy: userId,
+        },
+      };
+      await socket.send(JSON.stringify(request));
+      console.log("Manual request sent:", request);
+    } else {
+      alert("WebSocket is not connected. Please start the chat first.");
+      await initializeWebSocketConn()
     }
   }
 
-  // Function to scroll the messages container to the bottom
-  function scrollToBottom() {
-    setTimeout(() => {
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-    }, 0);
+
+  async function sendMessage(chatId) {
+    if (!newMessage) {
+      alert("Please enter a message to send.");
+      return;
+    }
+    console.log("State", socket.readyState)
+    if (socket && socket.readyState === 1) {
+      // const chatId = chatList[0].ChatId;
+      console.log("chats list: ", chatList)
+
+      const message = {
+        operation: "post",
+        message: {
+          content: newMessage,
+          chatId: chatId,
+          createdBy: $user.userId,
+          createdByDisplay: $user.firstName
+        },
+      };
+      await socket.send(JSON.stringify(message));
+      console.log("Message sent:", message);
+      newMessage = "";
+      console.log('xd')
+    } else {
+      console.log('still fail')
+      await initializeWebSocketConn()
+      console.log("restarting websocket")
+    }
   }
+
+
+  // const scrollToBottom = async (node) => {
+  //   node.scroll({ top: 0, behavior: 'smooth' });
+  // }; 
+
+
+
+
+
 </script>
 
 <div class="chat-box-container">
@@ -200,6 +286,9 @@ function handleIncomingMessage(message) {
   >
     {isOpen ? "Hide Chat" : "Open Chat"}
   </div>
+  {#if gotNewMessage && !isOpen}
+    <span class="new-message-indicator"></span>
+  {/if}
 
   <!-- Chat box content -->
   {#if isOpen}
@@ -208,26 +297,32 @@ function handleIncomingMessage(message) {
         <!-- Chat list -->
         <div class="chat-list-container">
           <ul class="chat-list">
-            {#each chats as chat}
-              <text>{chat}</text>
+            {#each chatList as chat}
+
+            <!-- {#each Object.keys(chatMessages) as chat} -->
+              <!-- <text>{chat}</text> -->
               <li
                 class:active={chat.id === currentChatId}
-                on:click={() => selectChat(chat.id)}>
-                {chat.name}
+                on:click={() => selectChat(chat.ChatId)}>
+                {$user.role === "APPLICANT" ? chat.RecruiterName : chat.ApplicantName}
               </li>
             {/each}
           </ul>
         </div>
 
-        <!-- Message area -->
+
+
+        <!-- Message area --> 
         <div class="message-area">
           {#if currentChatId !== null}
+          <!-- <text>`${chatMessages}`</text> -->
             <!-- Messages -->
+            {#key gotNewMessage}
             <div class="messages-container" bind:this={messagesContainer}>
               <ul class="messages">
-                {#each messages.filter((msg) => msg.chatId === currentChatId) as message}
+                {#each chatMessages[currentChatId] as message}
                   <li
-                    class="message {message.sender === 'You'
+                    class="message {message.createdBy === $user.userId
                       ? 'right'
                       : 'left'}"
                   >
@@ -238,6 +333,7 @@ function handleIncomingMessage(message) {
                 {/each}
               </ul>
             </div>
+            {/key}
 
             <!-- Input area -->
             <div class="input-area">
@@ -245,7 +341,7 @@ function handleIncomingMessage(message) {
                 type="text"
                 placeholder="Type a message..."
                 bind:value={newMessage}
-                on:keydown={(e) => e.key === "Enter" && sendMessage()}
+                on:keydown={(e) => e.key === "Enter" && sendMessage(currentChatId)}
               />
             </div>
           {:else}
