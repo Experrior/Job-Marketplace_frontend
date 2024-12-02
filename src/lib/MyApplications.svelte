@@ -1,5 +1,31 @@
 <script>
-    // Add any necessary script logic here
+  import { onMount } from "svelte";
+
+
+    onMount(async()=> {
+        const query = `query {
+            userApplications {
+                applicationId
+                userId
+                resumeUrl
+                job {
+                jobId
+                title
+                location
+                salary
+                createdAt
+                }
+                createdAt
+                status
+                quizResult{
+                    score
+                }
+            }
+            }
+        `
+        const response = fetch()
+
+    })
 </script>
 
 <div>

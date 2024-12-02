@@ -265,7 +265,6 @@ console.log(response)
           
           {#key skillChange}
           {#if skillsList.length > 0}
-          <text>some exmpal: `${skillsList.length}`</text>
           <h2>Required Skills</h2>
           <ul class="required-skills">
             {#each skillsList as skill, index}

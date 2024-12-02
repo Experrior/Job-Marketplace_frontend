@@ -2,13 +2,16 @@ import { writable, get, readable } from 'svelte/store';
 import { browser } from '$app/environment';
 
 const template = {
+  userId: '',
   displayName: '',
   profilePicture: '',
+  profile: '',
   email: '',
   firstName: '',
+  lastName: '',
   jwt: '',
   refreshToken: '',
-  role: 'recruiter'
+  role: ''
 };
 
 const user = writable(template);

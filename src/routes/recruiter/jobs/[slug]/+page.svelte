@@ -14,6 +14,7 @@
   let job = {};
   let chatList = [];
   let chatId = '';
+  let skillsList = [];
   const sortedApplicants = writable([]);
  onMount(async() => {
   
@@ -174,12 +175,11 @@ const sortBy = writable('score');
 
   async function startChat(applicantId, applicantName) {
     console.log($user.jwt)
-    console.log('creatin chat', applicantId, applicantName)
+    console.log('creating chat', applicantId, applicantName)
     // TODO add $user.name
-    if (! $user.name) {
-      $user.name = "John Snow"
-    }
-    fetch(`http://localhost:8080/chat-service/startChat?targetUserId=${applicantId}&recruiterName=${$user.name}&applicantName=${applicantName}`,
+
+    const fullName = $user.firstName + ' '+ $user.lastName
+    fetch(`http://localhost:8080/chat-service/startChat?targetUserId=${applicantId}&recruiterName=${fullName}&applicantName=${applicantName}`,
      {headers: {"Authorization": "Bearer "+$user.jwt}})
       .then((response) => response.text())
       .then((data) => {

@@ -78,7 +78,8 @@
                         lastName: response.data.lastName,
                         profilePicture: profilePicture,
                         refreshToken: response.data.refreshToken,
-                        isAuthenticated: true
+                        isAuthenticated: true,
+                        userId: response.data.userId
                     });
                     goto('/');
                 } else {

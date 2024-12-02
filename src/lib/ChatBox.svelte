@@ -3,24 +3,21 @@
   import axios from "axios";
   import {user, verifyUser} from '$lib/stores/user';
 
-
+  verifyUser();
   let isOpen = false;
   let currentChatId = null;
   let newMessage = "";
   let chatMessages = {};
   let gotNewMessage = false;
   let chatId = '';
-  let chats = [];
   let chatList = [];
   let chatsMap = {};
-  let messages = [];
-  let chatHumans = {};
   let messagesContainer;
 
   let socket;
 
   onMount(async () => {
-    console.log("MYUSERID: ", $user.jwt)
+    console.log("MYUSERID: ", $user.userId)
 
     await initializeWebSocketConn();
     await getUserChats()
@@ -239,21 +236,21 @@
     }
     console.log("State", socket.readyState)
     if (socket && socket.readyState === 1) {
-      const chatId = chatList[0].ChatId;
-      console.log("Casdasdas", chatList)
+      // const chatId = chatList[0].ChatId;
+      console.log("chats list: ", chatList)
 
       const message = {
         operation: "post",
         message: {
-          Content: newMessage,
-          ChatId: chatId,
-          CreatedBy: $user.userId,
-          CreatedByDisplay: "TODO USERNAME"
+          content: newMessage,
+          chatId: chatId,
+          createdBy: $user.userId,
+          createdByDisplay: $user.firstName
         },
       };
       await socket.send(JSON.stringify(message));
       console.log("Message sent:", message);
-      newMessage = ""; // Clear the input field
+      newMessage = "";
       console.log('xd')
     } else {
       console.log('still fail')
@@ -307,7 +304,7 @@
               <li
                 class:active={chat.id === currentChatId}
                 on:click={() => selectChat(chat.ChatId)}>
-                {$user.userId === chat.ApplicantId ? chat.RecruiterName : chat.ApplicantName}
+                {$user.role === "APPLICANT" ? chat.RecruiterName : chat.ApplicantName}
               </li>
             {/each}
           </ul>

@@ -72,14 +72,14 @@
 
 
 
-        console.log()
-        console.log('gw')
-        console.log(response)
-        newJob = response.data.data.jobById
+        // console.log()
+        // console.log('gw')
+        // console.log(newJob)
+        // // newJob = response.data.jobById
         
-        console.log('done update')
-        console.log(skillsList)
-        console.log(newJob)
+        // console.log('done update')
+        // console.log(skillsList)
+        // console.log(newJob)
         if (newJob){
         skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
         .map(match => ({
@@ -99,15 +99,31 @@
 
 
 try{
-    const response = await axios.post('http://localhost:8080/user-service/myResumes', {},
-    {headers:
-        {Authorization: "Bearer "+$user.jwt,
-        "Content-Type": "application/json",
+
+    const query = `query{
+            userResumes{
+                resumeId
+                resumeName
+                s3ResumePath
+                resumeUrl
+                createdAt
+            }
+        }`
+
+    //omg this syntax: 
+    const response = {};
+    await fetch('http://localhost:8080/user-service/graphql', {
+        method: 'POST',
+        body: JSON.stringify({query: query})
+            ,
+            headers:
+                {"Authorization": "Bearer "+$user.jwt,
+                "Content-Type": "application/json",
+                }
+            
         }
-    }
-    );
-    console.log(response)
-    resumes = response.data
+    ).then(r => r.json()).then(data => resumes = data.data.userResumes)
+        console.log("resumes list:", resumes)
     }catch (error) {
         console.log(error)
     }
@@ -152,8 +168,8 @@ try{
 //       )
 //       console.log('938ryfvjdbkuhi')
 //       console.log(response1)
-
-    goto(`/quiz/${newJob.quizId}`)
+    console.log("RESUME: ", resume)
+    goto(`/quiz?quizId=${newJob.quizId}&resume=${resume.resumeId}&jobId=${jobId}`)
   }
 
   // skillsList = [...skillsList.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
@@ -172,15 +188,6 @@ try{
 <div class="scrollable-page">
     <img src="/images/job_background.webp" alt="Job Background" class="full-width-image" />
 
-<<<<<<< HEAD
-  {#if loading}
-      <p>Loading...</p>
-  {:else if error}
-      <p class="error-message">You need to log in to view this offer</p>
-  {:else if newJob}
-      <div class="job-description">
-          <img src="{newJob.companyLogo}" alt="{newJob.companyName} Logo" class="company-logo" />
-=======
     {#if loading}
         <p class="loading-message">Loading...</p>
     {:else if error}
@@ -190,7 +197,6 @@ try{
             {#if newJob.companyLogo}
                 <img src="{newJob.companyLogo}" alt="{newJob.companyName} Logo" class="company-logo" />
             {/if}
->>>>>>> origin
 
             <h1 class="job-title">{newJob.title}</h1>
             <p class="company-name">{newJob.companyName}</p>

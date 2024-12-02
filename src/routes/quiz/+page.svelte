@@ -1,13 +1,17 @@
 <script>
     import { onMount } from 'svelte';
     import { writable, get } from 'svelte/store';
-    import { page } from '$app/stores';
     import { user, verifyUser} from '$lib/stores/user';
     import axios from 'axios';
     import { goto } from '$app/navigation';
     import Cookie from 'js-cookie';
 
-    let quizId = $page.params.slug;
+    // let quizId = $page.params.slug;
+    const urlParams = new URLSearchParams(window.location.search);
+    const resumeId = urlParams.get('resume');
+    const quizId = urlParams.get('quizId');
+    const jobId = urlParams.get('jobId');
+    console.log("QUIZID: ", quizId)
     var quizData = {};
     let quizSubmitted = false;
     let currentQuestionIndex = 0;
@@ -143,7 +147,8 @@
                     'Authorization': `Bearer ${$user.jwt}`
                   }}
     )
-    console.log(response)
+    console.log("CREATING quiz result RESPONSE:", response)
+    
     const response2 = await axios.get(Cookie.get('s3Path'),
       {
         query: mutation,
@@ -153,6 +158,7 @@
                   }}
     )
 
+    let quizResultId = response.data.data.submitQuizResult.quizResultId;
     console.log('dthgfdrse')
     console.log(response2)
     
@@ -165,15 +171,42 @@
       formData.append('quizResultId', response.data.data.submitQuizResult.quizResultId)
       console.log('sciek1')
       console.log(formData)
-        console.log(Cookie.get('jobId'))
+      console.log(Cookie.get('jobId'))
+
+      const query2 = `mutation XD($jobIDvar: ID!, $resumeIDvar: ID!, $quizResultIDvar: ID!){
+          applyForJob(
+              jobId: $jobIDvar
+              resumeId: $resumeIDvar
+              quizResultId: $quizResultIDvar
+          ){
+              applicationId
+              userId
+              job {
+                  jobId
+              }
+              status
+              fullName
+              createdAt
+              resumeUrl
+          }
+      }`
+
+    const variables2 = {
+      "jobIDvar": jobId,
+      "resumeIDvar": resumeId,
+      "quizResultIDvar": quizResultId
+      
+    };
       try {
-        const response = await axios.post(`http://localhost:8080/job-service/applications/${Cookie.get('jobId')}/apply`, formData, {
+        const response = await axios.post(`http://localhost:8080/job-service/graphql`, {
+          query: query2,
+          variables: variables2
+        }, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('jwt')}`
           },})
 
-          console.log('asdasdasdasdasdasda')
           console.log(response)
         }catch (error){
           console.error(error)
@@ -184,7 +217,6 @@
 
     async function submitQuiz() {
       quizSubmitted = true;
-      console.log('comaisduyabisn')
       let timeTaken = calculateScore();
 
       await sendResults(timeTaken);
