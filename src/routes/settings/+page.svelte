@@ -45,9 +45,9 @@
             <li on:click={() => navigateTo('userProfile')} class:selected={currentPage === 'userProfile'}>
                 Your Profile
             </li>
-            <li on:click={() => navigateTo('settings')} class:selected={currentPage === 'settings'}>
+            <!-- <li on:click={() => navigateTo('settings')} class:selected={currentPage === 'settings'}>
                 Settings
-            </li>
+            </li> -->
             <li on:click={() => navigateTo('cvCreator')} class:selected={currentPage === 'cvCreator'}>
                 CV Creator
             </li>

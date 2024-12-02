@@ -6,8 +6,20 @@
 
     onMount(async() => {
         verifyUser();
+        const query = `query{
+    userResumes{
+        resumeId
+        resumeName
+        s3ResumePath
+        resumeUrl
+        createdAt
+    }
+}`
+
         try{
-        const response = await axios.post('http://localhost:8080/user-service/myResumes', {},
+        const response = await axios.post('http://localhost:8080/user-service/graphql', {
+            query: query,
+        },
         {headers: 
             {Authorization: "Bearer "+$user.jwt,
             "Content-Type": "application/json",
@@ -15,7 +27,8 @@
         }
         );
         console.log(response)
-        cvs = response.data
+        console.log("REPSONSE RESUMES: ", response.data.data.userResumes)
+        cvs = response.data.data.userResumes
         }catch (error) {
             console.log(error)
         }

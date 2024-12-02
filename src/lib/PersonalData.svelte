@@ -112,6 +112,7 @@
   onMount(async () => {
     userProfile = await fetchUserProfile();
     if (userProfile) {
+      $user.profile = userProfile;
       auth.setUser(userProfile);
       skills.set(userProfile.skills || []);
       educations.set(userProfile.educations || []);

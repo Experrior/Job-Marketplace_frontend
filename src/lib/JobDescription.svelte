@@ -65,15 +65,12 @@
         <li>
           <span class="skill-name">{skill.name}</span>
           <span class="skill-level">
-            {#each Array(skill.value) as _, index}
-              <span class="star">&#9733;</span>
-            {/each}
-            {#if (skill.value !== 0)}
-            {#each Array(5 - skill.value) as _, index}
-              <span class="star empty">&#9734;</span>
-            {/each}
-            {/if}
-
+            {#each Array(Math.min(5, (skill.level || 0))) as _, i}
+            <span class="star">&#9733;</span>
+          {/each}
+            {#each Array(Math.max(0, 5 - (skill.level || 0))) as _, i}
+            <span class="star empty">&#9734;</span>
+          {/each}
           </span>
         </li>
       {/each}

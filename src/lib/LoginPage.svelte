@@ -28,14 +28,14 @@
         errorMessage = '';
 
     }
-    let companies = ["TechCorp", "DesignPro", "MarketMasters", "FinanceGurus"];
-
+    let companies = [];
 	onMount(async () => {
 		const res = await axios.get('http://localhost:8080/user-service/getCompanies')
         companies = res.data.map(comp => comp.name)
         console.log(res.data)
 
         companies = companies.sort()
+        registerFormData.company = companies[0]
 
 	});
 
@@ -60,6 +60,7 @@
 
                 if (response && response.status == 200) {
                     localStorage.setItem('jwt', response.data.accessToken);
+
                     localStorage.setItem('jwt_expiration', Date.now() + 8 * 60 * 60 * 1000);
 
                     let profilePicture = '';
@@ -77,9 +78,9 @@
                         lastName: response.data.lastName,
                         profilePicture: profilePicture,
                         refreshToken: response.data.refreshToken,
-                        isAuthenticated: true
+                        isAuthenticated: true,
+                        userId: response.data.userId
                     });
-
                     goto('/');
                 } else {
                     errors = response.data;

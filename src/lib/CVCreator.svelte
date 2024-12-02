@@ -3,14 +3,11 @@
     import jsPDF from 'jspdf';
     import {user, verifyUser} from '$lib/stores/user'
     import axios from 'axios';
-  import { yearsToDays, yearsToMonths } from 'date-fns';
-  import { onMount } from 'svelte';
-//    import {envelope, linkedin, telephone_inbound} from 'bootstrap-icons';
-//    import { AiOutlineLinkedin } from "svelte-icons-pack/ai";
-//    import { AiOutlineMail } from "svelte-icons-pack/ai";
-//    import { BsTelephoneInbound } from "svelte-icons-pack/bs";
+    import {
+      isValidPhoneNumber,
+    } from 'libphonenumber-js'
 
-
+  let userProfile = $user.profile
 
    const AiOutlineLinkedin = 'data:image/png;base64,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'
 
@@ -18,15 +15,26 @@
 
 const BsTelephoneInbound = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAHYcAAB2HAGnwnjqAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAD25JREFUeJztnXnQ1lUVxz/nBREEF0xxrSxUFHPJBVCMUFEoS80Mt3Q0E00dLc2WyXFpmfbUzKmxUXNX1MRdEQyD3MYFlzEdNUpF0XwFBQETOP1xfu/L48vzPPfe33N/y/Py+87cGYb3PPeee8/3d9dzzxVVJRZEpA+wF/BlYATwKWAjYAUwD3gReAi4DXhYYxZeoSFEZFvgp8Do5L9mAWep6vOoassJ6AucDMwB1DM9CxwBSAwdqtTQNqOABXXafz4wTFr9CEVkB+BqYPuUWcwEjlLV/7SkSIVVICKjgHuBdRqI3NwSAUTkIOBaYEDqTAzvAAeo6j9azKdCAg/jA8zraKGAI4CbaN34AOsDU0Vkjwh5rfbwND4AqQiQGP9KoE+a3zfAWsCtIrJFxDxXOyTGvwcP4wOzgocAETkcuIq4xq/F48Ceqro0o/x7LWqMv66H+LvAyKAeQEQmEv/L74ldgEsyzL9XQkR2Ae7Cz/jvARNU9YWQ5cThwDL8l3nLgBnA74E/YOt/398qcFzRS6iAttkOmAK8laQpwHYlWOrVS+8Co7p/m5HxHwSG1clnF+AZzzyWADsXbVyPthmR6FpP/xFlNr4XAVIY/w5gzSb5rY9tAvnkNQdYv2gjO9pnahP9p5bI+At6Gt9JAOCwmMavyXerAMXvAjqKNnSTuixsovvCMhu/KQGAg7Mwfk3+B2FnBD55n1O0oZvUo6nuZTZ+QwJg49r7Aca/G+ifoiK/8Mx/OfCFoo1dBgJg86h3PNttlTHfSQBgKPDfAOPfGfLl9yirDzDds5xOYIuiDV4kAWJ++XUJgO0Mzsz6y+9R5hDgVc/yZgMDijZ6EQQI/PK9jF+PAGfmafyackcCSz3LvbJoo+dNgKyM/xECAJsDiz0LSd3tN6nkyQHkK80mUdYESD6OqN1+IwJc5FnIfbGNX6PD1Z46LAF2Kdr4WRMga+N3EwDYhPq7WT3TbGCdDBtzIPC0Z4XnUIJNoqwIkIfxawlwlkchi4Gtc2jQttokyoIAeRm/lgBPeRT0vRwbNWST6NzeRIA8jZ+Ux9YeBc0D1sq5YX/u2QjLgS/2BgKQ4Wy/GQFO9Cjs7AIati02iWIRIMWXPzKG/h3ATrhxo4dMVKjqcmAi8G8P8fWBa5J7CW2HxJnjbvw9eSao6iMxyu4AdnTIvKqq/4xRWChUtRM7jv6fh/gewPHZahQfIjIS6+kGe4i/C4xX1Ydjld8BfMIh81SswtIgqezpnuJni8iaWeoTE4nx78X/yx8f68vvQgfmjdsMr8UsMA1U9WLgCg/RTYADM1YnCors9mvRgduvf0nsQlPiJMydzIWJWSvSKoru9mvRAXzokPHxL88cqroYOBJzUmmGvUVEclApFcrQ7deiA5jrkHHNEXKDqj4D3OwQG4wNBaVD2YwPRgDXGD9CRPpmqUQg7vOQ2TRzLQJRRuODEeB5h8y6mCdKWdDpIRPjvmI0lNX4YASY7iF3VNaKBGAzD5n3MtfCE2U2PhgB/obtpzfDYSLiWi7mhZEeMq55TZ4orfHBjlIXYDd5mmEd4JAc9PHBWMff56rq23ko4onSGh9WXg/32WT5RpaK+EBEtgQ+7hCblYcuEVGY8WElAW7Abrg0w5jEAEVirIfMA1krERGFGh8SAqjqIizaRzMIcEzWCjnweQ+ZGVkrEQmFGx+SCF0AIrIndiegGeYCn0yOanOHiLxC8yHgTWAT7apUDhCRNGWVwvgAtQ4JAryA2xnhkIIcL4Z66HZD2RxCCkgLsSghXl7T3RFCkq/mcg/OnOEhkwXGesi00/ifFQYB44GZIrKNS7hniJgrcR+2jCoomtdYD5kZGevQThgA/Mwl9BECqOrrwO0emRfRC7gmgG8BhXgulRijXQL1gkT9ziPjA0VkaLg+6ZCU5Vr/P5Dn5K8GruVzqbEKAVR1FuCanfYBvpOJRvUx1kNmRsY6NILPWUpRcEdebTCznYh7trmInK5mYXEJXfoML2h1Mgx/X/4802JgG6f+DSrVF7/I3+fl1Miu+AFvUmDUcWx4moyt74s2fNAysGGkUBE5Dbig7h9XYhEwVFXfcsilRrL9/KJDbLKqHpqVDr0ZzSKFXobdQGmGQcB346lTF2M9ZKr1f0o0JICqLsQvZOspIpKlC5Zr+QcVAVLDFSv4t1g33wwDgB/FUacuXGvZt4DnMiy/V6MpAZKx/SKPfI4XkU/HUWklRGQ9YAuH2AxtNJGp4IRPtPBf454LrIEFmYiNzbFDqmYo/kStjeEkgKrOx4YCF44WEddF01AM8pAp/OpaO8P3vYALsLG2GfoAF0e+lbPYQ2aDiOWtdvAigJrH0C89REdj17lj4U0PmXERy1vt4P1kjIgMwDZkXH75r2NbkFEOSUTkDWDjJiLLgN1UdXaM8lY3eD8Zo6pLgHM8RDcl7oTQ5abWF7hJRDaKWOZqg9BXwy7Hb9b9bR9vFE9M9pAZCjyQ8YZUr0SaV8NGYO//uMhzr6pOSKtYTXlrYkOPyx8AzCFkL1X1mTtUIMW7gar6KH6+g+NFpOU7har6AR6uTQm2Bf5WDQf+SPV0rIgMwTyI13OIvgt8RlVbWquLSAdwP37nAiS67a3m4lahCVK9HJpsEZ/tIbou8Mc0ZfQobwVwNLbC8MEwYFrVE7iR+vHoJGjE48AOHuLHqupfUhX00TJ3wm4zu3qeLlRzAgdafT18T+wo1tWTLMCGgpavbYvIrliUkIoEEZD69XDodiD1OS1cD7g8xjaxqj4G7I354flgW6olYkO01AMAJIEjZmNh3l04QVWjvAtc9QRx0DIBAERkd2zHzhWrdymwh6o+2XKhVu5ngWlYrGAfVKuDHmhpCOiCqj4EXOgh2h+YLCJRYg8mRBqH/3AwDLi/Gg5WIkoPAN07dk8Awz3Eo3rxVj1BekTpAaB7x+443AGnACaKyLcill31BCkRjQAAavFsffwGAM5PAibHKvtJYAJu97UuVJtFRBwCujO0DaLpwBgP8Zexs/z5EcvfDXvSvVodeCA6AQCSrvVJ7FlYF6ZjD0O7glaHlF9qEojIhtjp5mCsx5oXY5MsFTK8L7cvNh/wuc92SQbl7wbM9yxfsbsFG2XUFsOxcPc3YHGW6pX/DhYI+zAyepizrm6ZZg7nBRjgjN5Cgh4GnxdQfleaiz3m1afdCRDy8tdy4IB2JEEEgzdKM8n4NbRMCZA0zsbAG54VXgjsVAISvNRMjxqDT8Y8l2MZvF7qxOZImdgnk0lgTyRBpaZjO4EuvIY9iBh1UpRiYrgMuA1zROnEvKFHYk4pPpPbmFgB/AT4sZpvRDxk3QPUfDVfw/852BfIYEIG7IwZM8svNst0PzAkapvkRYDEAOcGVHY2MLgiwSrpFSK9GloEAQS4OqCyDwGDKhKskpYCp8Voi1zmALUQkf5YV7a750+mAV9SO2uIqUfonCAW5mIRzR5O/v0xYD/gK9gllxBcCpyiqktTa5NnD1DzBQ7BLwhVV5oC9M2oJ3g9QI806TWs1/smsFUTXXYEnk2R/+O0sFQshABJhbcD3g6o6HUZkeATwN8jG/wql8Eb6DIQuDZFmamXioURIKnwboSFVptCBtuk2KnoCdgEqxWDbxlJn1OxB7ND9FiO3d3saBsCJJUdA7wfUNGpwMCMdOkHfBXb4Km3ebUC+Fdi8ONiGbyBLqMTcoUS8i4CAnjmPgmsBxEZj2269PP8yYPA/moPXmWGxFdgCKbXEuBVjXTtPaD86/ELlVeLOdi7Dk84JYvuAWoYfxD2jrEv058ANixa7xzapQ+2f+J7stqVvJaKhVewR2WPCqzoc8BmReudU9scTLpQtH8G+rcFAZKKTgokwatkcIBUxoS5saVZKj5Gg6Vi4ZVqUNHDCZsFLwIOLFrvnNpmAHY9P5QEncDn2oIASUUPBj4IqOByMnAqKWsi3VLxfWB0WxAgqeQEwpaIisU3XqNo3XNqnzRLxU7s6b/yEyCp5BjCJz/TyOAksYwJ2Ai7Mh/SPg+QOARHvReQBVT179ilj86An+0DPBbz3kFZoebJvC8W0lc9fzYGcz4tfw9Qw/Th2C5cCNOXAicVrXuObRSyVHwGkFLsBPoiiU10CxD6buFk4HhVfS++VuWCiAwD/orfHc1RpR8CaqEWm2gf7GQwBBOxIWGn+FqVC6r6AtbF+7yhsH9bEQBAzfnhSFa6l/liK+AhETkxckDr0kFVO/F76X37thoCekJEDsfeNvLxNq7FPdiQ0KtDzYvIo9iReyO82HY9QC1U9TosXtAbgT+dADwrIsfG16pUeMzx903amgAAatFJPkv4C57rApeJyB29OE6AK1bD4rYnAHxkLfwD/AJU1GJ/4DkRmRRdseLhesFlcVvPAepBRMYB15Du9s5U4NRkJt3WEJFtsbV+s8BdM3tFD1ALVZ2GDQlp3hLcD3haRH4lImvH1Sw/JPGaLsUdte3RXkcAALXgT+OwKOOhQ0I/4EzgeRE5st2WjCLSD7gJv3sXdxa+fZnD9uhIbFMk9Py8Kz0CjCi6Hp517Qfc6lmvl4COwpXOqWEGAL/BbvymIcEyzAlji6Lr4jD+7QF1mqTaBsfBkRtpD+zmcdre4APgYmDTouvSovGfJIk+UrjyBTTWAOB8wr1sa9Ni7Ph1gxLUpx/mUu+r+yJgePfvi65AgQ03GruCnpYECryHxUHyvohRsPE/xC7arsyjaEMUTIIO7CWS/7ZIhKXAldh7iXkaf0qAjsuAr6+ST9FGKEPCYgxfSPpJYldajo3F49rB+BUBVm3YXbGgFK2QoCs9CBxC5FBvwNrYaWaI8Q9rmF/RjV62hEUxOYZ0N4XrpdeAnxLhIil2MSRk3tLU+BUBmjd2f+A04sX9W4FFBjkKWCtQl7WA72Orj2jGrwjg1/gDgR9ioVxjEEGx+MB/wvYlGg4R2HtH5xIei9DL+KoluR7eDhCR9YAzsF4h5kHRAuBRbKiYn+S9GfYcn89zuT2xHJvwXe8jXBEgEEmk7+9gsXwHF6xOTwQZHyoCpIaIDAKOxXqEoQWrAxbA4khVvSXkRxUBWkTyrvH+2GXNcQWp0QkcpPaOYxAqAkRE8nze6Vi0k9CYf2kxCzhaVeek+XFFgAwgIhsDhwLfwO9t5TRYgp1D/EZVQ51eulERIGMkF1QnYUEvYqwePgCuwCKHt/4Wc0WAfCAiA7GI6cdgJ5GhQ8QTwI3AZWpX5OLoVREgfyQvp+6F3XPcClvvb46dTn6I7Q3MBZ4GngLuV9WXs9Dl/6nhK80mC1AyAAAAAElFTkSuQmCC'
 
+let fullName = ''; 
+let email = '';
+let experiences = [];
+
+let educations =  [];
+    let skills =  [];
   // Default values for testing
-  let fullName = 'John Doe';
-  let email = 'john.doe@example.com';
-  let phone = '+1234567890';
-  let linkedin = 'https://www.linkedin.com/in/johndoe/';
-  let summary = 'Experienced professional with a background in software development.';
-  let address = "Wroclaw, Burzowa 90/2a"
-  let resumeName = '';
-  let experiences = [
+  if (userProfile) {
+    console.log("user profie:e", userProfile)
+    fullName = userProfile.firstName +' '+ userProfile.lastName;
+
+    email = userProfile.email;
+    experiences = userProfile.experiences;
+    educations = userProfile.educations;
+    skills = userProfile.skills;
+  }else{
+    console.log("failed to load userProfile")
+    fullName = "John doe"
+    email = 'john.doe@example.com';
+    experiences = [
     {
       company: 'Tech Corp',
       role: 'Software Engineer',
@@ -34,25 +42,32 @@ const BsTelephoneInbound = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAA
       endDate: 'Now',
       description: 'Developed web applications using modern frameworks.',
     },
-  ];
-  let educations = [
-    {
-      institution: 'University of Technology',
-      degree: 'B.Sc. Computer Science',
-      startDate: '2014-09-01',
-      endDate: '2017-06-30',
-      description: 'Focused on software engineering and data structures.',
-    },
-  ];
-  let skills = [
-    { name: 'JavaScript', value: 5 },
-    { name: 'Svelte', value: 4 },
+    ];
+    educations = [
+      {
+        institution: 'University of Technology',
+        degree: 'B.Sc. Computer Science',
+        startDate: '2014-09-01',
+        endDate: '2017-06-30',
+        description: 'Focused on software engineering and data structures.',
+      },
+    ];
+    skills = [
+      { name: 'JavaScript', value: 5 },
+      { name: 'Svelte', value: 4 },
     { name: 'React', value: 4 },
     { name: 'Node.js', value: 4 },
   ];
+  }
+  let phone = '+1234567890';
+  let linkedin = 'https://www.linkedin.com/in/johndoe/';
+  let summary = 'Experienced professional with a background in software development.';
+  let address = "Wroclaw, Burzowa 90/2a"
+  let resumeName = '';
+
 
   // New skill template
-  let newSkill = { name: '', value: 1 };
+  let newSkill = { skillName: '', proficiencyLevel: 1 };
   
 
     const MAX_FULL_NAME_LENGTH = 50;
@@ -96,8 +111,7 @@ const BsTelephoneInbound = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAA
     }
   
     function validatePhone(phone) {
-      const regex = /^(\+?\d{1,3}[-.\s]?)?(\(?\d{2,4}\)?[-.\s]?)?[\d\-.\s]{7,14}$/;
-      return regex.test(phone);
+      return isValidPhoneNumber(phone)
     }
 
 
@@ -173,136 +187,6 @@ const BsTelephoneInbound = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAA
       }
     }
   
-    function generatePDF() {
-      errors = {};
-      if (linkedin.length > MAX_LINK_LENGTH) errors.linkedin = `LinkedIn link cannot exceed ${MAX_LINK_LENGTH} characters.`;
-
-      // Validate personal information
-      if (!fullName) errors.fullName = 'Full Name is required.';
-      if (fullName.length > MAX_FULL_NAME_LENGTH) errors.fullName = `Full Name cannot exceed ${MAX_FULL_NAME_LENGTH} characters.`;
-  
-      if (!email || !validateEmail(email)) errors.email = 'Valid Email is required.';
-      if (email.length > MAX_EMAIL_LENGTH) errors.email = `Email cannot exceed ${MAX_EMAIL_LENGTH} characters.`;
-  
-      if (!phone || !validatePhone(phone)) errors.phone = 'Valid Phone Number is required.';
-      if (phone.length > MAX_PHONE_LENGTH) errors.phone = `Phone number cannot exceed ${MAX_PHONE_LENGTH} characters.`;
-  
-      if (summary.length > MAX_OVERVIEW_LENGTH) errors.summary = `Summary cannot exceed ${MAX_OVERVIEW_LENGTH} characters.`;
-  
-      // Check for errors before proceeding
-      if (Object.keys(errors).length === 0) {
-        const doc = new jsPDF();
-        doc.setFillColor(20, 71, 142);; // Blue color
-        doc.rect(0, 0, 220, 70, 'F'); // Increase height to 60 units
-        if (userImage) {
-
-            doc.setFillColor(255, 255, 255); // White color
-// doc.circle(25, 30, 15, 'F'); // Center at (25, 30), radius=15
-
-// User userImage
-doc.addImage(userImage, 'JPEG', 5, 8, 35, 45); 
-}
-
-  
-doc.setFontSize(22);
-doc.setTextColor(255, 255, 255); // White color
-doc.text(fullName, 50, 15); // Position next to the image
-
-doc.setFontSize(12);
-
-
-  doc.addImage(AiOutlineLinkedin, 'PNG', 50, 35, 5, 5); // Position relative to name
-
-doc.text(phone, 60, 38);
-
-
-  doc.addImage(AiOutlineLinkedin, 'PNG', 50, 45, 5, 5); // Position below phone
-
-doc.text(email, 60, 48);
-
-
-  doc.addImage(AiOutlineLinkedin, 'PNG', 50, 55, 5, 5); // Position below email
-
-if (linkedin) {
-  console.log(linkedin)
-  doc.setTextColor(0, 0, 238); // Blue color for hyperlink
-  doc.textWithLink('LinkedIn Profile', 60, 58, { url: linkedin });
-  doc.setTextColor(0, 0, 0); // Reset color
-}
-let yOffset = 80
-        // // After adding email, add LinkedIn if provided
-        // if (linkedin) {
-
-        //     doc.addImage(AiOutlineLinkedin, 'PNG', 20, yOffset - 4, 5, 5);
-        //     doc.setTextColor(0, 0, 238); // Blue color for hyperlink
-        //     doc.textWithLink(linkedin, 30, yOffset, { url: linkedin });
-        //     doc.setTextColor(0, 0, 0); // Reset color
-        //     yOffset += 10;
-        // }
-
-        doc.setFontSize(16);
-        doc.text('Summary', 20, yOffset);
-        yOffset += 8;
-        doc.setFontSize(12);
-        const summaryText = doc.splitTextToSize(summary, 170);
-        doc.text(summaryText, 20, yOffset);
-        yOffset += summaryText.length * 6;
-  
-        // Check if adding experiences will exceed page limit
-        if (yOffset + experiences.length * 30 + educations.length * 30 > 280) {
-          errors.pageLimit = 'Content exceeds one page. Please reduce the number of experiences or educations.';
-          return;
-        }
-  
-        if (experiences.length > 0) {
-          doc.setFontSize(16);
-          doc.text('Experiences', 20, yOffset);
-          yOffset += 8;
-          experiences.forEach(exp => {
-            doc.setFontSize(14);
-            doc.text(exp.role, 20, yOffset);
-            yOffset += 6;
-            doc.text(`at ${exp.company}`, 20, yOffset);
-            yOffset += 6;
-            yOffset += 6;
-            doc.setFontSize(12);
-            doc.text(`${exp.startDate} - ${exp.endDate}`, 20, yOffset);
-            yOffset += 6;
-            const expDesc = doc.splitTextToSize(exp.description, 170);
-            doc.text(expDesc, 20, yOffset);
-            yOffset += expDesc.length * 6 + 6;
-          });
-        }
-  
-        if (educations.length > 0) {
-          doc.setFontSize(16);
-          doc.text('Educations', 20, yOffset);
-          yOffset += 8;
-          educations.forEach(edu => {
-            doc.setFontSize(14);
-            doc.text(`${edu.degree} at ${edu.institution}`, 20, yOffset);
-            yOffset += 6;
-            doc.setFontSize(12);
-            doc.text(`${edu.startDate} - ${edu.endDate}`, 20, yOffset);
-            yOffset += 6;
-            const eduDesc = doc.splitTextToSize(edu.description, 170);
-            doc.text(eduDesc, 20, yOffset);
-            yOffset += eduDesc.length * 6 + 6;
-          });
-        }
-
-        doc.setFontSize(10);
-        doc.text(
-        'I hereby give consent to the processing of my personal data for the purpose of conducting the recruitment process for the position I have applied for.',
-        10,
-        285,
-        { maxWidth: 190 }
-        );
-
-        doc.save('CV.pdf');
-      }
-    }
-
       // Function to add a new skill
   function addSkill() {
     if (skills.length >= MAX_SKILLS) {
@@ -313,21 +197,21 @@ let yOffset = 80
     errors = {};
 
     // Validate skill name
-    if (!newSkill.name.trim()) {
+    if (!newSkill.skillName.trim()) {
       errors.skillName = 'Skill name is required.';
-    } else if (newSkill.name.length > 30) {
+    } else if (newSkill.skillName.length > 30) {
       errors.skillName = 'Skill name cannot exceed 30 characters.';
     }
 
     // Validate proficiency value
-    if (!skillOptions.includes(newSkill.value)) {
+    if (!skillOptions.includes(newSkill.proficiencyLevel)) {
       errors.skillValue = 'Skill value must be between 1 and 5.';
     }
 
     // If no errors, add the skill
     if (Object.keys(errors).length === 0) {
       skills = [...skills, { ...newSkill }];
-      newSkill = { name: '', value: 1 }; // Reset the newSkill object
+      newSkill = { skillName: '', proficiencyLevel: 1 }; // Reset the newSkill object
     }
   }
 
@@ -341,7 +225,9 @@ let yOffset = 80
 
 
   async function  generatePDF2() {
-        //preverification
+    if (! verifyPDFheight()){
+        alert('page is too long')
+    }
     errors = {};
       if (linkedin.length > MAX_LINK_LENGTH) errors.linkedin = `LinkedIn link cannot exceed ${MAX_LINK_LENGTH} characters.`;
 
@@ -490,10 +376,10 @@ let yOffset = 80
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
       skills.forEach(skill => {
-        doc.text(`${skill.name}`, 20, y);
+        doc.text(`${skill.skillName}`, 20, y);
         // Add proficiency level as filled and empty circles (stars)
         for (let i = 0; i < 5; i++) {
-          if (i < skill.value) {
+          if (i < skill.proficiencyLevel) {
             doc.setFillColor(255, 215, 0); // Gold color for filled stars
             doc.circle(80 + i * 5, y - 2, 2, 'F');
           } else {
@@ -535,8 +421,9 @@ let yOffset = 80
           headers: {
             'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${localStorage.getItem('jwt')}`
-          },
-        });
+            },
+          }
+      );
 
         // Handle successful response
         console.log('PDF uploaded successfully:', response.data);
@@ -550,6 +437,177 @@ let yOffset = 80
       doc.save(`${resumeName}.pdf`);
     }
 
+  function  verifyPDFheight() {
+  errors = {};
+    if (linkedin.length > MAX_LINK_LENGTH) errors.linkedin = `LinkedIn link cannot exceed ${MAX_LINK_LENGTH} characters.`;
+
+    // Validate personal information
+    if (!fullName) errors.fullName = 'Full Name is required.';
+    if (fullName.length > MAX_FULL_NAME_LENGTH) errors.fullName = `Full Name cannot exceed ${MAX_FULL_NAME_LENGTH} characters.`;
+
+    if (!email || !validateEmail(email)) errors.email = 'Valid Email is required.';
+    if (email.length > MAX_EMAIL_LENGTH) errors.email = `Email cannot exceed ${MAX_EMAIL_LENGTH} characters.`;
+
+    if (!phone || !validatePhone(phone)) errors.phone = 'Valid Phone Number is required.';
+    if (phone.length > MAX_PHONE_LENGTH) errors.phone = `Phone number cannot exceed ${MAX_PHONE_LENGTH} characters.`;
+
+    if (summary.length > MAX_OVERVIEW_LENGTH) errors.summary = `Summary cannot exceed ${MAX_OVERVIEW_LENGTH} characters.`;
+    if (Object.keys(errors).length !== 0){
+      return
+    }
+      
+    const doc = new jsPDF();
+    // console.log("testDOC",doc.getPageIngefo(), doc.getPageHeight())
+
+    const leftMargin = 20;
+    let y = 20;
+    const lineWidth = 170;
+
+  if (userImage) {
+    doc.addImage(userImage, 'JPEG', leftMargin + lineWidth - 55, 8, 35, 45);
+  }
+
+
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text(fullName, leftMargin, y);
+    y += 6;
+
+    doc.setLineWidth(0.5);
+    doc.line(leftMargin, y, leftMargin + 90, y);
+    y += 10;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Email: ${email}`, leftMargin, y);
+    y += 6;
+    doc.text(`Phone: ${phone}`, leftMargin, y);
+    if (address){
+    y += 6;
+    doc.text(`Address: ${address}`, leftMargin, y);
+    }
+    y += 6;
+    doc.text(`LinkedIn: ${linkedin}`, leftMargin, y);
+    y += 10;
+
+    // Draw a horizontal line
+    doc.line(leftMargin, y, leftMargin + lineWidth, y);
+    y += 10;
+
+    // Summary
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Professional Summary', leftMargin, y);
+    y += 6;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    const summaryLines = doc.splitTextToSize(summary, lineWidth);
+    doc.text(summaryLines, leftMargin, y);
+    y += summaryLines.length * 6 + 4;
+
+    // Draw a horizontal line
+    doc.line(leftMargin, y, leftMargin + lineWidth, y);
+    y += 10;
+
+    // Experience
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Experience', leftMargin, y);
+    y += 6;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    experiences.forEach(exp => {
+
+      const maxEduTitleWidth = 140;
+      const eduTitle = `${exp.role} at ${exp.company}`
+      const eduTitleLines = doc.splitTextToSize(eduTitle, maxEduTitleWidth);
+      doc.setFont('helvetica', 'bold')
+      doc.text(eduTitleLines, leftMargin, y);
+      doc.setFont('helvetica', 'italic');
+      doc.text(`${exp.startDate} - ${exp.endDate}`, leftMargin + 120, y);
+      y += eduTitleLines.length * 6;
+      const expDescription = doc.splitTextToSize(exp.description, lineWidth);
+      doc.setFont('helvetica', 'normal');
+      doc.text(expDescription, leftMargin, y);
+      y += expDescription.length * 6 + 4;
+
+    });
+
+    // Draw a horizontal line
+    doc.line(leftMargin, y, leftMargin + lineWidth, y);
+    y += 10;
+
+    // Education
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Education', leftMargin, y);
+    y += 6;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    educations.forEach(edu => {
+
+
+
+      const eduTitle = `${edu.degree} - ${edu.institution}`;
+      const maxEduTitleWidth = 140; // Maximum width for the title
+      const eduTitleLines = doc.splitTextToSize(eduTitle, maxEduTitleWidth);
+      doc.setFont('helvetica', 'bold');
+      doc.text(eduTitleLines, leftMargin, y);
+      doc.setFont('helvetica', 'italic');
+      doc.text(`${edu.startDate} - ${edu.endDate}`, leftMargin + 120, y);
+      y += eduTitleLines.length * 6; // Adjust y based on the number of lines
+      const eduDescription = doc.splitTextToSize(edu.description, lineWidth);
+      doc.setFont('helvetica', 'normal');
+      doc.text(eduDescription, leftMargin, y);
+      y += eduDescription.length * 6 + 4;
+
+    });
+
+    // Draw a horizontal line
+    doc.line(leftMargin, y, leftMargin + lineWidth, y);
+    y += 10;
+
+  if (skills.length > 0) {
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Skills', 20, y);
+    y += 8;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    skills.forEach(skill => {
+      doc.text(`${skill.skillName}`, 20, y);
+      // Add proficiency level as filled and empty circles (stars)
+      for (let i = 0; i < 5; i++) {
+        if (i < skill.proficiencyLevel) {
+          doc.setFillColor(255, 215, 0); // Gold color for filled stars
+          doc.circle(80 + i * 5, y - 2, 2, 'F');
+        } else {
+          doc.setFillColor(200, 200, 200); // Grey color for empty stars
+          doc.circle(80 + i * 5, y - 2, 2, 'F');
+        }
+      }
+      y += 6;
+
+    });
+  }
+
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      'I hereby give consent to the processing of my personal data for the purpose of conducting the recruitment process for the position I have applied for.',
+      10,
+      285,
+      { maxWidth: 190 }
+    );
+    alert(y)
+    if (y > 275){
+      return false
+    }
+
+    return true
+    
+  }
 
     function removeExperience(index) {
     experiences = experiences.filter((_, i) => i !== index);
@@ -574,7 +632,7 @@ let yOffset = 80
       <section class="section">
         <div class="section">
           <label for="resumeName">Name this resume</label>
-          <input id="resumeName" type="text" bind:value={resumeName} maxlength={MAX_RESUME_NAME_LENGTH} />
+          <input id="resumeName" type="text" bind:value={resumeName} required minlength=1 maxlength={MAX_RESUME_NAME_LENGTH} />
         </div>
         <h3>Personal Information</h3>
         <div class="form-group">
@@ -758,7 +816,7 @@ let yOffset = 80
       <ul>
         {#each skills as skill, index}
           <li>
-            {skill.name} - Level {skill.value}
+            {skill.skillName} - Level {skill.proficiencyLevel}
             <button type="button" on:click={() => removeSkill(index)} style="margin-left: 10px; background-color: #dc3545;">Remove</button>
           </li>
         {/each}
@@ -770,14 +828,14 @@ let yOffset = 80
     <div class="form-row">
       <div class="form-group">
         <label>Skill Name *</label>
-        <input type="text" bind:value={newSkill.name} maxlength="30" />
+        <input type="text" bind:value={newSkill.skillName} maxlength="30" />
         {#if errors.skillName}
           <p class="error-message">{errors.skillName}</p>
         {/if}
       </div>
       <div class="form-group">
         <label>Proficiency Level *</label>
-        <select bind:value={newSkill.value}>
+        <select bind:value={newSkill.proficiencyLevel}>
           {#each skillOptions as option}
             <option value={option}>{option}</option>
           {/each}

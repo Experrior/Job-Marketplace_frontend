@@ -52,67 +52,81 @@
     console.log('gusadfasdfasdf')
     console.log(jobId)
     try{
-    await fetch('http://localhost:8080/job-service/graphql',{
-      method: 'POST',
+        await fetch('http://localhost:8080/job-service/graphql',{
+        method: 'POST',
 
-    headers:{
-              "Content-Type": "application/json",
-              'Authorization': `Bearer ${$user.jwt}`
-            },
-            body: JSON.stringify({
-              query: query,
-              variables: variables
-            })
-    },
-    {
-    },
+        headers:{
+                "Content-Type": "application/json",
+                'Authorization': `Bearer ${$user.jwt}`
+                },
+                body: JSON.stringify({
+                query: query,
+                variables: variables
+                })
+        },
+        {
+        },
           {}
-    ).then(r => r.json()).then(data => newJob = data.data.jobById)
+        ).then(r => r.json()).then(data => newJob = data.data.jobById)
 
 
 
 
-    console.log()
-    console.log('guwno')
-    console.log(newJob)
-    // const stream = response.body.getReader()
-    // console.log(stream.read())
-    // console.log(response.body)
-    // newJob = response.data.data.jobById
-    console.log('done update')
-    console.log(skillsList)
-    console.log(newJob)
-    if (newJob){
-      skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
-    .map(match => ({
-      name: match[1],
-      level: Number(match[2])
-    }));
+        // console.log()
+        // console.log('gw')
+        // console.log(newJob)
+        // // newJob = response.data.jobById
+        
+        // console.log('done update')
+        // console.log(skillsList)
+        // console.log(newJob)
+        if (newJob){
+        skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
+        .map(match => ({
+        name: match[1],
+        level: Number(match[2])
+        }));
+        }
+
+    } catch (err) {
+
+        console.log(err);
+        error = err.message || 'An error occurred while fetching the job.';
+        jobNotFound =true;
+    } finally {
+        loading = false;
     }
 
-        } catch (err) {
 
-          console.log(err);
-          error = err.message || 'An error occurred while fetching the job.';
-          jobNotFound =true;
-      } finally {
-          loading = false;
-      }
+try{
 
-
-      try{
-        const response = await axios.post('http://localhost:8080/user-service/myResumes', {},
-        {headers:
-            {Authorization: "Bearer "+$user.jwt,
-            "Content-Type": "application/json",
+    const query = `query{
+            userResumes{
+                resumeId
+                resumeName
+                s3ResumePath
+                resumeUrl
+                createdAt
             }
+        }`
+
+    //omg this syntax: 
+    const response = {};
+    await fetch('http://localhost:8080/user-service/graphql', {
+        method: 'POST',
+        body: JSON.stringify({query: query})
+            ,
+            headers:
+                {"Authorization": "Bearer "+$user.jwt,
+                "Content-Type": "application/json",
+                }
+            
         }
-        );
-        console.log(response)
-        resumes = response.data
-        }catch (error) {
-            console.log(error)
-        }
+    ).then(r => r.json()).then(data => resumes = data.data.userResumes)
+        console.log("resumes list:", resumes)
+    }catch (error) {
+        console.log(error)
+    }
 
 
   });
@@ -141,9 +155,12 @@
     //     })
     // console.log('test1')
     //   console.log(response)
+
+    //todo fix, now is workaround
       Cookie.set('s3Path', resume.resumeUrl)
       Cookie.set('resumeName', resume.resumeName)
       Cookie.set('jobId',jobId)
+      
 // const response1 = axios.post(`http://localhost:8080/job-service/applications/${jobId}/apply`,{},
 //       {headers:{
 //                     'Authorization': `Bearer ${$user.jwt}`
@@ -151,8 +168,8 @@
 //       )
 //       console.log('938ryfvjdbkuhi')
 //       console.log(response1)
-
-    goto(`/quiz/${newJob.quizId}`)
+    console.log("RESUME: ", resume)
+    goto(`/quiz?quizId=${newJob.quizId}&resume=${resume.resumeId}&jobId=${jobId}`)
   }
 
   // skillsList = [...skillsList.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
