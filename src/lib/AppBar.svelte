@@ -28,7 +28,7 @@
             {/if}
         {/if}
         <a on:click={() => goto('/savedOffers')} class="app-link" aria-label="Saved Offers">Saved Offers</a>
-        <a on:click={() => navigateToSettings('myApplications')} class="app-link" aria-label="My Applications">My Applications</a>
+        <a on:click={() => goto('/applications')} class="app-link" aria-label="My Applications">My Applications</a>
     </div>
 
     {#if $user }
