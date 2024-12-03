@@ -178,7 +178,7 @@
 <style>
   main {
     padding-top: 60px;
-    height: calc(100vh - 60px);
+    height: calc(100vh);
     overflow-y: auto;
     background-color: #f8f9fa;
   }

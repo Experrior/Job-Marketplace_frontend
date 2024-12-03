@@ -10,61 +10,72 @@
   import ChatBox from '$lib/ChatBox.svelte';
 
   let jobId = $page.params.slug;
-  let applicants = [];  
+  let applicants = [];
   let job = {};
   let chatList = [];
   let chatId = '';
   let skillsList = [];
   const sortedApplicants = writable([]);
- onMount(async() => {
-  
-  const query=`query XD($jobId: ID!) {
-  jobApplications(jobId: $jobId) {
-    applicationId
-    userId
-    job {
-      jobId
-      title
-      description
-      location
-      salary
-      createdAt
-    }
-    status
-    quizResult{
-        score
-        timeTaken
-    }
-    fullName
-    resumeUrl
-  }
-}
-`
-    const variables = {
-      jobId : jobId
-    }
-    try {
-    const response = await axios.post('http://localhost:8080/job-service/graphql',
-      {
-        query: query,
-        variables: variables
-      }, {headers:{
-                    "Content-Type": "application/json",
-                    'Authorization': `Bearer ${$user.jwt}`
-                  }}
-    )
-    console.log('5k46mjy5ethrge')
-    console.log(response.data.data.jobApplications)
-    console.log($user.jwt)
-    applicants = response.data.data.jobApplications
-    sortApplicants()
-    } catch (error) {
-      alert(error)
+  let sortColumn = 'score';
+  let sortDirection = 'asc';
+  let applicantsToShow = 5;
+
+  onMount(async () => {
+    await fetchApplicants();
+    await fetchJobDetails();
+    if (job?.requiredSkills) {
+      parseSkills(job.requiredSkills);
     }
 
-        const query2 = `
-    query XD($jobIdi: ID!){
-        jobById(jobId: $jobIdi){
+    console.log("Applicants: ", applicants);
+  });
+
+  async function fetchApplicants() {
+    const query = `
+      query XD($jobId: ID!) {
+        jobApplications(jobId: $jobId) {
+          applicationId
+          userId
+          job {
+            jobId
+            title
+            description
+            location
+            salary
+            createdAt
+          }
+          status
+          quizResult {
+            score
+            timeTaken
+          }
+          fullName
+          resumeUrl
+        }
+      }
+    `;
+
+    try {
+      const response = await axios.post('http://localhost:8080/job-service/graphql', {
+        query,
+        variables: { jobId },
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${$user.jwt}`
+        }
+      });
+      applicants = response.data.data.jobApplications;
+      sortApplicants();
+    } catch (error) {
+      alert(error.message || "An error occurred while fetching applicants.");
+    }
+  }
+
+  async function fetchJobDetails() {
+    const query = `
+      query XD($jobIdi: ID!) {
+        jobById(jobId: $jobIdi) {
           jobId
           title
           location
@@ -77,119 +88,119 @@
           requiredSkills
           quizId
         }
-    }
+      }
     `;
-    const variables2 = {
-      jobIdi: jobId
-      
-    };
-    console.log('gusadfasdfasdf')
-    console.log(jobId)
-    try{
-    await fetch('http://localhost:8080/job-service/graphql',{
-      method: 'POST',
 
-    headers:{
-              "Content-Type": "application/json",
-              'Authorization': `Bearer ${$user.jwt}`
-            },
-            body: JSON.stringify({
-              query: query2,
-              variables: variables2
-            })
-    },
-    {
-    },
-          {}
-    ).then(r => r.json()).then(data => job = data.data.jobById)
-    
-
-
-
-    console.log()
-    console.log('gw54')
-    console.log(job)
-    // const stream = response.body.getReader()
-    // console.log(stream.read())
-    // console.log(response.body)
-    // job = response.data.data.jobById
-    console.log('done update')
-    console.log(skillsList)
-    console.log(job)
-    if (job){
-      skillsList = [...job.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
-    .map(match => ({
-      name: match[1],
-      level: Number(match[2])
-    }));
+    try {
+      const response = await fetch('http://localhost:8080/job-service/graphql', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${$user.jwt}`
+        },
+        body: JSON.stringify({ query, variables: { jobIdi: jobId } })
+      });
+      const data = await response.json();
+      job = data.data.jobById;
+    } catch (error) {
+      console.error(error);
     }
+  }
 
-        } catch (err) {
+  function parseSkills(requiredSkills) {
+    skillsList = [...requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
+            .map(match => ({
+              name: match[1],
+              level: Number(match[2])
+            }));
+  }
 
-          console.log(err);
-          error = err.message || 'An error occurred while fetching the job.';
-          jobNotFound =true;
-      } finally {
-          loading = false;
+  function sortApplicants() {
+    const sorted = [...applicants];
+
+    sorted.sort((a, b) => {
+      let comparison = 0;
+
+      if (sortColumn === 'name') {
+        comparison = a.fullName.localeCompare(b.fullName);
+      } else if (sortColumn === 'score') {
+        comparison = (b.quizResult?.score || 0) - (a.quizResult?.score || 0);
+      } else if (sortColumn === 'time') {
+        comparison = (a.quizResult?.timeTaken || 0) - (b.quizResult?.timeTaken || 0);
+      } else if (sortColumn === 'status') {
+        comparison = a.status.localeCompare(b.status);
       }
 
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
 
+    sortedApplicants.set(sorted);
+  }
 
-})
+  function handleSortChange(column) {
+    if (sortColumn === column) {
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortColumn = column;
+      sortDirection = 'asc';
+    }
+    sortApplicants();
+  }
 
-const sortBy = writable('score');
-
-  let applicantsToShow = 5;
-
-
- 
   function getDuration(totalSeconds) {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
-  function sortApplicants() {
-    let sorted = [...applicants];
-    const currentSort = $sortBy;
-
-    if (currentSort === 'score') {
-      sorted.sort((a, b) => b.score - a.score);
-    } else if (currentSort === 'time') {
-      sorted.sort((a, b) => a.time - b.time);
-    }
-
-    sortedApplicants.set(sorted);
-  }
-
-  sortBy.subscribe(() => {
-    sortApplicants();
-  });
-
-
-  function handleSortChange(criteria) {
-    sortBy.set(criteria);
-  }
-
-
-
   async function startChat(applicantId, applicantName) {
-    console.log($user.jwt)
-    console.log('creating chat', applicantId, applicantName)
-    // TODO add $user.name
-
-    const fullName = $user.firstName + ' '+ $user.lastName
-    fetch(`http://localhost:8080/chat-service/startChat?targetUserId=${applicantId}&recruiterName=${fullName}&applicantName=${applicantName}`,
-     {headers: {"Authorization": "Bearer "+$user.jwt}})
-      .then((response) => response.text())
-      .then((data) => {
-        console.log(data);
-        chatList = JSON.parse(data);
-        chatId = chatList[0];
-        });
+    const fullName = `${$user.firstName} ${$user.lastName}`;
+    try {
+      const response = await fetch(`http://localhost:8080/chat-service/startChat?targetUserId=${applicantId}&recruiterName=${fullName}&applicantName=${applicantName}`, {
+        headers: { "Authorization": `Bearer ${$user.jwt}` }
+      });
+      const data = await response.text();
+      chatList = JSON.parse(data);
+      chatId = chatList[0];
+    } catch (error) {
+      console.error("Error starting chat:", error);
     }
+  }
 
+  async function updateStatus(applicationId, newStatus) {
+    const mutation = `
+      mutation {
+        setApplicationStatus(applicationId: "${applicationId}", status: "${newStatus}") {
+          success
+          message
+        }
+      }
+    `;
+
+    try {
+      const response = await axios.post('http://localhost:8080/job-service/graphql', {
+        query: mutation
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${$user.jwt}`
+        }
+      });
+
+      const result = response.data.data.setApplicationStatus;
+      if (result.success) {
+        alert('Status updated successfully');
+        await fetchApplicants(); // Refresh the applicants list
+      } else {
+        alert(`Failed to update status: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('An error occurred while updating the status.');
+    }
+  }
 </script>
+
 
 <AppBar/>
 
@@ -214,67 +225,7 @@ const sortBy = writable('score');
           requiredSkills={job.requiredSkills}
         />
       </div>
-<!-- 
-      <div class="applicants-overview">
-        <h2>Applicants Overview</h2>
-        <p>Total Applicants: {applicants.length}</p>
 
-        <div class="applicants-number">
-          <label for="applicantsToShow">Number of applicants to display:</label>
-          <input
-            type="number"
-            id="applicantsToShow"
-            min="1"
-            max={applicants.length}
-            bind:value={applicantsToShow}
-          />
-        </div>
-
-        <div class="sorting-options">
-          <span>Sort by:</span>
-          <button
-            class="{ $sortBy === 'time' ? 'active' : '' }"
-            on:click={() => handleSortChange('time')}
-            aria-label="Sort applicants by time"
-          >
-            Score
-          </button>
-          <button
-            class="{ $sortBy === 'score' ? 'active' : '' }"
-            on:click={() => handleSortChange('score')}
-            aria-label="Sort applicants by score"
-          >
-            Time
-          </button>
-        </div>
-
-        <table class="applicants-table">
-          <thead>
-            <tr>
-              <th>Photo</th>
-              <th>Applicant Name</th>
-              <th>Score</th>
-              <th>Time (MM:SS)</th>
-              <th>CV</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each $sortedApplicants.slice(0, applicantsToShow) as applicant}
-            <tr>
-              <td>
-                <img src="{applicant.photo}" alt="{applicant.applicantName} Photo" class="applicant-photo" />
-              </td>
-              <td>{applicant.applicantName}</td>
-              <td>{applicant.score}</td>
-              <td>{getDuration(applicant.time)}</td>
-              <td>
-                <a href="{applicant.cv}" download class="cv-download-button">Download</a>
-              </td>
-            </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div> -->
       <div class="applicants-overview">
         <h2>Applicants Overview</h2>
         <p>Total Applicants: {applicants.length}</p>
@@ -291,56 +242,65 @@ const sortBy = writable('score');
         </div>
       
         <div class="sorting-options">
-          <span>Sort by:</span>
-          <button
-            class="{ $sortBy === 'time' ? 'active' : '' }"
-            on:click={() => handleSortChange('time')}
-            aria-label="Sort applicants by time"
-          >
-            Time
-          </button>
-          <button
-            class="{ $sortBy === 'score' ? 'active' : '' }"
-            on:click={() => handleSortChange('score')}
-            aria-label="Sort applicants by score"
-          >
-            Score
-          </button>
         </div>
-      
+
         <table class="applicants-table">
           <thead>
-            <tr>
-              <th>Photo</th>
-              <th>Applicant Name</th>
-              <th>Score</th>
-              <th>Time (MM:SS)</th>
-              <th>CV</th>
-              <th>Start chat</th>
-            </tr>
+          <tr>
+            <th>Photo</th>
+            <th
+                    class={`sortable ${sortColumn === 'name' ? sortDirection : ''}`}
+                    on:click={() => handleSortChange('name')}>
+              Applicant Name
+            </th>
+            <th
+                    class={`sortable ${sortColumn === 'score' ? sortDirection : ''}`}
+                    on:click={() => handleSortChange('score')}>
+              Score
+            </th>
+            <th
+                    class={`sortable ${sortColumn === 'time' ? sortDirection : ''}`}
+                    on:click={() => handleSortChange('time')}>
+              Time (MM:SS)
+            </th>
+            <th
+                    class={`sortable ${sortColumn === 'status' ? sortDirection : ''}`}
+                    on:click={() => handleSortChange('status')}>
+              Status
+            </th>
+            <th>CV</th>
+            <th>Start Chat</th>
+          </tr>
           </thead>
           <tbody>
-            {#each $sortedApplicants.slice(0, applicantsToShow) as applicant}
+          {#each $sortedApplicants.slice(0, applicantsToShow) as applicant}
             <tr>
               <td>
-                <img
-                  src="{applicant.photo || '/images/profile2.png'}"
-                  class="applicant-photo"
-                />
+                <img src="{applicant.photo || '/images/profile2.png'}" class="applicant-photo" />
               </td>
               <td>{applicant.fullName}</td>
-              <td>{applicant.quizResult?.score ?? 'N/A'}</td>
-              <td>{getDuration(applicant.quizResult?.timeTaken)}</td>
+              <td>{applicant.quizResult && applicant.quizResult.score !== undefined ? applicant.quizResult.score : ''}</td>
+              <td>{applicant.quizResult && applicant.quizResult.timeTaken !== undefined ? getDuration(applicant.quizResult.timeTaken) : ''}</td>
+              <td>
+                <select class="status-select" on:change={(e) => updateStatus(applicant.applicationId, e.target.value)}>
+                  <option value="PENDING" selected={applicant.status === 'PENDING'}>Pending</option>
+                  <option value="APPROVED" selected={applicant.status === 'APPROVED'}>Approved</option>
+                  <option value="REJECTED" selected={applicant.status === 'REJECTED'}>Rejected</option>
+                  <option value="OFFERED" selected={applicant.status === 'OFFERED'}>Offered</option>
+                  <option value="ACCEPTED" selected={applicant.status === 'ACCEPTED'}>Accepted</option>
+                  <option value="DECLINED" selected={applicant.status === 'DECLINED'}>Declined</option>
+                </select>
+              </td>
               <td>
                 <a href="{applicant.resumeUrl || '#'}" download class="cv-download-button">
-                  {applicant.resumeUrl ? 'Download' : 'N/A'}
+                  {applicant.resumeUrl ? 'Download' : ''}
                 </a>
               </td>
               <td>
-                <button on:click={() => startChat(applicant.userId, applicant.fullName)}>StartChat</button>
+                <button class="start-chat-button" on:click={() => startChat(applicant.userId, applicant.fullName)}>StartChat</button>
               </td>
             </tr>
-            {/each}
+          {/each}
           </tbody>
         </table>
       </div>
@@ -391,30 +351,37 @@ const sortBy = writable('score');
     width: 120px;
   }
 
-  .app-bar {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #007bff;
+  .start-chat-button {
     padding: 0.5rem 1rem;
+    background-color: #28a745;
     color: white;
-  }
-
-  .app-name {
-    color: white;
-    text-decoration: none;
-    font-size: 1.5rem;
-  }
-
-  .user-icon {
-    background: none;
     border: none;
+    border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
   }
+
+  .start-chat-button:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+  }
+
+  .status-select {
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: white;
+    color: #495057;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+  }
+
+  .status-select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+  }
+
 
   .full-width-image {
     width: 100%;
@@ -425,10 +392,9 @@ const sortBy = writable('score');
     z-index: 0;
   }
 
-
   .main-content {
     display: flex;
-    max-width: 1200px;
+    max-width: 1450px;
     margin: -80px auto 2rem;
     padding: 1rem;
     position: relative;
@@ -436,7 +402,7 @@ const sortBy = writable('score');
   }
 
   .job-description-container {
-    flex: 1;
+    flex: 0.4;
     margin-right: 1rem;
     background-color: #f8f9fa;
     padding: 1.5rem;
@@ -522,6 +488,32 @@ const sortBy = writable('score');
 
   .applicants-table tr:hover {
     background-color: #f1f1f1;
+  }
+
+  .sortable {
+    cursor: pointer;
+    position: relative;
+  }
+
+  .sortable::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+  }
+
+  .sortable.asc::after {
+    border-bottom-color: #000000;
+  }
+
+  .sortable.desc::after {
+    border-top-color: #000000;
+  }
+
+  .sortable:hover {
+    color: #000000;
   }
 
   @media (max-width: 768px) {
