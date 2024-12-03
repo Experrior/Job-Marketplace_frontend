@@ -1,12 +1,15 @@
 <script>
-    import { goto } from '$app/navigation';
-    import JobDescription from '$lib/JobDescription.svelte';
-    import axios from 'axios';
-    import {user, verifyUser} from '$lib/stores/user';
-    import { onMount } from 'svelte';
-    console.log(verifyUser())
+  import { goto } from '$app/navigation';
+  import JobDescription from '$lib/JobDescription.svelte';
+  import axios from 'axios';
+  import { user, verifyUser } from '$lib/stores/user';
+  import { onMount } from 'svelte';
+  import Quill from 'quill';
+  import 'quill/dist/quill.snow.css';
 
-    let title = '';
+  console.log(verifyUser());
+
+  let title = '';
   let companyLogo = '';
   let location = '';
   let category = '';
@@ -18,37 +21,55 @@
   let skillName = '';
   let skillLevel = 1;
   let skillsList = [];
-let quizName = '';
-let skillChange = false;
-let quizzes = []
+  let quizName = '';
+  let skillChange = false;
+  let quizzes = [];
+  let quillInstance;
 
+  onMount(async () => {
+    // Initialize Quill editor
+    quillInstance = new Quill('#quill-editor', {
+      theme: 'snow',
+      placeholder: 'Describe the job role...',
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, false] }],
+          ['bold', 'italic', 'underline'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link', 'blockquote', 'code-block']
+        ]
+      }
+    });
 
-    onMount(async () => {
-      try {
-          const response = await axios.post('http://localhost:8080/job-service/graphql', {
-      query: `query{
-    quizzesByRecruiter{
-        quizId,
-        quizName
+    // Set initial value for the description
+    quillInstance.on('text-change', () => {
+      description = quillInstance.root.innerHTML; // Bind content to the `description` variable
+    });
+
+    // Fetch quizzes
+    try {
+      const response = await axios.post(
+              'http://localhost:8080/job-service/graphql',
+              {
+                query: `query {
+            quizzesByRecruiter {
+              quizId
+              quizName
+            }
+          }`
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${$user.jwt}`
+                }
+              }
+      );
+      quizzes = response.data.data.quizzesByRecruiter;
+    } catch (error) {
+      alert(error);
     }
-}`
- }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${$user.jwt}`
-        }
-      })
-      console.log($user.jwt)
-      console.log('asdasd')
-      console.log(response)
-      console.log(response.data.data.quizzesByRecruiter)
-      quizzes = response.data.data.quizzesByRecruiter
-      console.log(quizzes)
-    }catch (error) {
-      alert(error)
-    }
-
-})
+  });
 
   const employmentTypes = [
     'Full-time',
@@ -61,40 +82,38 @@ let quizzes = []
   ];
 
   const workLocations = ['remote', 'hybrid', 'stationary'];
-    
-  
-    function addSkill() {
-      if (skillName && skillLevel) {
-        let newSkill = {}
-        newSkill['name'] = skillName;
-        newSkill['level'] = skillLevel;
-        skillsList.push(newSkill)
-        skillName = '';
-        skillLevel = '';
-        console.log("new skills list:")
-        console.log(skillsList)
-        skillChange = ! skillChange;
-      }
-    }
-  
-    async function  submit() {
-        const jobRequestValue = {
-        title,
-        location,
-        employmentType,
-        workLocation,
-        salary: salary ? parseInt(salary) : null,
-        description,
-        requiredExperience,
-        skillsList,
-        };
-        console.log(jobRequestValue);
-        console.log($user.jwt)
-        let quizId = quizzes.find(item => item.quizName === quizName).quizId;
 
-        const mutation = `
-        mutation XD($jobDefinition: JobInput!){
-        createJob(jobRequest: $jobDefinition) {
+  function addSkill() {
+    if (skillName && skillLevel) {
+      let newSkill = {};
+      newSkill['name'] = skillName;
+      newSkill['level'] = skillLevel;
+      skillsList.push(newSkill);
+      skillName = '';
+      skillLevel = '';
+      skillChange = !skillChange;
+    }
+  }
+
+  async function submit() {
+    const jobRequestValue = {
+      title,
+      location,
+      employmentType,
+      workLocation,
+      salary: salary ? parseInt(salary) : null,
+      description,
+      requiredExperience,
+      skillsList
+    };
+
+    console.log(jobRequestValue);
+
+    let quizId = quizzes.find((item) => item.quizName === quizName).quizId;
+
+    const mutation = `
+        mutation XD($jobDefinition: JobInput!) {
+          createJob(jobRequest: $jobDefinition) {
             jobId
             companyId
             title
@@ -105,55 +124,48 @@ let quizzes = []
             salary
             createdAt
             quizId
-        }
+          }
         }`;
-        const variables = {
-            jobDefinition: {
-    title: title,
-    description: description,
-    location: location,
-    salary: salary,
-    requiredSkills: skillsList,
-    requiredExperience: requiredExperience,
-    quizId: quizId,
-    employmentType: employmentType,
-    workLocation: workLocation
-  }
-};
-console.log('COTAMSLUCYCHA')
-console.log(skillsList)
-console.log(quizId)
-console.log(quizzes)
-console.log(variables)
 
-        try {
-            const response = await axios.post('http://localhost:8080/job-service/graphql', {
-      query: mutation,
-      variables: variables
-    }, {headers:{
-               "Content-Type": "application/json",
-               'Authorization': `Bearer ${$user.jwt}`
-            } }
-)
+    const variables = {
+      jobDefinition: {
+        title: title,
+        description: description,
+        location: location,
+        salary: salary,
+        requiredSkills: skillsList,
+        requiredExperience: requiredExperience,
+        quizId: quizId,
+        employmentType: employmentType,
+        workLocation: workLocation
+      }
+    };
 
-console.log(response)
-        if (response.data.errors) {
+    try {
+      const response = await axios.post(
+              'http://localhost:8080/job-service/graphql',
+              {
+                query: mutation,
+                variables: variables
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${$user.jwt}`
+                }
+              }
+      );
 
-        }else{
-
-        }
-          console.log(response.data.data.createJob.jobId)
-          const newJobId = response.data.data.createJob.jobId
-          goto(`/job/${newJobId}`);
-
-        }catch (error) {
-            console.log(error)
-            alert(error)
-        }
-
-
-        // goto('/jobs')
-    // goto(`/jobs/${title.toLowerCase().replace(/\s+/g, '-')}`);
+      if (response.data.errors) {
+        alert(response.data.errors);
+      } else {
+        const newJobId = response.data.data.createJob.jobId;
+        goto(`/job/${newJobId}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error);
+    }
   }
 
   function deleteSkill(index) {
@@ -167,10 +179,10 @@ console.log(response)
   } else if (skillLevel > 5) {
     skillLevel = 5;
   }
+</script>
 
-  </script>
-  
-  <div class="app-bar">
+
+<div class="app-bar">
     <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
     <button class="user-icon" on:click={() => goto('/settings')} aria-label="Go to settings">
       <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
@@ -233,11 +245,12 @@ console.log(response)
           <label for="category">Category</label>
           <input id="category" bind:value={category} placeholder="e.g., Engineering" />
         </div>
-  
+
         <div class="form-group">
           <label for="description">Job Description</label>
-          <textarea id="description" bind:value={description} placeholder="Describe the job role" required></textarea>
+          <div id="quill-editor" style="height: 200px;"></div>
         </div>
+
   
         <div class="form-group">
           <label for="requiredExperience">Required Experience</label>

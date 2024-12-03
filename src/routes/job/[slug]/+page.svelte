@@ -219,7 +219,7 @@
 
             {#if newJob.description}
                 <h2>Job Description</h2>
-                <p class="job-text">{newJob.description}</p>
+                <p class="job-text">{@html newJob.description}</p>
             {/if}
 
             {#if newJob.requiredExperience}
