@@ -63,6 +63,10 @@
         }
     }
 
+    function handleUnlike(jobId) {
+        savedOffers = savedOffers.filter(job => job.jobId !== jobId);
+    }
+
 
     onMount(fetchSavedOffers);
 </script>
@@ -76,7 +80,7 @@
         <div class="job-list-container">
             <ul class="job-list">
                 {#each savedOffers as job}
-                    <JobCard {job} isLiked={true} />
+                    <JobCard {job} isLiked={true} onUnlike={handleUnlike} />
                 {/each}
             </ul>
         </div>

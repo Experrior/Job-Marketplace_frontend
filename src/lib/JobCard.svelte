@@ -1,11 +1,9 @@
 <script>
   import {user, verifyUser} from "$lib/stores/user.js";
   import {goto} from "$app/navigation";
-
   export let job;
-
   export let isLiked = false;
-
+  export let onUnlike;
   const API_URL = "http://localhost:8080/job-service/graphql";
 
   async function callGraphQL(query, variables = {}) {
@@ -38,22 +36,27 @@
   }
 
   async function toggleLike(event) {
-    event.stopPropagation(); // Prevent the job card click event from triggering
+    event.stopPropagation(); // Prevent the card click event from triggering
+
     const query = `
-    mutation ToggleFollowJob($jobId: ID!) {
-      toggleFollowJob(jobId: $jobId) {
-        success
-        message
-        isFollowed
-      }
-    }
-  `;
+        mutation ToggleFollowJob($jobId: ID!) {
+            toggleFollowJob(jobId: $jobId) {
+                success
+                message
+                isFollowed
+            }
+        }
+        `;
     const variables = { jobId: job.jobId };
 
     const result = await callGraphQL(query, variables);
 
     if (result?.toggleFollowJob?.success) {
       isLiked = result.toggleFollowJob.isFollowed;
+
+      if (!isLiked && typeof onUnlike === 'function') {
+        onUnlike(job.jobId); // Call the parent-provided callback
+      }
     } else {
       console.error("Failed to toggle like:", result?.toggleFollowJob?.message || "Unknown error");
     }
