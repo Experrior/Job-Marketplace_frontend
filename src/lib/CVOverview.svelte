@@ -1,44 +1,73 @@
 <script>
-    import { onMount } from 'svelte';
-    import axios from 'axios';
-    import {user, verifyUser} from '$lib/stores/user'
+    import { onMount } from "svelte";
+    import axios from "axios";
+    import { user, verifyUser } from "$lib/stores/user";
+
     let cvs = [];
 
-    onMount(async() => {
+    onMount(async () => {
         verifyUser();
-        const query = `query{
-    userResumes{
-        resumeId
-        resumeName
-        s3ResumePath
-        resumeUrl
-        createdAt
-    }
-}`
-
-        try{
-        const response = await axios.post('http://localhost:8080/user-service/graphql', {
-            query: query,
-        },
-        {headers: 
-            {Authorization: "Bearer "+$user.jwt,
-            "Content-Type": "application/json",
+        const query = `query {
+            userResumes {
+                resumeId
+                resumeName
+                s3ResumePath
+                resumeUrl
+                createdAt
             }
+        }`;
+
+        try {
+            const response = await axios.post(
+                "http://localhost:8080/user-service/graphql",
+                { query: query },
+                {
+                    headers: {
+                        Authorization: "Bearer " + $user.jwt,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            console.log("Response resumes:", response.data.data.userResumes);
+            cvs = response.data.data.userResumes;
+        } catch (error) {
+            console.error(error);
         }
-        );
-        console.log(response)
-        console.log("REPSONSE RESUMES: ", response.data.data.userResumes)
-        cvs = response.data.data.userResumes
-        }catch (error) {
-            console.log(error)
-        }
-        
     });
 
-    function viewCV(id) {
+    function viewCV(resumeUrl) {
+        if (resumeUrl) {
+            window.open(resumeUrl, "_blank");
+        } else {
+            console.error("No resume URL available for this CV.");
+        }
     }
 
-    function deleteCV(id) {
+    async function deleteCV(resumeId) {
+        const confirmed = confirm("Are you sure you want to delete this CV?");
+        if (!confirmed) return;
+
+        try {
+            const response = await axios.post(
+                "http://localhost:8080/user-service/resume/remove",
+                null,
+                {
+                    headers: {
+                        Authorization: "Bearer " + $user.jwt,
+                        "Content-Type": "application/json",
+                    },
+                    params: {
+                        resumeId: resumeId,
+                    },
+                }
+            );
+            console.log("Delete response:", response);
+
+            // Remove the deleted CV from the list
+            cvs = cvs.filter((cv) => cv.resumeId !== resumeId);
+        } catch (error) {
+            console.error("Error deleting CV:", error);
+        }
     }
 </script>
 
@@ -53,8 +82,8 @@
                         <p>Date Created: {cv.createdAt}</p>
                     </div>
                     <div class="cv-actions">
-                        <button class="btn view-btn" on:click={() => viewCV(cv.id)}>View</button>
-                        <button class="btn delete-btn" on:click={() => deleteCV(cv.id)}>Delete</button>
+                        <button class="btn view-btn" on:click={() => viewCV(cv.resumeUrl)}>View</button>
+                        <button class="btn delete-btn" on:click={() => deleteCV(cv.resumeId)}>Delete</button>
                     </div>
                 </li>
             {/each}
