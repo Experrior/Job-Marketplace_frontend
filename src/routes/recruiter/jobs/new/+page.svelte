@@ -12,7 +12,6 @@
   let title = '';
   let companyLogo = '';
   let location = '';
-  let category = '';
   let employmentType = '';
   let workLocation = '';
   let salary = '';
@@ -109,7 +108,7 @@
 
     console.log(jobRequestValue);
 
-    let quizId = quizzes.find((item) => item.quizName === quizName).quizId;
+    let quizId = quizzes.find((item) => item.quizName === quizName)?.quizId || null;
 
     const mutation = `
         mutation XD($jobDefinition: JobInput!) {
@@ -239,12 +238,6 @@
             <label for="salary">Salary ($)</label>
             <input id="salary" type="number" min="0" bind:value={salary} placeholder="e.g., 70000" />
           </div>
-  
-  
-        <div class="form-group">
-          <label for="category">Category</label>
-          <input id="category" bind:value={category} placeholder="e.g., Engineering" />
-        </div>
 
         <div class="form-group">
           <label for="description">Job Description</label>
