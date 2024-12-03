@@ -1,189 +1,185 @@
 <script>
-  import { onMount } from 'svelte';
-  import { page } from '$app/stores';
-  import { goto } from '$app/navigation';
-  import AppBar from '../../../lib/AppBar.svelte';
-  import {user, verifyUser} from '$lib/stores/user'
-  import axios from 'axios';
-  import Cookie from 'js-cookie';
+    import { onMount } from 'svelte';
+    import { page } from '$app/stores';
+    import { goto } from '$app/navigation';
+    import AppBar from '../../../lib/AppBar.svelte';
+    import { user, verifyUser } from '$lib/stores/user';
+    import Cookie from 'js-cookie';
 
-  let jobNotFound = false;
-  let jobId = $page.params.slug;
-  var newJob = {};
-  let loading = true;
-  let error = null;
-  let skillsList = [];
-  let resume = {};
-  let resumes = [];
-  let job= {};
-  //TODO add only verified can apply
-    // let isLoggedIn = false;
-  // onMount(() => {
-  //   let isLoggedIn = verifyUser()
-  // })
-  onMount(async () => {
-    verifyUser()
-    console.log($user.jwt)
+    let jobNotFound = false;
+    let jobId = $page.params.slug;
+    let newJob = {};
+    let loading = true;
+    let error = null;
+    let skillsList = [];
+    let resume = {};
+    let resumes = [];
+    let applications = [];
+    let hasApplied = false;
+    let showError = false;
+    let applicationSuccess = false;
 
-
-    const query = `
-    query XD($jobIdi: ID!){
-        jobById(jobId: $jobIdi){
-          jobId
-          title
-          location
-          employmentType
-          workLocation
-          requiredExperience
-          salary
-          companyId
-          companyName
-          requiredSkills
-          description
-          createdAt
-          quizId
-        }
-    }
-    `;
-    const variables = {
-      jobIdi: jobId
-
-    };
-    console.log('gusadfasdfasdf')
-    console.log(jobId)
-    try{
-        await fetch('http://localhost:8080/job-service/graphql',{
-        method: 'POST',
-
-        headers:{
-                "Content-Type": "application/json",
-                'Authorization': `Bearer ${$user.jwt}`
+    // Helper function for making GraphQL requests
+    async function fetchGraphQL(endpoint, query, variables = {}) {
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${$user.jwt}`,
                 },
-                body: JSON.stringify({
-                query: query,
-                variables: variables
-                })
-        },
-        {
-        },
-          {}
-        ).then(r => r.json()).then(data => newJob = data.data.jobById)
+                body: JSON.stringify({ query, variables }),
+            });
 
-
-
-
-        // console.log()
-        // console.log('gw')
-        // console.log(newJob)
-        // // newJob = response.data.jobById
-        
-        // console.log('done update')
-        // console.log(skillsList)
-        // console.log(newJob)
-        if (newJob){
-        skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
-        .map(match => ({
-        name: match[1],
-        level: Number(match[2])
-        }));
-        }
-
-    } catch (err) {
-
-        console.log(err);
-        error = err.message || 'An error occurred while fetching the job.';
-        jobNotFound =true;
-    } finally {
-        loading = false;
-    }
-
-
-try{
-
-    const query = `query{
-            userResumes{
-                resumeId
-                resumeName
-                s3ResumePath
-                resumeUrl
-                createdAt
+            const { data, errors } = await response.json();
+            if (errors) {
+                console.error('GraphQL errors:', errors);
+                throw new Error(errors.map((err) => err.message).join(', '));
             }
-        }`
-
-    //omg this syntax: 
-    const response = {};
-    await fetch('http://localhost:8080/user-service/graphql', {
-        method: 'POST',
-        body: JSON.stringify({query: query})
-            ,
-            headers:
-                {"Authorization": "Bearer "+$user.jwt,
-                "Content-Type": "application/json",
-                }
-            
+            return data;
+        } catch (err) {
+            console.error('GraphQL request failed:', err);
+            throw err;
         }
-    ).then(r => r.json()).then(data => resumes = data.data.userResumes)
-        console.log("resumes list:", resumes)
-    }catch (error) {
-        console.log(error)
     }
 
+    onMount(async () => {
+        verifyUser();
 
-  });
+        try {
+            // Fetch job details
+            const jobQuery = `
+                query($jobIdi: ID!) {
+                    jobById(jobId: $jobIdi) {
+                        jobId
+                        title
+                        location
+                        employmentType
+                        workLocation
+                        requiredExperience
+                        salary
+                        companyId
+                        companyName
+                        requiredSkills
+                        description
+                        createdAt
+                        quizId
+                    }
+                }
+            `;
+            const jobData = await fetchGraphQL(
+                'http://localhost:8080/job-service/graphql',
+                jobQuery,
+                { jobIdi: jobId }
+            );
+            newJob = jobData.jobById;
 
-  console.log("test1")
-  console.log(newJob)
+            if (newJob) {
+                skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)].map(
+                    (match) => ({
+                        name: match[1],
+                        level: Number(match[2]),
+                    })
+                );
+            }
+        } catch (err) {
+            error = err.message || 'An error occurred while fetching the job.';
+            jobNotFound = true;
+        } finally {
+            loading = false;
+        }
 
-  function formatDate(dateString) {
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      return new Date(dateString).toLocaleDateString(undefined, options);
-  }
+        try {
+            // Fetch user resumes
+            const resumesQuery = `
+                query {
+                    userResumes {
+                        resumeId
+                        resumeName
+                        s3ResumePath
+                        resumeUrl
+                        createdAt
+                    }
+                }
+            `;
+            const resumesData = await fetchGraphQL('http://localhost:8080/user-service/graphql', resumesQuery);
+            resumes = resumesData.userResumes;
 
-  async function takeQuiz(){
+            // Fetch user applications
+            const applicationsQuery = `
+                query {
+                    userApplications {
+                        job {
+                            jobId
+                        }
+                    }
+                }
+            `;
+            const applicationsData = await fetchGraphQL(
+                'http://localhost:8080/job-service/graphql',
+                applicationsQuery
+            );
+            applications = applicationsData.userApplications;
 
-    console.log("KAOSODASDIABSD")
-    console.log(localStorage.getItem('jwt'))
-    console.log($user.jwt)
+            hasApplied = applications.some((app) => app.job.jobId === jobId);
 
+            console.log('Applications:', applications);
+            console.log('Has applied:', hasApplied);
 
+        } catch (err) {
+            console.error('Error fetching user data:', err);
+        }
+    });
 
-    // resume.resumeUrl
-    // const response = await axios.get(resume.resumeUrl, {}, {
-    //       headers: {
-    //         'Content-Type': 'multipart/form-data',
-    //       },
-    //     })
-    // console.log('test1')
-    //   console.log(response)
+    function formatDate(dateString) {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    }
 
-    //todo fix, now is workaround
-      Cookie.set('s3Path', resume.resumeUrl)
-      Cookie.set('resumeName', resume.resumeName)
-      Cookie.set('jobId',jobId)
-      
-// const response1 = axios.post(`http://localhost:8080/job-service/applications/${jobId}/apply`,{},
-//       {headers:{
-//                     'Authorization': `Bearer ${$user.jwt}`
-//                   }}
-//       )
-//       console.log('938ryfvjdbkuhi')
-//       console.log(response1)
-    console.log("RESUME: ", resume)
-    goto(`/quiz?quizId=${newJob.quizId}&resume=${resume.resumeId}&jobId=${jobId}`)
-  }
+    async function takeQuiz() {
+        if (!resume.resumeId) {
+            showError = true;
+            return;
+        }
+        showError = false;
 
-  // skillsList = [...skillsList.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)]
-  // .map(match => ({
-  //   name: match[1],
-  //   level: Number(match[2])
-  // }));
-  console.log('smiec')
-  console.log(skillsList)
+        if (newJob.quizId) {
+            Cookie.set('s3Path', resume.resumeUrl);
+            Cookie.set('resumeName', resume.resumeName);
+            Cookie.set('jobId', jobId);
+            goto(`/quiz?quizId=${newJob.quizId}&resume=${resume.resumeId}&jobId=${jobId}`);
+        } else {
+            try {
+                const applyMutation = `
+                    mutation {
+                        applyForJob(jobId: "${jobId}", resumeId: "${resume.resumeId}") {
+                            applicationId
+                            userId
+                            job {
+                                jobId
+                            }
+                            status
+                            fullName
+                            createdAt
+                            resumeUrl
+                        }
+                    }
+                `;
+                const applicationData = await fetchGraphQL(
+                    'http://localhost:8080/job-service/graphql',
+                    applyMutation
+                );
+                console.log('Application successful:', applicationData);
+                applicationSuccess = true;
+            } catch (err) {
+                console.error('Error applying for job:', err);
+                // Handle error (e.g., show an error message)
+            }
+        }
+    }
 </script>
 
 <AppBar/>
-
-
 
 <div class="scrollable-page">
     <img src="/images/job_background.webp" alt="Job Background" class="full-width-image" />
@@ -250,21 +246,46 @@ try{
                 </ul>
             {/if}
 
-            {#if resumes?.length > 0}
-                <div class="form-group">
-                    <label for="resume">Specify CV</label>
-                    <select id="resume" bind:value={resume} class="resume-dropdown">
-                        <option value="" disabled selected>Select a CV</option>
-                        {#each resumes as resume}
-                            <option value="{resume}">{resume.resumeName}</option>
-                        {/each}
-                    </select>
+            <div class="form-group">
+                <label for="resume">Specify CV</label>
+                <select id="resume" bind:value={resume} class="resume-dropdown" required>
+                    <option value="" disabled selected>Select a CV</option>
+                    {#each resumes as resume}
+                        <option value="{resume}">{resume.resumeName}</option>
+                    {/each}
+                </select>
+                {#if showError}
+                    <p class="error-message">Specify a resume.</p>
+                {/if}
+            </div>
+
+            {#if applicationSuccess}
+                <div class="success-card">
+                    <h2>Application Submitted Successfully!</h2>
+                    <p>You have applied for the position of <strong>{newJob.title}</strong> at <strong>{newJob.companyName}</strong>.</p>
+                    <p>Recruiters will review your application and get back to you shortly.</p>
+                    <div class="next-steps">
+                        <h3>Next Steps:</h3>
+                        <ul>
+                            <li>Prepare for potential interviews.</li>
+                            <li>Check your email for updates on your application.</li>
+                        </ul>
+                    </div>
+                    <button class="view-application-button" on:click={() => goto('/applications')}>
+                        View My Applications
+                    </button>
                 </div>
+            {:else if hasApplied}
+                <p>You have already applied for this position.</p>
+                <button class="submit-button" on:click={() => goto('/applications')}>
+                    View Application
+                </button>
+            {:else}
+                <button class="submit-button" on:click={takeQuiz}>
+                    Apply Now
+                </button>
             {/if}
 
-            <button class="apply-button" on:click={takeQuiz}>
-                Apply Now
-            </button>
         </div>
     {:else}
         <p class="error-message">Job not found.</p>
@@ -408,7 +429,7 @@ try{
         box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
     }
 
-    .apply-button {
+    .submit-button {
         display: block;
         width: 100%;
         text-align: center;
@@ -424,7 +445,7 @@ try{
         margin-top: 1rem;
     }
 
-    .apply-button:hover {
+    .submit-button:hover {
         background-color: #8697C4;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         transform: translateY(-2px);
@@ -432,15 +453,67 @@ try{
 
     .loading-message,
     .error-message {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         color: #666666;
-        text-align: center;
-        margin-top: 2rem;
+        text-align: left;
+        margin-top: 0.5rem;
     }
 
     .error-message {
         color: #e74c3c;
     }
+
+    .success-card {
+        background: #e7f5ff;
+        padding: 20px;
+        border: 2px solid #90e0ef;
+        border-radius: 10px;
+        text-align: center;
+        max-width: 600px;
+        margin: 20px auto;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .success-card h2 {
+        color: #0077b6;
+        font-size: 1.8rem;
+    }
+
+    .success-card p {
+        color: #023e8a;
+        margin: 10px 0;
+    }
+
+    .success-card .next-steps {
+        margin-top: 20px;
+        text-align: left;
+    }
+
+    .success-card .next-steps h3 {
+        color: #0077b6;
+    }
+
+    .success-card ul {
+        color: #023e8a;
+        list-style: disc;
+        margin-left: 20px;
+    }
+
+    .success-card .view-application-button {
+        background: #0096c7;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 20px;
+        text-transform: uppercase;
+    }
+
+    .success-card .view-application-button:hover {
+        background: #0077b6;
+    }
+
 
     @media (max-width: 768px) {
         .job-description {
