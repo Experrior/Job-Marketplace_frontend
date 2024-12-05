@@ -1,14 +1,20 @@
 <script>
     import { onMount } from 'svelte';
-    import {user, verifyUser} from "$lib/stores/user.js";
-    import {goto} from "$app/navigation";
+    import { user, verifyUser } from "$lib/stores/user.js";
+    import { goto } from "$app/navigation";
     import JobCard from "$lib/JobCard.svelte";
     import AppBar from "$lib/AppBar.svelte";
+    import Toast from "$lib/Toast.svelte";
 
     const API_URL = "http://localhost:8080/job-service/graphql";
 
     let savedOffers = [];
+    let savedOffersCopy = [];
+    let pendingRemovals = [];
     let error = '';
+    let showToast = false;
+    let toastMessage = "";
+    let toastJobId;
 
     async function callGraphQL(query, variables = {}) {
         if (!verifyUser()) {
@@ -21,7 +27,7 @@
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${$user.jwt}`,
                 },
-                body: JSON.stringify({ query, variables }),
+                body: JSON.stringify({query, variables}),
             });
             const data = await response.json();
             if (data.errors) {
@@ -45,14 +51,14 @@
                 salary
                 createdAt
             }
-        }
-    `;
+        }`;
 
         try {
             const result = await callGraphQL(query);
 
             if (result && result.followedJobs) {
                 savedOffers = result.followedJobs;
+                savedOffersCopy = [...result.followedJobs];
             } else {
                 console.error('GraphQL error:', result.errors);
                 error = 'Could not load saved offers. Please try again later.';
@@ -64,14 +70,87 @@
     }
 
     function handleUnlike(jobId) {
+        toastMessage = "Job removed. Undo?";
+        toastJobId = jobId;
+        showToast = true;
+
+        // Find and store the full job object in pendingRemovals
+        const jobToRemove = savedOffers.find(job => job.jobId === jobId);
+        if (jobToRemove) {
+            pendingRemovals.push(jobToRemove);
+        }
+
+        // Temporarily remove job from the UI
         savedOffers = savedOffers.filter(job => job.jobId !== jobId);
+    }
+
+
+    function cancelToast() {
+        showToast = false;
+
+        const restoredJobId = toastJobId;
+        if (restoredJobId) {
+            // Find the job in pendingRemovals with full data
+            const jobToRestore = pendingRemovals.find(job => job.jobId === restoredJobId);
+            console.log("Restoring job:", jobToRestore);
+            if (jobToRestore) {
+                // Remove the job from pendingRemovals
+                pendingRemovals = pendingRemovals.filter(job => job.jobId !== restoredJobId);
+                console.log("Pending removals:", pendingRemovals);
+
+                // Reinsert the job into savedOffers in the correct position
+                const originalIndex = savedOffersCopy.findIndex(job => job.jobId === restoredJobId);
+                console.log("Original index:", originalIndex);
+                savedOffers = [
+                    ...savedOffers.slice(0, originalIndex),
+                    jobToRestore,
+                    ...savedOffers.slice(originalIndex),
+                ];
+            }
+        }
+
+        toastJobId = null;
+    }
+
+
+    async function confirmRemove() {
+        const confirmedJobId = toastJobId;
+        if (confirmedJobId) {
+            // Remove the job from pendingRemovals
+            pendingRemovals = pendingRemovals.filter(id => id !== confirmedJobId);
+
+            // Backend request
+            const query = `
+        mutation RemoveFollowedJob($jobId: ID!) {
+            removeFollowedJob(jobId: $jobId) {
+                success
+                message
+            }
+        }`;
+            const variables = { jobId: confirmedJobId };
+
+            try {
+                const result = await callGraphQL(query, variables);
+
+                if (!result?.removeFollowedJob?.success) {
+                    console.error("Failed to remove job:", result?.removeFollowedJob?.message || "Unknown error");
+                    // Optionally, restore the job in the UI if the backend request fails
+                }
+            } catch (err) {
+                console.error("Error while removing job:", err);
+            }
+        }
+
+        // Reset toast
+        showToast = false;
+        toastJobId = null;
     }
 
 
     onMount(fetchSavedOffers);
 </script>
 
-<AppBar />
+<AppBar/>
 
 <div class="container">
     {#if savedOffers.length === 0 && !error}
@@ -80,12 +159,21 @@
         <div class="job-list-container">
             <ul class="job-list">
                 {#each savedOffers as job}
-                    <JobCard {job} isLiked={true} onUnlike={handleUnlike} />
+                    <JobCard {job} isLiked={true} useToast={true} onUnlike={handleUnlike} />
                 {/each}
             </ul>
         </div>
     {/if}
 </div>
+
+{#if showToast}
+    <Toast
+            message={toastMessage}
+            duration={3000}
+            onCancel={cancelToast}
+            onExpire={confirmRemove}
+    />
+{/if}
 
 <style>
     .container {
@@ -100,8 +188,8 @@
         padding: 1rem;
         border-radius: 0.375rem;
         width: 70%;
-        max-height: calc(100vh - 8rem); /* Dynamic max-height relative to viewport */
-        overflow-y: auto; /* Enable vertical scrolling */
+        max-height: calc(100vh - 8rem);
+        overflow-y: auto;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 

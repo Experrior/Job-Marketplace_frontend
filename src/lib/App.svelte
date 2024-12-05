@@ -149,7 +149,7 @@
         {#if paginatedJobs.length > 0}
           <div class="job-list">
             {#each paginatedJobs as job}
-              <JobCard {job} isLiked={followedJobIds.has(job.jobId)} />
+              <JobCard {job} isLiked={followedJobIds.has(job.jobId)} useToast={false} />
             {/each}
           </div>
         {:else}
