@@ -92,7 +92,7 @@
 <main>
     <AppBar/>
     <div class="page-container">
-        <h1>My Applications</h1>
+        <h2>My Applications</h2>
 
         {#if error}
             <p class="error">{error}</p>
@@ -128,14 +128,17 @@
 
 <style>
     main {
+        margin-top: 30px;
         background: #f5f7fa;
         padding: 2rem;
         font-family: Arial, sans-serif;
+        height: 100vh; /* Ensure it takes the full viewport height */
+        overflow-y: auto; /* Allow vertical scrolling */
     }
 
     .page-container {
         max-width: 1200px;
-        margin: 0 auto;
+        margin: 30px auto;
     }
 
     h1 {
@@ -233,3 +236,4 @@
         text-decoration: underline;
     }
 </style>
+
