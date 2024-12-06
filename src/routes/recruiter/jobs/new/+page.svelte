@@ -16,7 +16,7 @@
   let workLocation = '';
   let salary = '';
   let description = '';
-  let requiredExperience = '';
+  let requiredExperience = 0;
   let skillName = '';
   let skillLevel = 1;
   let skillsList = [];
@@ -73,14 +73,22 @@
   const employmentTypes = [
     'Full-time',
     'Part-time',
-    'Contract Work',
+    'Contract',
     'Internship',
-    'B2B',
-    'Specific-task contract',
+    'Temporary',
     'Freelance'
   ];
 
-  const workLocations = ['remote', 'hybrid', 'stationary'];
+  const employmentTypeMapping = {
+    'Full-time': 'FULL_TIME',
+    'Part-time': 'PART_TIME',
+    'Contract': 'CONTRACT',
+    'Internship': 'INTERNSHIP',
+    'Temporary': 'TEMPORARY',
+    'Freelance': 'FREELANCE'
+  };
+
+  const workLocations = ['remote', 'hybrid', 'onsite'];
 
   function addSkill() {
     if (skillName && skillLevel) {
@@ -98,7 +106,7 @@
     const jobRequestValue = {
       title,
       location,
-      employmentType,
+      employmentType: employmentTypeMapping[employmentType],
       workLocation,
       salary: salary ? parseInt(salary) : null,
       description,
@@ -135,7 +143,7 @@
         requiredSkills: skillsList,
         requiredExperience: requiredExperience,
         quizId: quizId,
-        employmentType: employmentType,
+        employmentType: employmentTypeMapping[employmentType],
         workLocation: workLocation
       }
     };
@@ -244,10 +252,9 @@
           <div id="quill-editor" style="height: 200px;"></div>
         </div>
 
-  
         <div class="form-group">
-          <label for="requiredExperience">Required Experience</label>
-          <textarea id="requiredExperience" bind:value={requiredExperience} placeholder="Detail the required experience"></textarea>
+          <label for="requiredExperience">Required Experience in Years</label>
+          <input id="requiredExperience" type="number" bind:value={requiredExperience} min="0" />
         </div>
 
         <div class="form-group">

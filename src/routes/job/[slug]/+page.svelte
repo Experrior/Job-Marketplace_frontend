@@ -223,8 +223,10 @@
             {/if}
 
             {#if newJob.requiredExperience}
-                <h2>Required Experience</h2>
-                <p class="job-text">{newJob.requiredExperience}</p>
+                <div class="experience-section">
+                    <h2>Experience Required</h2>
+                    <p class="experience-number">{newJob.requiredExperience} years</p>
+                </div>
             {/if}
 
             {#if skillsList?.length > 0}
@@ -410,6 +412,7 @@
     .star.empty {
         color: #e0e0e0;
     }
+
 
     .resume-dropdown {
         width: 100%;
