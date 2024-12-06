@@ -17,6 +17,7 @@
   let salary = '';
   let description = '';
   let requiredExperience = 0;
+  let experienceLevel = '';
   let skillName = '';
   let skillLevel = 1;
   let skillsList = [];
@@ -88,6 +89,8 @@
     'Freelance': 'FREELANCE'
   };
 
+  const experienceLevels = ['Intern', 'Junior', 'Mid', 'Senior', 'Lead', 'Manager', 'Director', 'Executive'];
+
   const workLocations = ['remote', 'hybrid', 'onsite'];
 
   function addSkill() {
@@ -142,6 +145,7 @@
         salary: salary,
         requiredSkills: skillsList,
         requiredExperience: requiredExperience,
+        experienceLevel: experienceLevel,
         quizId: quizId,
         employmentType: employmentTypeMapping[employmentType],
         workLocation: workLocation
@@ -231,13 +235,23 @@
               {/each}
             </select>
           </div>
-      
+
           <div class="form-group">
             <label for="workLocation">Work Location</label>
             <select id="workLocation" bind:value={workLocation} required>
               <option value="" disabled selected>Select work location</option>
               {#each workLocations as loc}
                 <option value="{loc}">{loc.charAt(0).toUpperCase() + loc.slice(1)}</option>
+              {/each}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="experienceLevel">Experience Level</label>
+            <select id="experienceLevel" bind:value={experienceLevel} required>
+              <option value="" disabled selected>Select experience level</option>
+              {#each experienceLevels as level}
+                <option value="{level}">{level.charAt(0).toUpperCase() + level.slice(1)}</option>
               {/each}
             </select>
           </div>
