@@ -15,31 +15,35 @@
         filters.requiredSkills = selectedSkills;
     }
 
-    function handleWorkTypeChange(event) {
-        filters.workType = event.target.value;
+    function handleWorkLocationChange(event) {
+        filters.workLocation = event.target.value;
     }
 
     function handleEmploymentTypeChange(event) {
         filters.employmentType = event.target.value;
+    }
+
+    function handleExperienceLevel(event) {
+        filters.experienceLevel = event.target.value;
     }
 </script>
 
 <div class="filter-section">
     <h2>Filters</h2>
     <label>
+        Company Name
+        <input type="text" bind:value={filters.companyId} />
+    </label>
+    <label>
         Location
         <input type="text" bind:value={filters.location} />
     </label>
     <label>
-        Required Experience
-        <input type="text" bind:value={filters.requiredExperience} />
-    </label>
-    <label>
         Work Type
-        <select bind:value={filters.workType} on:change={handleWorkTypeChange}>
+        <select bind:value={filters.workLocation} on:change={handleWorkLocationChange}>
             <option value="">Any</option>
             <option value="remote">Remote</option>
-            <option value="on-site">On Site</option>
+            <option value="onsite">On Site</option>
             <option value="hybrid">Hybrid</option>
         </select>
     </label>
@@ -47,13 +51,27 @@
         Employment Type
         <select bind:value={filters.employmentType} on:change={handleEmploymentTypeChange}>
             <option value="">Any</option>
-            <option value="full-time">Full Time</option>
-            <option value="part-time">Part Time</option>
+            <option value="full_time">Full Time</option>
+            <option value="part_time">Part Time</option>
+            <option value="contract">Contract</option>
+            <option value="internship">Internship</option>
+            <option value="temporary">Temporary</option>
+            <option value="freelance">Freelance</option>
         </select>
     </label>
     <label>
-        Company Name
-        <input type="text" bind:value={filters.companyId} />
+        Experience Level
+        <select bind:value={filters.experienceLevel} on:change={handleExperienceLevel}>
+            <option value="">Any</option>
+            <option value="intern">Intern</option>
+            <option value="entry">Junior</option>
+            <option value="mid">Mid</option>
+            <option value="senior">Senior</option>
+            <option value="lead">Lead</option>
+            <option value="manager">Manager</option>
+            <option value="director">Director</option>
+            <option value="executive">Executive</option>
+        </select>
     </label>
     <label class="has-salary-container">
         <span>Has Salary</span>
