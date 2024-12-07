@@ -5,7 +5,7 @@
     import AppBar from '../../../lib/AppBar.svelte';
     import { user, verifyUser } from '$lib/stores/user';
     import Cookie from 'js-cookie';
-
+    
     let jobNotFound = false;
     let jobId = $page.params.slug;
     let newJob = {};
@@ -19,10 +19,15 @@
     let showError = false;
     let applicationSuccess = false;
 
-    // Helper function for making GraphQL requests
+
+    console.log('All env vars:', import.meta.env);
+    
+    const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+    console.log("USING GATEWAY:", apiGateway);
+    
     async function fetchGraphQL(endpoint, query, variables = {}) {
         try {
-            const response = await fetch(endpoint, {
+            const response = await fetch(apiGateway + endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -68,7 +73,7 @@
                 }
             `;
             const jobData = await fetchGraphQL(
-                'http://localhost:8080/job-service/graphql',
+                '/job-service/graphql',
                 jobQuery,
                 { jobIdi: jobId }
             );
@@ -102,7 +107,7 @@
                     }
                 }
             `;
-            const resumesData = await fetchGraphQL('http://localhost:8080/user-service/graphql', resumesQuery);
+            const resumesData = await fetchGraphQL('/user-service/graphql', resumesQuery);
             resumes = resumesData.userResumes;
 
             // Fetch user applications
@@ -116,7 +121,7 @@
                 }
             `;
             const applicationsData = await fetchGraphQL(
-                'http://localhost:8080/job-service/graphql',
+                '/job-service/graphql',
                 applicationsQuery
             );
             applications = applicationsData.userApplications;
@@ -166,7 +171,7 @@
                     }
                 `;
                 const applicationData = await fetchGraphQL(
-                    'http://localhost:8080/job-service/graphql',
+                    '/job-service/graphql',
                     applyMutation
                 );
                 console.log('Application successful:', applicationData);
