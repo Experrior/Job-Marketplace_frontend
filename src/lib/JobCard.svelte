@@ -5,9 +5,12 @@
   export let isLiked = false;
   export let onUnlike;
   export let useToast = true; // Default to true for backward compatibility
+  export let logoUrl;
 
   const API_URL = "http://localhost:8080/job-service/graphql";
 
+
+  console.log("Logo URL: ", logoUrl);
   async function callGraphQL(query, variables = {}) {
     if (!verifyUser()) {
       goto('/login');
@@ -34,7 +37,7 @@
   }
 
   function navigateToJob() {
-    window.location.href = `/job/${job.jobId}`;
+    window.location.href = `/job/${job.jobId}?companyLogo=${encodeURIComponent(logoUrl)}`;
   }
 
   async function toggleLike(event) {
@@ -102,7 +105,7 @@
 
 <div class="job-card" on:click={navigateToJob}>
   <div class="company-logo">
-    <img src="/images/visa-logo.png" alt="Visa Logo" />
+    <img src={logoUrl} alt="{job.companyName} Logo" />
   </div>
 
   <div class="job-info">
@@ -169,14 +172,24 @@
   }
 
   .company-logo {
-    width: 50px;
-    height: 50px;
+    width: 60px; /* Adjust the width as needed */
+    height: 60px; /* Adjust the height to match the width */
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: 50%; /* Circular logo */
     overflow: hidden;
+    /*background-color: #f5f5f5; !* Light grey background for fallback *!*/
+    /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); !* Optional shadow for a modern look *!*/
   }
+
+  .company-logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover; /* Ensures the image is properly cropped */
+    object-position: center; /* Centers the image within the container */
+  }
+
 
   .job-info {
     flex: 1;

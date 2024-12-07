@@ -18,6 +18,7 @@
     let hasApplied = false;
     let showError = false;
     let applicationSuccess = false;
+    let companyLogo = '';
 
     // Helper function for making GraphQL requests
     async function fetchGraphQL(endpoint, query, variables = {}) {
@@ -45,6 +46,11 @@
 
     onMount(async () => {
         verifyUser();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        companyLogo = urlParams.get('companyLogo');
+
+        console.log('Company Logo:', companyLogo);
 
         try {
             // Fetch job details
@@ -82,6 +88,8 @@
                     })
                 );
             }
+
+            console.log('New Job:', newJob);
         } catch (err) {
             error = err.message || 'An error occurred while fetching the job.';
             jobNotFound = true;
@@ -190,8 +198,8 @@
         <p class="error-message">Job not found</p>
     {:else if newJob}
         <div class="job-description">
-            {#if newJob.companyLogo}
-                <img src="{newJob.companyLogo}" alt="{newJob.companyName} Logo" class="company-logo" />
+            {#if companyLogo}
+                <img src="{companyLogo}" alt="{newJob.companyName} Logo" class="company-logo" />
             {/if}
 
             <h1 class="job-title">{newJob.title}</h1>
@@ -322,12 +330,12 @@
     }
 
     .company-logo {
-        width: 70px;
-        height: 70px;
-        object-fit: cover;
-        border-radius: 50%;
-        margin-bottom: 1rem;
-        border: 1px solid #e5e5e5;
+        width: 150px; /* Width of the logo */
+        height: 150px; /* Height of the logo */
+        object-fit: contain; /* Ensure the entire image is visible */
+        display: block; /* Ensure it is a block element */
+        margin-left: auto; /* Center horizontally */
+        margin-right: auto; /* Center horizontally */
     }
 
     .job-title {
