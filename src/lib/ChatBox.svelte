@@ -9,7 +9,6 @@
   let newMessage = "";
   let chatMessages = {};
   let gotNewMessage = false;
-  let chatId = '';
   let chatList = [];
   let chatsMap = {};
   let messagesContainer;
@@ -21,18 +20,15 @@
 
     await initializeWebSocketConn();
     await getUserChats()
-    console.log("CHATTY", chatList)
-    console.log("livetowin!", chatMessages)
+    console.log("chatList:", chatList)
+    console.log("chatMessages:", chatMessages)
 
     scrollToBottom();
 
-
-    // awaitinitializeWebSocketConn();
   });
 
   afterUpdate(() => {
 		console.log("afterUpdate");
-		// scrollToBottom(element);
   });
 
   function scrollToBottom() {
@@ -41,7 +37,6 @@
     }
   }
 
-  // Reactive to currentChatId or messages update
   $: {
     if (currentChatId !== null) {
       scrollToBottom();
@@ -65,7 +60,6 @@
         throw new Error(`Error fetching chats: ${response.statusText}`);
       }
 
-      console.log('chattts')
       chatList = response.data;
       if (chatList.length > 0) {
         selectChat(chatList[0].ChatId);
@@ -79,26 +73,21 @@
 
   }
 
-  // Clean up WebSocket connection on component destroy
   onDestroy(() => {
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.close();
-      console.log("CLOOOOOOSED WEEBSOCKT!!!!")
+      console.log("CLOSED WEBSOCKET")
     }
   });
 
-  // Function to toggle the chat box visibility
+
   async function toggleChatBox() {
     isOpen = !isOpen;
     await getUserChats()
 
-    // Optionally, fetch messages for the current chat when opening
-    // if (isOpen && currentChatId !== null) {
-    //   fetchMessages(currentChatId);
-    // }
+
   }
 
-  // Function to select a chat
   async function selectChat(chatId) {
     currentChatId = chatId;
     gotNewMessage = false;
@@ -106,7 +95,7 @@
   }
 
   async function fetchMessages(chatId) {
-    console.log("BAMBUS", socket.readyState)
+    console.log("socket.readyState: ", socket.readyState)
     console.log(chatId)
   if (socket && socket.readyState) {
     const request = {
@@ -126,10 +115,6 @@
 
   async function initializeWebSocketConn() {
     socket = await new WebSocket(`ws://localhost:8080/chat_service/ws?userId=${$user.userId}`);
-    console.log("DEBUGGG1")
-    socket.onopen = () => {
-      console.log("WebSocket connection established");
-    };
 
     socket.onmessage = (event) => {
           const messages = JSON.parse(event.data);
@@ -180,12 +165,12 @@
     };
 
     socket.onopen = async () => {
-      console.log('oneopen:')
+      console.log("WebSocket connection established");
       if (currentChatId){
         const request = {
         operation: "getAll",
           message: {
-          chatId: chatId,
+          chatId: currentChatId,
           CreatedBy: $user.userId,
         },
       };
@@ -201,34 +186,6 @@
 
 
 
-  // Function to scroll the messages container to the bottom
-  // function scrollToBottom() {
-  //   setTimeout(() => {
-  //     if (messagesContainer) {
-  //       messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  //     }
-  //   }, 0);
-  // }
-
-
-  async function sendManualRequest() {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      const request = {
-        operation: "get",
-        message: {
-          ChatId: chatId,
-          CreatedBy: userId,
-        },
-      };
-      await socket.send(JSON.stringify(request));
-      console.log("Manual request sent:", request);
-    } else {
-      alert("WebSocket is not connected. Please start the chat first.");
-      await initializeWebSocketConn()
-    }
-  }
-
-
   async function sendMessage(chatId) {
     if (!newMessage) {
       alert("Please enter a message to send.");
@@ -236,7 +193,6 @@
     }
     console.log("State", socket.readyState)
     if (socket && socket.readyState === 1) {
-      // const chatId = chatList[0].ChatId;
       console.log("chats list: ", chatList)
 
       const message = {
@@ -259,19 +215,9 @@
     }
   }
 
-
-  // const scrollToBottom = async (node) => {
-  //   node.scroll({ top: 0, behavior: 'smooth' });
-  // }; 
-
-
-
-
-
 </script>
 
 <div class="chat-box-container">
-  <!-- Chat header -->
   <div
     class="chat-header"
     role="button"
@@ -298,9 +244,6 @@
         <div class="chat-list-container">
           <ul class="chat-list">
             {#each chatList as chat}
-
-            <!-- {#each Object.keys(chatMessages) as chat} -->
-              <!-- <text>{chat}</text> -->
               <li
                 class:active={chat.id === currentChatId}
                 on:click={() => selectChat(chat.ChatId)}>
@@ -310,13 +253,8 @@
           </ul>
         </div>
 
-
-
-        <!-- Message area --> 
         <div class="message-area">
           {#if currentChatId !== null}
-          <!-- <text>`${chatMessages}`</text> -->
-            <!-- Messages -->
             {#key gotNewMessage}
             <div class="messages-container" bind:this={messagesContainer}>
               <ul class="messages">
@@ -335,7 +273,6 @@
             </div>
             {/key}
 
-            <!-- Input area -->
             <div class="input-area">
               <input
                 type="text"
@@ -345,11 +282,9 @@
               />
             </div>
           {:else}
-            <!-- Placeholder when no chat is selected -->
             <div
               class="messages-container"
-              style="display: flex; align-items: center; justify-content: center;"
-            >
+              style="display: flex; align-items: center; justify-content: center;">
               <p>Select a chat to start messaging</p>
             </div>
           {/if}
