@@ -15,7 +15,10 @@
   let totalPages = 1;
 
   let allJobs = [];
+  let companies = [];
   let followedJobIds = new Set();
+
+  let companiesLoaded = false;
 
   let filters = {
     location: '',
@@ -37,14 +40,12 @@
 
   onMount(async () => {
     await fetchJobs();
+    await fetchCompanies();
 
-    console.log(verifyUser())
+    console.log("Companies: ", companies);
     if (verifyUser()) {
-      console.log("Fetching saved offers...");
       const savedOffers = await fetchSavedOffers($user.jwt);
       followedJobIds = new Set(savedOffers.map((job) => job.jobId));
-      console.log("Saved offers:", savedOffers);
-      console.log("Followed job IDs:", followedJobIds);
     }
   });
 
@@ -86,6 +87,23 @@
         totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
       } else {
         console.error('Error fetching jobs:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Network or server error:', error);
+    }
+  }
+
+  async function fetchCompanies() {
+    try {
+      const response = await axios.get('http://localhost:8080/user-service/getCompanies');
+      if (response.status === 200) {
+        companies = response.data.map((company) => ({
+          id: company.companyId,
+          name: company.name,
+        }));
+        companiesLoaded = true;
+      } else {
+        console.error('Error fetching companies:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Network or server error:', error);
@@ -149,7 +167,7 @@
         {#if paginatedJobs.length > 0}
           <div class="job-list">
             {#each paginatedJobs as job}
-              <JobCard {job} isLiked={followedJobIds.has(job.jobId)} />
+              <JobCard {job} isLiked={followedJobIds.has(job.jobId)} useToast={false} />
             {/each}
           </div>
         {:else}
@@ -170,15 +188,18 @@
       </div>
     </div>
 
-    <Filters {filters} {skillsList} onApplyFilters={applyFilters} />
-  </div>
+    {#if companiesLoaded}
+      <Filters {companies} {filters} {skillsList} onApplyFilters={applyFilters} />
+    {:else}
+      <p>Loading filters...</p>
+    {/if}  </div>
   <ChatBox/>
 </main>
 
 <style>
   main {
     padding-top: 60px;
-    height: calc(100vh - 60px);
+    height: calc(100vh);
     overflow-y: auto;
     background-color: #f8f9fa;
   }

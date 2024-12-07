@@ -138,7 +138,7 @@
 
 
         doc.setFont('helvetica', 'bold');
-        const eduTitle = `${edu.degree} - ${edu.institution}`;
+        const eduTitle = `${edu.degree} - ${edu.institutionName}`;
         const maxEduTitleWidth = 100; // Maximum width for the title
         const eduTitleLines = doc.splitTextToSize(eduTitle, maxEduTitleWidth);
         doc.text(eduTitleLines, leftMargin, y);
@@ -358,7 +358,7 @@
         {#each formData.education as edu, index}
           <div>
             <label for={`institution-${index}`}>Institution</label>
-            <input id={`institution-${index}`} type="text" bind:value={edu.institution} />
+            <input id={`institution-${index}`} type="text" bind:value={edu.institutionName} />
   
             <label for={`degree-${index}`}>Degree</label>
             <input id={`degree-${index}`} type="text" bind:value={edu.degree} />

@@ -1,10 +1,10 @@
 <script>
   import {user, verifyUser} from "$lib/stores/user.js";
   import {goto} from "$app/navigation";
-
   export let job;
-
   export let isLiked = false;
+  export let onUnlike;
+  export let useToast = true; // Default to true for backward compatibility
 
   const API_URL = "http://localhost:8080/job-service/graphql";
 
@@ -38,26 +38,64 @@
   }
 
   async function toggleLike(event) {
-    event.stopPropagation(); // Prevent the job card click event from triggering
-    const query = `
-    mutation ToggleFollowJob($jobId: ID!) {
-      toggleFollowJob(jobId: $jobId) {
-        success
-        message
-        isFollowed
+    event.stopPropagation(); // Prevent card click propagation
+
+    if (!isLiked) {
+      // Liking a job
+      const query = `
+            mutation ToggleFollowJob($jobId: ID!) {
+                toggleFollowJob(jobId: $jobId) {
+                    success
+                    message
+                    isFollowed
+                }
+            }`;
+      const variables = { jobId: job.jobId };
+
+      try {
+        const result = await callGraphQL(query, variables);
+        if (result?.toggleFollowJob?.success) {
+          isLiked = result.toggleFollowJob.isFollowed;
+        } else {
+          console.error("Failed to like job:", result?.toggleFollowJob?.message || "Unknown error");
+        }
+      } catch (error) {
+        console.error("Error while liking job:", error);
+      }
+    } else {
+      // Unliking a job
+      if (useToast) {
+        // Use toast for unliking
+        if (typeof onUnlike === 'function') {
+          onUnlike(job.jobId);
+        }
+      } else {
+        // Immediate unlike without toast
+        const query = `
+                mutation ToggleFollowJob($jobId: ID!) {
+                    toggleFollowJob(jobId: $jobId) {
+                        success
+                        message
+                        isFollowed
+                    }
+                }`;
+        const variables = { jobId: job.jobId };
+
+        try {
+          const result = await callGraphQL(query, variables);
+          if (result?.toggleFollowJob?.success) {
+            isLiked = result.toggleFollowJob.isFollowed;
+          } else {
+            console.error("Failed to unlike job:", result?.toggleFollowJob?.message || "Unknown error");
+          }
+        } catch (error) {
+          console.error("Error while unliking job:", error);
+        }
       }
     }
-  `;
-    const variables = { jobId: job.jobId };
-
-    const result = await callGraphQL(query, variables);
-
-    if (result?.toggleFollowJob?.success) {
-      isLiked = result.toggleFollowJob.isFollowed;
-    } else {
-      console.error("Failed to toggle like:", result?.toggleFollowJob?.message || "Unknown error");
-    }
   }
+
+
 
 
 </script>

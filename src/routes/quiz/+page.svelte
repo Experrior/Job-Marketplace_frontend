@@ -48,19 +48,20 @@
                   } }
       )
       console.log('test1')
-      console.log(response.data)
-        let quizS3 = response.data.data.quizById.s3QuizUrl
-        const json1 = await axios.get(quizS3,
-        {headers: {
-            'Content-Type': 'application/json',
-            }
-            }
-        )
-        console.log(quizS3)
-        console.log(json1.data)
-        quizData = json1.data
-        console.log(quizData)
-        console.log('8765dyrcgjvhkg')
+      console.log('Response: ', response.data)
+    let quizS3 = response.data.data.quizById.s3QuizUrl
+    console.log('QuizS3 url: ', quizS3)
+    const json1 = await axios.get(quizS3,
+    {headers: {
+        'Content-Type': 'application/json',
+        }
+    }
+    )
+    console.log(quizS3)
+    console.log(json1.data)
+    quizData = json1.data
+    console.log(quizData)
+    console.log('8765dyrcgjvhkg')
     timer = quizData.timeLimit;
     console.log(`tiem is: ${timer}`)
     console.log(quizData)

@@ -51,7 +51,7 @@
     <form on:submit|preventDefault={addEducation}>
         <div class="form-group">
             <label for="institution_name">Institution Name</label>
-            <input id="institution_name" type="text" bind:value={newEducation.institution_name} required />
+            <input id="institution_name" type="text" bind:value={newEducation.institutionName} required />
         </div>
         <div class="form-group">
             <label for="degree">Degree</label>

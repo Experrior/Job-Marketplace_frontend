@@ -121,7 +121,7 @@
         </div>
   
         <div class="form-group">
-          <label for="requiredExperience">Required Experience</label>
+          <label for="requiredExperience">Required Experience in Years</label>
           <textarea id="requiredExperience" bind:value={requiredExperience} placeholder="Detail the required experience"></textarea>
         </div>
   
