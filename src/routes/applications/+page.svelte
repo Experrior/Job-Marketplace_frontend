@@ -3,6 +3,10 @@
     import { user, verifyUser } from "$lib/stores/user.js";
     import { goto } from "$app/navigation";
     import AppBar from "$lib/AppBar.svelte";
+    import axios from "axios";
+    import { companyCache } from "../../stores/companyCache.js";
+    import { get } from 'svelte/store';
+
 
     let applications = [];
     let error = '';
@@ -35,6 +39,32 @@
         }
     }
 
+    async function fetchCompanyDetails(companyId) {
+        const cache = get(companyCache);
+        if (cache[companyId]) {
+            return cache[companyId];
+        }
+
+        try {
+            const response = await axios.get(`http://localhost:8080/user-service/getCompanyById`, {
+                params: { companyId }
+            });
+            if (response.status === 200) {
+                companyCache.update(cache => {
+                    cache[companyId] = response.data;
+                    return cache;
+                });
+                return response.data;
+            } else {
+                console.error('Error fetching company details:', response.status, response.statusText);
+                return null;
+            }
+        } catch (error) {
+            console.error('Network or server error:', error);
+            return null;
+        }
+    }
+
     async function fetchApplications() {
         const query = `
       query {
@@ -63,10 +93,17 @@
 
         try {
             const result = await callGraphQL(query);
-            console.log(result)
-
             if (result && result.userApplications) {
-                applications = result.userApplications;
+                applications = await Promise.all(result.userApplications.map(async (application) => {
+                    const companyDetails = await fetchCompanyDetails(application.job.companyId);
+                    return {
+                        ...application,
+                        job: {
+                            ...application.job,
+                            company: companyDetails
+                        }
+                    };
+                }));
             } else {
                 error = 'Could not load applications. Please try again later.';
             }
@@ -107,6 +144,12 @@
                             <span class="status-pill {application.status.toLowerCase()}">{application.status}</span>
                         </div>
                         <div class="card-body">
+                            {#if application.job.company?.logoUrl}
+                                <img src={application.job.company.logoUrl} alt="{application.job.company.name} logo" class="company-logo" />
+                            {/if}
+                            <div class="company-info">
+                                <p><strong>Company:</strong> {application.job.company?.name || 'Unknown'}</p>
+                            </div>
                             <p><strong>Location:</strong> {application.job.location || 'Not specified'}</p>
                             <p><strong>Work Type:</strong> {application.job.workLocation || 'Not specified'}</p>
                             <p><strong>Employment Type:</strong> {application.job.employmentType || 'Not specified'}</p>
@@ -115,11 +158,10 @@
                                 <p><strong>Quiz Score:</strong> {application.quizResult.score}</p>
                             {/if}
                             <p><strong>Application Date:</strong> {new Date(application.createdAt).toLocaleDateString()}</p>
-                        </div>
-                        <div class="card-footer">
                             <a href={application.resumeUrl} target="_blank" class="resume-link">View Resume</a>
                         </div>
                     </div>
+
                 {/each}
             </div>
         {/if}
@@ -174,6 +216,7 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        position: relative; /* Ensures absolute positioning works for child elements */
     }
 
     .card-header {
@@ -217,7 +260,18 @@
     .card-body {
         padding: 1rem;
         color: #555;
-        flex-grow: 1;
+        position: relative; /* For the resume link positioning */
+    }
+
+    .company-info {
+        margin-bottom: 1rem;
+    }
+
+    .company-logo {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 100px;
     }
 
     .card-footer {
@@ -227,9 +281,13 @@
     }
 
     .resume-link {
+        position: absolute;
+        bottom: 16px;
+        right: 16px; /* Adjusted to align near the application date */
         color: #007bff;
         text-decoration: none;
         font-weight: bold;
+        transform: translateY(-20px); /* Moves the link higher for alignment */
     }
 
     .resume-link:hover {

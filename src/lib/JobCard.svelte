@@ -9,8 +9,6 @@
 
   const API_URL = "http://localhost:8080/job-service/graphql";
 
-
-  console.log("Logo URL: ", logoUrl);
   async function callGraphQL(query, variables = {}) {
     if (!verifyUser()) {
       goto('/login');
