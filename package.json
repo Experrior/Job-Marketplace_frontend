@@ -30,7 +30,8 @@
 		"svelte-icons": "2.1.0",
 		"js-cookie": "3.0.5",
 		"socket.io-client": "^4.8.1",
-		"libphonenumber-js": "1.11.15"
+		"libphonenumber-js": "1.11.15",
+		"quill": "2.0.3"
 	},
 	"dependencies": {
 		"@sveltejs/adapter-auto": "^3.3.1",
@@ -54,7 +55,8 @@
 		"svelte-icons": "2.1.0",
 		"js-cookie": "3.0.5",
 		"socket.io-client": "^4.8.1",
-		"libphonenumber-js": "1.11.15"
+		"libphonenumber-js": "1.11.15",
+		"quill": "2.0.3"
 	}
 
 }
