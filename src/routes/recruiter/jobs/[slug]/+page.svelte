@@ -36,6 +36,7 @@
         jobApplications(jobId: $jobId) {
           applicationId
           userId
+          userPictureUrl
           job {
             jobId
             title
@@ -66,6 +67,7 @@
         }
       });
       applicants = response.data.data.jobApplications;
+      console.log("Job Applications: ", response.data.data.jobApplications);
       sortApplicants();
     } catch (error) {
       alert(error.message || "An error occurred while fetching applicants.");
@@ -276,7 +278,7 @@
           {#each $sortedApplicants.slice(0, applicantsToShow) as applicant}
             <tr>
               <td>
-                <img src="{applicant.photo || '/images/profile2.png'}" class="applicant-photo" />
+                <img src="{applicant.userPictureUrl || '/images/profile2.png'}" class="applicant-photo" />
               </td>
               <td>{applicant.fullName}</td>
               <td>{applicant.quizResult && applicant.quizResult.score !== undefined ? applicant.quizResult.score : ''}</td>
