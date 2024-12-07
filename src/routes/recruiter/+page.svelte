@@ -2,120 +2,152 @@
   import { goto } from "$app/navigation";
   import AppBar from "../../lib/AppBar.svelte";
   import { user } from "$lib/stores/user";
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
   import axios from "axios";
 
-  let userRole;
-  $: userRole = $user.role;
-  var quizzes = [];
-  var jobs = 
+  let quizzes = [];
+  let jobs = [];
+  let showDisabledJobs = false;
 
-onMount(async () => {
-  // get quizzes
-      try {
-          const response = await axios.post('http://localhost:8080/job-service/graphql', {
-      query: `query{
-    quizzesByRecruiter{
-        quizId,
-        quizName,
-        createdAt,
-        isDeleted
-    }
-}`
- }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${$user.jwt}`
-        }
-      })
-      console.log(response.data.data.quizzesByRecruiter)
-      quizzes = response.data.data.quizzesByRecruiter
-      console.log(quizzes)
-    }catch (error) {
-      alert(error)
-    }
-    //getJobs
+  const apiEndpoint = "http://localhost:8080/job-service/graphql";
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${$user.jwt}`,
+  };
+
+  async function fetchGraphQLData(query) {
     try {
-          const response = await axios.post('http://localhost:8080/job-service/graphql', {
-      query: `query {
-  jobsByRecruiter {
-    jobId
-    title
-    description
-    location
-    salary
-    createdAt
-    quizId
-  }
-}`
- }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${$user.jwt}`
-        }
-      })
-      console.log(response.data.data.jobsByRecruiter)
-      console.log('g12')
-      jobs = response.data.data.jobsByRecruiter
-      console.log(quizzes)
-    }catch (error) {
-      alert(error)
+      const response = await axios.post(apiEndpoint, { query }, { headers });
+      return response.data.data;
+    } catch (error) {
+      alert(error);
+      console.error("GraphQL Error:", error);
+      return null;
     }
-
-})
-
-  const recruiter = {
-      id: "recruiter1",
-      name: "Jane Doe",
-      company: "Tech Solutions",
-      logo: "/logos/logo1.png",
-  };
-
-  function createListOfCopies(originalObject, numberOfCopies) {
-      const listOfCopies = [];
-
-      for (let i = 0; i < numberOfCopies; i++) {
-          const jobCopy = { ...originalObject, id: `${originalObject.id}-${i}` };
-          listOfCopies.push(jobCopy);
-      }
-
-      return listOfCopies;
   }
 
-  const originalObject = {
-      id: "2",
-      title: "Backend Engineer",
-      company: recruiter.company,
-      companyLogo: recruiter.logo,
-      location: "Remote",
-      occupation: "San Diego, USA",
-      description:
-          "Looking for a Backend Engineer proficient in Node.js and cloud services. Must have experience with database design and API development.",
-      requiredExperience: "At least 4 years of backend development experience.",
-      requiredSkills: {
-          "Node.js": 5,
-          "Express": 4,
-          "MongoDB": 4,
-          "AWS": 3,
-          "API Development": 5,
-      },
-  };
+  async function fetchQuizzes() {
+    const data = await fetchGraphQLData(`
+      query {
+        quizzesByRecruiter {
+          quizId
+          quizName
+          createdAt
+          isDeleted
+        }
+      }
+    `);
 
-  // const jobs = createListOfCopies(originalObject, 20);
+    if (data) {
+      quizzes = data.quizzesByRecruiter || [];
+      console.log("Fetched quizzes:", quizzes);
+    }
+  }
+
+  async function fetchJobs() {
+    const data = await fetchGraphQLData(`
+      query {
+        jobsByRecruiter {
+          jobId
+          title
+          description
+          location
+          salary
+          createdAt
+          quizId
+          isDeleted
+        }
+      }
+    `);
+
+    if (data) {
+      jobs = data.jobsByRecruiter || [];
+      console.log("Fetched jobs:", jobs);
+    }
+  }
+
+  onMount(() => {
+    fetchQuizzes();
+    fetchJobs();
+  });
+
+  function navigateTo(path) {
+    goto(path);
+  }
 
   function showApplicants(slug) {
-      goto(`/recruiter/jobs/${slug}`);
+    navigateTo(`/recruiter/jobs/${slug}`);
   }
 
   function editJobOffer(slug) {
-      goto(`/recruiter/jobs/edit/${slug}`);
+    navigateTo(`/recruiter/jobs/edit/${slug}`);
   }
 
   function navigateToQuiz(slug) {
-      goto(`/recruiter/quizzes/${slug}`);
+    navigateTo(`/recruiter/quizzes/${slug}`);
   }
 
+  function toggleShowDisabledJobs() {
+    showDisabledJobs = !showDisabledJobs;
+  }
+
+  async function disableJobOffer(jobId) {
+    const mutation = `
+    mutation {
+      deleteJob(jobId: "${jobId}") {
+        success,
+        message
+      }
+    }
+  `;
+
+    try {
+      const response = await axios.post(apiEndpoint, { query: mutation }, { headers });
+      const result = response.data.data.deleteJob;
+      if (result.success) {
+        alert("Job offer disabled successfully.");
+        fetchJobs(); // Refresh the job list
+      } else {
+        alert(`Failed to disable job offer: ${result.message}`);
+      }
+    } catch (error) {
+      alert("An error occurred while disabling the job offer.");
+      console.error("GraphQL Error:", error);
+    }
+  }
+
+  async function enableJobOffer(jobId) {
+    console.log("Enabling job offer:", jobId);
+    const mutation = `
+    mutation {
+      restoreJob(jobId: "${jobId}") {
+        jobId
+        title
+        description
+        location
+        salary
+        createdAt
+        isDeleted
+      }
+    }
+  `;
+
+    try {
+      const response = await axios.post(apiEndpoint, { query: mutation }, { headers });
+      const result = response.data.data.restoreJob;
+      if (result) {
+        alert("Job offer enabled successfully.");
+        fetchJobs(); // Refresh the job list
+      } else {
+        alert("Failed to enable job offer.");
+      }
+    } catch (error) {
+      alert("An error occurred while enabling the job offer.");
+      console.error("GraphQL Error:", error);
+    }
+  }
 </script>
+
 
 <AppBar/>
 
@@ -126,93 +158,127 @@ onMount(async () => {
     <button on:click={() => goto('/recruiter/quizzes/new')} class="create-button">Create New Quiz</button>
   </div>
 
-<div class="scrollable-page">
-  <main class="lists-container">
-    <!-- Job List -->
-    <div class="job-list-container">
-      <h2>Job offers</h2>
-      {#each jobs as job}
-        <div class="job-card">
-          <div class="job-info">
-            <img
-              src={job.companyLogo}
-              alt="{job.company} Logo"
-              class="company-logo"
-            />
-            <div>
-              <h2>{job.title}</h2>
-              <p>{job.company} - {job.location}</p>
+  <div class="scrollable-page">
+    <main class="lists-container">
+      <!-- Job List -->
+      <div class="job-list-container">
+        <div class="list-header">
+          <h2>Job Offers</h2>
+          <select on:change={toggleShowDisabledJobs} class="filter-dropdown">
+            <option value="active" selected={!showDisabledJobs}>Show Active Jobs</option>
+            <option value="disabled" selected={showDisabledJobs}>Show Disabled Jobs</option>
+          </select>
+        </div>
+
+        {#each jobs.filter(job => showDisabledJobs ? job.isDeleted : !job.isDeleted) as job}
+          <div class="job-card {job.isDeleted ? 'disabled' : ''}">
+            <div class="job-info">
+              <div class="job-details">
+                <h3>{job.title}</h3>
+                <p>{job.location}</p>
+                <p>Salary: {job.salary ? job.salary : 'undisclosed'}</p>
+              </div>
+            </div>
+            <div class="job-actions">
+              <button on:click={() => showApplicants(job.jobId)}>Applicants</button>
+              <button on:click={() => editJobOffer(job.jobId)}>Edit</button>
+              {#if !job.isDeleted}
+                <button on:click={() => disableJobOffer(job.jobId)}>Disable</button>
+              {:else}
+                <button on:click={() => enableJobOffer(job.jobId)}>Enable</button>
+              {/if}
             </div>
           </div>
-          <div class="job-actions">
-            <button
-              class="show-button"
-              on:click={() => showApplicants(job.jobId)}
-              aria-label={`Show applicants for ${job.title}`}
-            >
-              Show Applicants
-            </button>
-            <button
-              class="edit-button"
-              on:click={() => editJobOffer(job.jobId)}
-              aria-label={`Edit ${job.title}`}
-            >
-              Edit Job Offer
-            </button>
-          </div>
-        </div>
-      {/each}
-    </div>
+        {/each}
+      </div>
 
-    <!-- Quiz List -->
-    <div class="quiz-list-container">
-      <h2>Quizzes</h2>
-      {#each quizzes as quiz}
-        <button class="quiz-card" on:click={() => navigateToQuiz(quiz.quizId)}>
-          {#if !quiz.isDeleted}
-          <div class="quiz-info">
-            <h3>{quiz.quizName.split('.json')[0]}</h3>
-            <p>Created: {quiz.createdAt.split('.')[0]}</p>
-          </div>
-          {/if}
-        </button>
-      {/each}
-    </div>
-  </main>
-</div>
+      <!-- Quiz List -->
+      <div class="quiz-list-container">
+        <h2>Quizzes</h2>
+        {#each quizzes as quiz}
+          <button class="quiz-card" on:click={() => navigateToQuiz(quiz.quizId)}>
+            {#if !quiz.isDeleted}
+              <div class="quiz-info">
+                <h3>{quiz.quizName.split('.json')[0]}</h3>
+                <p>Created: {quiz.createdAt.split('.')[0]}</p>
+              </div>
+            {/if}
+          </button>
+        {/each}
+      </div>
+    </main>
+  </div>
 </div>
 
 <style>
   .main-container {
-      margin-top: 60px;
+    margin-top: 60px;
   }
 
   .top-buttons {
-      display: flex;
-      gap: 1rem;
-      padding: 1rem;
-      background-color: #f9f9f9;
-      position: sticky;
-      top: 60px;
-      z-index: 999;
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    position: sticky;
+    top: 60px;
+    z-index: 999;
   }
 
   .create-button {
-      padding: 0.75rem 1.5rem;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1rem;
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    border: none;
+    border-radius: 4px;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
   }
 
   .create-button:hover {
-      background-color: #218838;
+    background: #218838;
+  }
+
+  .filter-dropdown {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 1rem;
+  }
+
+  .job-card, .quiz-card {
+    padding: 0.5rem; /* Decreased padding */
+    margin-left: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 0.5rem; /* Decreased margin */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: box-shadow 0.3s;
+    cursor: pointer;
+    font-size: 0.9rem; /* Decreased font size */
+  }
+
+  .job-card:hover, .quiz-card:hover {
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .job-card.disabled {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  .job-card.disabled:hover {
+    background: #f2cbcf; /* Darker red background */
+    color: #721c24; /* Light pink text */
   }
 
   .scrollable-page {
-      max-height: calc(100vh - 60px - 72px);
+      max-height: calc(100vh);
       overflow: hidden; /* Prevent outer scrolling */
   }
 
@@ -224,34 +290,17 @@ onMount(async () => {
   .lists-container {
       display: flex;
       gap: 1rem;
-      height: calc(100vh - 132px); /* Adjust based on header and buttons height */
+      height: calc(100vh); /* Adjust based on header and buttons height */
   }
 
   .job-list-container, .quiz-list-container {
       flex: 1;
       overflow-y: auto;
       margin-top: 60px;
+      margin-bottom: 50px;
       padding: 1rem;
       padding-right: 0.5rem;
   }
-
-  .quiz-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    /* border: 1px solid #ddd; */
-    padding: 1rem;
-    border-radius: 8px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1rem;
-    width: 100%; /* Ensure full width */
-    cursor: pointer;
-    border: none; /* Remove default button border */
-    background: none; /* Remove default button background */
-    text-align: left; /* Align text to the left */
-    transition: background-color 0.3s ease; /* Smooth hover transition */
-}
 
 .job-card:hover, .quiz-card:hover {
     background-color: #f9f9f9; /* Light gray background on hover */
@@ -264,7 +313,7 @@ onMount(async () => {
 }
 
 .quiz-info h3 {
-    font-size: 1.2rem;
+    font-size: 1rem;
     margin-bottom: 0.5rem;
 }
 
@@ -273,51 +322,38 @@ onMount(async () => {
     color: #555;
 }
 
-
  .quiz-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
   }
 
-  .company-logo {
-      width: 80px;
-      height: 80px;
-      object-fit: contain;
-      border-radius: 8px;
+  .job-actions button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-right: 0.5rem;
   }
 
-  .job-actions {
-      display: flex;
-      gap: 0.5rem;
+  .job-actions button:nth-child(1) {
+    background: #007bff;
+    color: white;
   }
 
-  .show-button {
-      padding: 0.5rem 1rem;
-      background-color: #007bff;
-      border: none;
-      color: white;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s;
+  .job-actions button:nth-child(2) {
+    background: #ffc107;
+    color: black;
   }
 
-  .show-button:hover {
-      background-color: #0056b3;
+  .job-actions button:nth-child(3) {
+    background: #dc3545;
+    color: white;
   }
 
-  .edit-button {
-      padding: 0.5rem 1rem;
-      background-color: #ffc107;
-      border: none;
-      color: #212529;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-  }
-
-  .edit-button:hover {
-      background-color: #e0a800;
+  .job-actions button:hover {
+    opacity: 0.9;
   }
 
   .quiz-list-container h2 {
@@ -325,30 +361,11 @@ onMount(async () => {
       text-align: left;
   }
 
+
   @media (max-width: 768px) {
-      .lists-container {
-          flex-direction: column;
-      }
-
-      .job-card, .quiz-card {
-          flex-direction: column;
-          align-items: flex-start;
-      }
-
-      .job-actions, .quiz-actions {
-          margin-top: 1rem;
-      }
+    .lists-container {
+      flex-direction: column;
+    }
   }
 
-
-  button {
-      width: 100%;
-      padding: 0.75rem;
-      margin-top: 1rem;
-      border: none;
-      border-radius: 4px;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-  }
 </style>

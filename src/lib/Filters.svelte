@@ -1,45 +1,87 @@
 <script>
     export let filters;
-    export let skillsList; // List of available skills to choose from
     export let onApplyFilters;
+    export let companies = [];
 
     // Manage selected skills
-    let selectedSkills = filters.requiredSkills || [];
+    let filteredCompanies = [];
+    let dropdownVisible = false;
 
-    function toggleSkill(skill) {
-        if (selectedSkills.includes(skill)) {
-            selectedSkills = selectedSkills.filter((s) => s !== skill);
-        } else {
-            selectedSkills = [...selectedSkills, skill];
-        }
-        filters.requiredSkills = selectedSkills;
-    }
 
-    function handleWorkTypeChange(event) {
-        filters.workType = event.target.value;
+    function handleWorkLocationChange(event) {
+        filters.workLocation = event.target.value;
     }
 
     function handleEmploymentTypeChange(event) {
         filters.employmentType = event.target.value;
     }
+
+    function handleExperienceLevel(event) {
+        filters.experienceLevel = event.target.value;
+    }
+
+    function filterCompanies() {
+        const query = filters.companyName?.toLowerCase() || '';
+        if (query) {
+            filteredCompanies = companies.filter((company) =>
+                company.name.toLowerCase().startsWith(query)
+            );
+        } else {
+            filteredCompanies = [];
+        }
+    }
+
+
+    $: filterCompanies();
+
+    function selectCompany(company) {
+        filters.companyName = company.name;
+        filters.companyId = company.id;
+        filteredCompanies = [];
+        dropdownVisible = false
+    }
 </script>
 
 <div class="filter-section">
     <h2>Filters</h2>
+    <div class="company-filter-container">
+        <label>
+            Company
+            <div class="input-dropdown-wrapper">
+                <input
+                        type="text"
+                        bind:value={filters.companyName}
+                        on:input={() => {
+                    dropdownVisible = true;
+                    filterCompanies();
+                }}
+                on:focus={() => (dropdownVisible = true)}
+                on:blur={() => setTimeout(() => (dropdownVisible = false), 100)}
+                placeholder="Search for a company..."
+                />
+                {#if dropdownVisible && filteredCompanies.length > 0}
+                    <ul class="dropdown">
+                        {#each filteredCompanies as company}
+                            <li on:click={() => selectCompany(company)}>
+                                {company.name}
+                            </li>
+                        {/each}
+                    </ul>
+                {/if}
+            </div>
+        </label>
+    </div>
+
     <label>
         Location
         <input type="text" bind:value={filters.location} />
     </label>
     <label>
-        Required Experience
-        <input type="text" bind:value={filters.requiredExperience} />
-    </label>
-    <label>
         Work Type
-        <select bind:value={filters.workType} on:change={handleWorkTypeChange}>
+        <select bind:value={filters.workLocation} on:change={handleWorkLocationChange}>
             <option value="">Any</option>
             <option value="remote">Remote</option>
-            <option value="on-site">On Site</option>
+            <option value="onsite">On Site</option>
             <option value="hybrid">Hybrid</option>
         </select>
     </label>
@@ -47,13 +89,27 @@
         Employment Type
         <select bind:value={filters.employmentType} on:change={handleEmploymentTypeChange}>
             <option value="">Any</option>
-            <option value="full-time">Full Time</option>
-            <option value="part-time">Part Time</option>
+            <option value="full_time">Full Time</option>
+            <option value="part_time">Part Time</option>
+            <option value="contract">Contract</option>
+            <option value="internship">Internship</option>
+            <option value="temporary">Temporary</option>
+            <option value="freelance">Freelance</option>
         </select>
     </label>
     <label>
-        Company Name
-        <input type="text" bind:value={filters.companyId} />
+        Experience Level
+        <select bind:value={filters.experienceLevel} on:change={handleExperienceLevel}>
+            <option value="">Any</option>
+            <option value="intern">Intern</option>
+            <option value="junior">Junior</option>
+            <option value="mid">Mid</option>
+            <option value="senior">Senior</option>
+            <option value="lead">Lead</option>
+            <option value="manager">Manager</option>
+            <option value="director">Director</option>
+            <option value="executive">Executive</option>
+        </select>
     </label>
     <label class="has-salary-container">
         <span>Has Salary</span>
@@ -109,29 +165,75 @@
     }
 
     .has-salary-container {
-        display: flex; /* Align elements in a row */
-        flex-direction: row !important; /* Ensure horizontal alignment */
-        align-items: center; /* Vertically center both elements */
-        justify-content: flex-start; /* Align items to the left */
-        gap: 0.5rem; /* Add spacing between the label and the checkbox */
+        display: flex;
+        flex-direction: row !important;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
         margin-top: 0.5rem;
-        margin-bottom: 1rem; /* Optional: Add some spacing below */
+        margin-bottom: 1rem;
     }
 
     .has-salary-container span {
         font-size: 1rem;
-        color: #333; /* Match the text color with other labels */
+        color: #333;
     }
 
     .has-salary-container input[type="checkbox"] {
         width: 1.2rem;
         height: 1.2rem;
         cursor: pointer;
-        accent-color: #758c96; /* Customize the checkbox color when checked */
+        accent-color: #758c96;
         border: 1px solid #ddd;
-        border-radius: 4px; /* Optional: Rounded corners for a clean look */
+        border-radius: 4px;
     }
 
+    .company-filter-container {
+        position: relative;
+        width: 100%;
+    }
 
+    .input-dropdown-wrapper {
+        position: relative;
+        width: 100%;
+    }
 
+    .input-dropdown-wrapper input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .dropdown {
+        position: absolute;
+        top: 80%;
+        left: 0;
+        width: 100%;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 0.375rem;
+        max-height: 10rem;
+        overflow-y: auto;
+        z-index: 10;
+        list-style-type: none;
+        padding: 0;
+        margin-bottom: 0;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .dropdown li {
+        padding: 0.5rem 0.75rem;
+        margin: 0;
+        cursor: pointer;
+        font-size: 1rem;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .dropdown li:hover {
+        background-color: #e0e0e0;
+    }
+
+    .dropdown li:active {
+        background-color: #d9d9d9;
+    }
 </style>

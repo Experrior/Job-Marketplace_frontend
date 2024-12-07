@@ -1,100 +1,129 @@
 <script>
-    import { goto } from '$app/navigation';
-    import JobDescription from '$lib/JobDescription.svelte';
-    import axios from 'axios';
-    import {user, verifyUser} from '$lib/stores/user';
-    import { onMount } from 'svelte';
-    console.log(verifyUser())
+  import { goto } from '$app/navigation';
+  import JobDescription from '$lib/JobDescription.svelte';
+  import axios from 'axios';
+  import { user, verifyUser } from '$lib/stores/user';
+  import { onMount } from 'svelte';
+  import Quill from 'quill';
+  import 'quill/dist/quill.snow.css';
 
-    let title = '';
+  console.log(verifyUser());
+
+  let title = '';
   let companyLogo = '';
   let location = '';
-  let category = '';
   let employmentType = '';
   let workLocation = '';
   let salary = '';
   let description = '';
-  let requiredExperience = '';
+  let requiredExperience = 0;
+  let experienceLevel = '';
   let skillName = '';
   let skillLevel = 1;
   let skillsList = [];
-let quizName = '';
-let skillChange = false;
-let quizzes = []
+  let quizName = '';
+  let skillChange = false;
+  let quizzes = [];
+  let quillInstance;
 
+  onMount(async () => {
+    // Initialize Quill editor
+    quillInstance = new Quill('#quill-editor', {
+      theme: 'snow',
+      placeholder: 'Describe the job role...',
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, false] }],
+          ['bold', 'italic', 'underline'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link', 'blockquote', 'code-block']
+        ]
+      }
+    });
 
-    onMount(async () => {
-      try {
-          const response = await axios.post('http://localhost:8080/job-service/graphql', {
-      query: `query{
-    quizzesByRecruiter{
-        quizId,
-        quizName
+    // Set initial value for the description
+    quillInstance.on('text-change', () => {
+      description = quillInstance.root.innerHTML; // Bind content to the `description` variable
+    });
+
+    // Fetch quizzes
+    try {
+      const response = await axios.post(
+              'http://localhost:8080/job-service/graphql',
+              {
+                query: `query {
+            quizzesByRecruiter {
+              quizId
+              quizName
+            }
+          }`
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${$user.jwt}`
+                }
+              }
+      );
+      quizzes = response.data.data.quizzesByRecruiter;
+    } catch (error) {
+      alert(error);
     }
-}`
- }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${$user.jwt}`
-        }
-      })
-      console.log($user.jwt)
-      console.log('asdasd')
-      console.log(response)
-      console.log(response.data.data.quizzesByRecruiter)
-      quizzes = response.data.data.quizzesByRecruiter
-      console.log(quizzes)
-    }catch (error) {
-      alert(error)
-    }
-
-})
+  });
 
   const employmentTypes = [
     'Full-time',
     'Part-time',
-    'Contract Work',
+    'Contract',
     'Internship',
-    'B2B',
-    'Specific-task contract',
+    'Temporary',
     'Freelance'
   ];
 
-  const workLocations = ['remote', 'hybrid', 'stationary'];
-    
-  
-    function addSkill() {
-      if (skillName && skillLevel) {
-        let newSkill = {}
-        newSkill['name'] = skillName;
-        newSkill['level'] = skillLevel;
-        skillsList.push(newSkill)
-        skillName = '';
-        skillLevel = '';
-        console.log("new skills list:")
-        console.log(skillsList)
-        skillChange = ! skillChange;
-      }
-    }
-  
-    async function  submit() {
-        const jobRequestValue = {
-        title,
-        location,
-        employmentType,
-        workLocation,
-        salary: salary ? parseInt(salary) : null,
-        description,
-        requiredExperience,
-        skillsList,
-        };
-        console.log(jobRequestValue);
-        console.log($user.jwt)
-        let quizId = quizzes.find(item => item.quizName === quizName).quizId;
+  const employmentTypeMapping = {
+    'Full-time': 'FULL_TIME',
+    'Part-time': 'PART_TIME',
+    'Contract': 'CONTRACT',
+    'Internship': 'INTERNSHIP',
+    'Temporary': 'TEMPORARY',
+    'Freelance': 'FREELANCE'
+  };
 
-        const mutation = `
-        mutation XD($jobDefinition: JobInput!){
-        createJob(jobRequest: $jobDefinition) {
+  const experienceLevels = ['Intern', 'Junior', 'Mid', 'Senior', 'Lead', 'Manager', 'Director', 'Executive'];
+
+  const workLocations = ['remote', 'hybrid', 'onsite'];
+
+  function addSkill() {
+    if (skillName && skillLevel) {
+      let newSkill = {};
+      newSkill['name'] = skillName;
+      newSkill['level'] = skillLevel;
+      skillsList.push(newSkill);
+      skillName = '';
+      skillLevel = '';
+      skillChange = !skillChange;
+    }
+  }
+
+  async function submit() {
+    const jobRequestValue = {
+      title,
+      location,
+      employmentType: employmentTypeMapping[employmentType],
+      workLocation,
+      salary: salary ? parseInt(salary) : null,
+      description,
+      requiredExperience,
+      skillsList
+    };
+
+    console.log(jobRequestValue);
+
+    let quizId = quizzes.find((item) => item.quizName === quizName)?.quizId || null;
+
+    const mutation = `
+        mutation XD($jobDefinition: JobInput!) {
+          createJob(jobRequest: $jobDefinition) {
             jobId
             companyId
             title
@@ -105,55 +134,49 @@ let quizzes = []
             salary
             createdAt
             quizId
-        }
+          }
         }`;
-        const variables = {
-            jobDefinition: {
-    title: title,
-    description: description,
-    location: location,
-    salary: salary,
-    requiredSkills: skillsList,
-    requiredExperience: requiredExperience,
-    quizId: quizId,
-    employmentType: employmentType,
-    workLocation: workLocation
-  }
-};
-console.log('COTAMSLUCYCHA')
-console.log(skillsList)
-console.log(quizId)
-console.log(quizzes)
-console.log(variables)
 
-        try {
-            const response = await axios.post('http://localhost:8080/job-service/graphql', {
-      query: mutation,
-      variables: variables
-    }, {headers:{
-               "Content-Type": "application/json",
-               'Authorization': `Bearer ${$user.jwt}`
-            } }
-)
+    const variables = {
+      jobDefinition: {
+        title: title,
+        description: description,
+        location: location,
+        salary: salary,
+        requiredSkills: skillsList,
+        requiredExperience: requiredExperience,
+        experienceLevel: experienceLevel,
+        quizId: quizId,
+        employmentType: employmentTypeMapping[employmentType],
+        workLocation: workLocation
+      }
+    };
 
-console.log(response)
-        if (response.data.errors) {
+    try {
+      const response = await axios.post(
+              'http://localhost:8080/job-service/graphql',
+              {
+                query: mutation,
+                variables: variables
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${$user.jwt}`
+                }
+              }
+      );
 
-        }else{
-
-        }
-          console.log(response.data.data.createJob.jobId)
-          const newJobId = response.data.data.createJob.jobId
-          goto(`/job/${newJobId}`);
-
-        }catch (error) {
-            console.log(error)
-            alert(error)
-        }
-
-
-        // goto('/jobs')
-    // goto(`/jobs/${title.toLowerCase().replace(/\s+/g, '-')}`);
+      if (response.data.errors) {
+        alert(response.data.errors);
+      } else {
+        const newJobId = response.data.data.createJob.jobId;
+        goto(`/job/${newJobId}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error);
+    }
   }
 
   function deleteSkill(index) {
@@ -167,10 +190,10 @@ console.log(response)
   } else if (skillLevel > 5) {
     skillLevel = 5;
   }
+</script>
 
-  </script>
-  
-  <div class="app-bar">
+
+<div class="app-bar">
     <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
     <button class="user-icon" on:click={() => goto('/settings')} aria-label="Go to settings">
       <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
@@ -212,7 +235,7 @@ console.log(response)
               {/each}
             </select>
           </div>
-      
+
           <div class="form-group">
             <label for="workLocation">Work Location</label>
             <select id="workLocation" bind:value={workLocation} required>
@@ -222,26 +245,30 @@ console.log(response)
               {/each}
             </select>
           </div>
+
+          <div class="form-group">
+            <label for="experienceLevel">Experience Level</label>
+            <select id="experienceLevel" bind:value={experienceLevel} required>
+              <option value="" disabled selected>Select experience level</option>
+              {#each experienceLevels as level}
+                <option value="{level}">{level.charAt(0).toUpperCase() + level.slice(1)}</option>
+              {/each}
+            </select>
+          </div>
       
           <div class="form-group">
             <label for="salary">Salary ($)</label>
             <input id="salary" type="number" min="0" bind:value={salary} placeholder="e.g., 70000" />
           </div>
-  
-  
-        <div class="form-group">
-          <label for="category">Category</label>
-          <input id="category" bind:value={category} placeholder="e.g., Engineering" />
-        </div>
-  
+
         <div class="form-group">
           <label for="description">Job Description</label>
-          <textarea id="description" bind:value={description} placeholder="Describe the job role" required></textarea>
+          <div id="quill-editor" style="height: 200px;"></div>
         </div>
-  
+
         <div class="form-group">
-          <label for="requiredExperience">Required Experience</label>
-          <textarea id="requiredExperience" bind:value={requiredExperience} placeholder="Detail the required experience"></textarea>
+          <label for="requiredExperience">Required Experience in Years</label>
+          <input id="requiredExperience" type="number" bind:value={requiredExperience} min="0" />
         </div>
 
         <div class="form-group">

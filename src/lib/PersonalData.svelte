@@ -11,12 +11,13 @@
   const skills = writable([]);
   const educations = writable([]);
   const experiences = writable([]);
+  const links = writable([]);
 
   let userProfile = null;
   let newSkillName = "", newSkillLevel = "1";
   let newEducationInstitution = "", newEducationDegree = "", newEducationStartDate = "2023-01", newEducationEndDate = "2023-12";
   let newExperienceCompany = "", newExperienceRole = "", newExperienceStartDate = "2023-01", newExperienceEndDate = "2023-12";
-
+  let newLinkName = "", newLinkUrl = "", linkError = "";
 
   // Utility function to call GraphQL API
   async function callGraphQL(query, variables = {}) {
@@ -71,6 +72,11 @@
             startDate
             endDate
           }
+          links {
+            linkId
+            name
+            url
+          }
           profilePictureUrl
           createdAt
         }
@@ -103,6 +109,11 @@
           role: experience.role,
           startDate: experience.startDate,
           endDate: experience.endDate,
+        })),
+        links: profile.links.map(link => ({
+          linkId: link.linkId,
+          name: link.name,
+          url: link.url,
         })),
         accountCreatedAt: profile.createdAt,
       };
@@ -164,6 +175,65 @@
     const data = await callGraphQL(mutation, { skillId });
     if (data && data.deleteSkillById) {
       skills.update(current => current.filter(skill => skill.skillId !== skillId));
+    }
+  }
+
+  async function addLink() {
+    if (!validateLink()) {
+      return;
+    }
+
+    const mutation = `
+      mutation {
+        addLink(linkRequest: { name: "${newLinkName}", url: "${newLinkUrl}" }) {
+          linkId
+          name
+          url
+        }
+      }
+    `;
+    const data = await callGraphQL(mutation, { name: newLinkName, url: newLinkUrl });
+    if (data && data.addLink) {
+      links.update(current => [...current, ...data.addLink]);
+    }
+
+    newLinkName = "";
+    newLinkUrl = "";
+  }
+
+  async function removeLink(linkId) {
+    const mutation = `
+      mutation {
+        deleteLinkById(linkId: "${linkId}") {
+          linkId
+        }
+      }
+    `;
+    const data = await callGraphQL(mutation, { linkId });
+    if (data && data.deleteLinkById) {
+      links.update(current => current.filter(link => link.linkId !== linkId));
+    }
+  }
+
+  function validateLink() {
+    if (!newLinkName.trim()) {
+      linkError = "Link name is required.";
+      return false;
+    }
+    if (!newLinkUrl.trim() || !isValidUrl(newLinkUrl)) {
+      linkError = "Valid URL is required.";
+      return false;
+    }
+    linkError = "";
+    return true;
+  }
+
+  function isValidUrl(url) {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -457,6 +527,33 @@
         {/if}
       </div>
     </div>
+    <div class="section">
+      <h3>Links</h3>
+      {#each $links as link}
+        <div class="list-item">
+          <span>{link.name} - <a href={link.url} target="_blank" rel="noopener">{link.url}</a></span>
+          <button type="button" on:click={() => removeLink(link.linkId)}>Remove</button>
+        </div>
+      {/each}
+
+      <!-- Add New Link Form -->
+      <div class="add-form">
+        <input
+                type="text"
+                placeholder="Link Name"
+                bind:value={newLinkName}
+        />
+        <input
+                type="text"
+                placeholder="URL"
+                bind:value={newLinkUrl}
+        />
+        <button type="button" on:click={addLink}>Add Link</button>
+        {#if linkError}
+          <p class="error">{linkError}</p>
+        {/if}
+      </div>
+    </div>
   </div>
 {:else}
   <p>Loading user data...</p>
@@ -540,6 +637,7 @@
     flex-direction: column;
     gap: 0.5rem;
     margin-top: 1rem;
+    margin-bottom: 0.5rem;
     background-color: #fff;
     padding: 1rem;
     border: 1px solid #ddd;
