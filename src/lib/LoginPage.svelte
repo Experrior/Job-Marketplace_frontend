@@ -175,7 +175,7 @@
             {#if registrationSuccess}
                 <RegistrationSuccess
                         message="Registration Successful!"
-                        additionalInfo="Check your email to verify your account. You can now proceed to the login page."
+                        additionalInfo="Check your email to verify your account."
                 />
             {:else}
                 <h1>{isLogin ? 'Login' : 'Register'}</h1>
