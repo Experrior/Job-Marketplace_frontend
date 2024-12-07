@@ -4,8 +4,7 @@
     import axios from 'axios';
     import { user } from "$lib/stores/user.js";
     import { onMount } from 'svelte';
-    // import Cookies from 'js-cookie'
-
+    import RegistrationSuccess from './RegistrationSuccess.svelte';
 
     let errors = {};
     let isApplicant = true;
@@ -21,23 +20,28 @@
         company: ''
     }
     let errorMessage = '';
-    let justRegistered = false;
+    let emailVerified = false;
+    let awaitingApproval = false;
+    let companyVerified = false
+    let registrationSuccess = false;
+
     function toggleForm() {
-        justRegistered = false;
         isLogin = !isLogin;
         errorMessage = '';
 
     }
     let companies = [];
-	onMount(async () => {
-		const res = await axios.get('http://localhost:8080/user-service/getCompanies')
-        companies = res.data.map(comp => comp.name)
-        console.log(res.data)
+    onMount(async () => {
+        const urlParams = new URLSearchParams(window.location.search);
 
-        companies = companies.sort()
-        registerFormData.company = companies[0]
+        emailVerified = urlParams.get('emailVerified') === 'true';
+        awaitingApproval = urlParams.get('awaitingApproval') === 'true';
+        companyVerified = urlParams.get('companyVerified') === 'true';
 
-	});
+        const res = await axios.get('http://localhost:8080/user-service/getCompanies');
+        companies = res.data.map(comp => comp.name).sort();
+        registerFormData.company = companies[0];
+    });
 
     async function handleSubmit() {
         errors = {};
@@ -50,7 +54,6 @@
         const url = !isLogin ? "http://localhost:8080/user-service/register/" + role : 'http://localhost:8080/user-service/login';
 
         var response = null;
-        justRegistered = false;
         try {
             if ($user) {
                 $user.username = loginFormData.email;
@@ -96,7 +99,7 @@
                     tempCopy = registerFormData;
                 }
                 response = await axios.post(url, tempCopy);
-                justRegistered = true;
+                registrationSuccess = true;
             }
 
             if (response && response.ok) {
@@ -119,13 +122,12 @@
 
     async function fetchUserProfilePicture() {
         const query = `
-        query {
-            currentUserProfile {
-                profilePictureUrl
+            query {
+                currentUserProfile {
+                    profilePictureUrl
+                }
             }
-        }
-    `;
-
+        `;
         try {
             const response = await axios.post('http://localhost:8080/user-service/graphql', { query }, {
                 headers: {
@@ -162,8 +164,6 @@
 
 </script>
 
-
-
 <div class="container">
 
     <div class="image-side">
@@ -172,95 +172,115 @@
 
     <div class="form-side">
         <div class="form-container">
-            <h1>{isLogin ? 'Login' : 'Register'}</h1>
+            {#if registrationSuccess}
+                <RegistrationSuccess
+                        message="Registration Successful!"
+                        additionalInfo="Check your email to verify your account. You can now proceed to the login page."
+                />
+            {:else}
+                <h1>{isLogin ? 'Login' : 'Register'}</h1>
 
-
-            {#if !isLogin}
-                <div class="switch-button-wrapper">
-                    <div class="switch-button" on:click={toggle}>
-                        <div class="option" class:selected={isApplicant}>{leftText}</div>
-                        <div class="option" class:selected={!isApplicant}>{rightText}</div>
+                {#if !isLogin}
+                    <div class="switch-button-wrapper">
+                        <div class="switch-button" on:click={toggle}>
+                            <div class="option" class:selected={isApplicant}>{leftText}</div>
+                            <div class="option" class:selected={!isApplicant}>{rightText}</div>
+                        </div>
                     </div>
-                    <!-- <button bind:isApplicant on:click{toggle} leftText="Applicant" rightText="Recruiter" /> -->
-                </div>
-            {/if}
-
-
-
-            {#if !isLogin}
-                {#if errors.email}
-                <div class="error">{errors.email}</div>
                 {/if}
-                <input type="email" placeholder="Email" bind:value={registerFormData.email} required />
 
-                {#if errors.firstName}
-                <div class="error">{errors.firstName}</div>
-                {/if}
-                <input type="text" placeholder="First Name" bind:value={registerFormData.firstName} required />
+                <!-- Registration Form -->
+                {#if !isLogin}
+                    {#if errors.email}
+                        <div class="error">{errors.email}</div>
+                    {/if}
+                    <input type="email" placeholder="Email" bind:value={registerFormData.email} required />
 
-                {#if errors.lastName}
-                <div class="error">{errors.lastName}</div>
-                {/if}
-                <input type="text" placeholder="Last Name" bind:value={registerFormData.lastName} required />
-                {#key errors}
-                {#if errors.password}
-                <div class="error">{errors.password}</div>
-                {/if}
-                {/key}
-                <input type="password" placeholder="Password" bind:value={registerFormData.password} required />
-                <input type="password" placeholder="Repeat Password" bind:value={registerFormData.confirmPassword} required />
-           {:else}
-                {#if errors.email}
-                    <div class="error">{errors.email}</div>
-                {/if}
-                <input type="email" placeholder="Email" bind:value={loginFormData.email} required />
+                    {#if errors.firstName}
+                        <div class="error">{errors.firstName}</div>
+                    {/if}
+                    <input type="text" placeholder="First Name" bind:value={registerFormData.firstName} required />
 
-                {#if errors.password}
+                    {#if errors.lastName}
+                        <div class="error">{errors.lastName}</div>
+                    {/if}
+                    <input type="text" placeholder="Last Name" bind:value={registerFormData.lastName} required />
+
+                    {#key errors}
+                        {#if errors.password}
+                            <div class="error">{errors.password}</div>
+                        {/if}
+                    {/key}
+                    <input type="password" placeholder="Password" bind:value={registerFormData.password} required />
+                    <input type="password" placeholder="Repeat Password" bind:value={registerFormData.confirmPassword} required />
+
+                    {#if !isApplicant}
+                        <div class="company-selection">
+                            <h4>Company:</h4>
+                            <select on:change={handleCompanyChange} required>
+                                {#each companies as company}
+                                    <option value={company}>{company}</option>
+                                {/each}
+                            </select>
+                        </div>
+                    {/if}
+
+                {:else}
+                    <!-- Login Form -->
+                    {#if emailVerified && awaitingApproval}
+                        <div class="confirmation-message">
+                            Your email has been verified. Please wait for your company's approval before logging in.
+                        </div>
+                    {:else if emailVerified}
+                        <div class="confirmation-message">
+                            Your email has been successfully verified. You can now log in.
+                        </div>
+                    {:else if companyVerified}
+                        <div class="confirmation-message">
+                            Your company has been successfully verified.
+                        </div>
+                    {/if}
+
+                    {#if errors.email}
+                        <div class="error">{errors.email}</div>
+                    {/if}
+                    <input type="email" placeholder="Email" bind:value={loginFormData.email} required />
+
+                    {#if errors.password}
                         <div class="error">{errors.password}</div>
+                    {/if}
+                    <input type="password" placeholder="Password" bind:value={loginFormData.password} required />
                 {/if}
-                <input type="password" placeholder="Password" bind:value={loginFormData.password} required />
-           {/if}
 
+                <button on:click={handleSubmit}>
+                    {isLogin ? 'Login' : 'Register'}
+                </button>
 
-            {#if !isLogin && !isApplicant}
-                <h4>Company:</h4>
-                <select on:change={handleCompanyChange} required>
-                    <!-- <option value="" disabled selected>Select Company</option> -->
-                    {#each companies as company}
-                        <option value={company}>{company}</option>
-                    {/each}
-                </select>
+                {#if errorMessage}
+                    <p class="error-message">{errorMessage}</p>
+                {/if}
+
+                <button class="button-toggle" on:click={toggleForm}>
+                    {isLogin ? 'Need an account? Register' : 'Have an account? Login'}
+                </button>
+
+                {#if !isApplicant && !isLogin}
+                    <button class="button-toggle" on:click={() => goto('/register-company')}>
+                        Register your company
+                    </button>
+                {/if}
+
+                <text class="info1">
+                    This website is still under progress.
+                    The login system allows access to the IT services of Job Market webpage. Use email and password to log in.
+                    If you do not know your username or password, use option Forgot my password.
+                    In the event of a problem with logging in, please write to 259905@student.pwr.edu.pl.
+                </text>
             {/if}
-
-            {#if justRegistered}
-            <div class="registerConfirm">Register request successful, please verify your email.</div>
-            {/if}
-
-            <button on:click={handleSubmit}>
-                {isLogin ? 'Login' : 'Register'}
-            </button>
-
-            {#if errorMessage}
-                <p class="error-message">{errorMessage}</p>
-            {/if}
-
-            <button class="button-toggle" on:click={toggleForm}>
-                {isLogin ? 'Need an account? Register' : 'Have an account? Login'}
-            </button>
-            {#if !isApplicant && !isLogin}
-            <button class="button-toggle" on:click={ () => goto('/register-company')}>
-                Register yout company
-            </button>
-            {/if}
-            <text class="info1">
-                This website is still under progress.
-                The login system allows access to the IT services of Job Market webpage. Use email and password to log in.
-                If you do not know your username or password, use option Forgot my password.
-                In the event of a problem with logging in, please write to 259905@student.pwr.edu.pl.
-            </text>
         </div>
     </div>
 </div>
+
 
 <style>
     .switch-button {
@@ -286,15 +306,6 @@
         color: white;
     }
 
-
-
-
-
-
-
-
-
-
     .container {
         display: flex;
         height: 100vh;
@@ -309,13 +320,12 @@
         background-color: #f0f0f0;
     }
 
-
     .info1 {
-    text-align: left;
-    opacity: 0.5;
-    font-size: 10px;
-    display:block;
-  }
+        text-align: left;
+        opacity: 0.5;
+        font-size: 10px;
+        display:block;
+    }
 
     .switch-button-wrapper {
         display: flex;
@@ -335,18 +345,11 @@
     }
 
     .error {
-    color: red;
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-    opacity: 1;
-  }
-
-  .registerConfirm {
-    color: green;
-    font-size: 1.2rem;
-    margin-top: 0.25rem;
-    opacity: 1;
-  }
+        color: red;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        opacity: 1;
+    }
 
     .form-container {
         max-width: 400px;
@@ -363,6 +366,25 @@
         margin-bottom: 1rem;
         border-radius: 4px;
         border: 1px solid #ccc;
+    }
+
+    .company-selection {
+        margin-top: 1rem;
+        text-align: left;
+    }
+
+    .company-selection h4 {
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+        color: #333;
+    }
+
+    .company-selection select {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 1rem;
     }
 
     button {
@@ -386,5 +408,17 @@
     .error-message {
         color: red;
         margin-top: 1rem;
+    }
+
+    .confirmation-message {
+        color: #155724;
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        padding: 1rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-weight: bold;
+        border-radius: 4px;
     }
 </style>
