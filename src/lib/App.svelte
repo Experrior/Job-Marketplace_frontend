@@ -39,8 +39,9 @@
   ];
 
   onMount(async () => {
-    await fetchJobs();
     await fetchCompanies();
+    await fetchJobs();
+
 
     console.log("Companies: ", companies);
     if (verifyUser()) {
@@ -82,6 +83,7 @@
         allJobs = response.data.content.map(job => ({
           ...job,
           isNew: isNewJob(job.createdAt),
+          logoUrl: companies.find(company => company.id === job.companyId)?.logoUrl
         }));
         filteredJobs = allJobs;
         totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
@@ -100,6 +102,7 @@
         companies = response.data.map((company) => ({
           id: company.companyId,
           name: company.name,
+          logoUrl: company.logoUrl
         }));
         companiesLoaded = true;
       } else {
@@ -167,8 +170,7 @@
         {#if paginatedJobs.length > 0}
           <div class="job-list">
             {#each paginatedJobs as job}
-              <JobCard {job} isLiked={followedJobIds.has(job.jobId)} useToast={false} />
-            {/each}
+              <JobCard {job} isLiked={followedJobIds.has(job.jobId)} logoUrl={job.logoUrl} useToast={false} />            {/each}
           </div>
         {:else}
           <p>No jobs found for your search criteria.</p>

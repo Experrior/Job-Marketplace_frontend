@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import Quill from 'quill';
   import 'quill/dist/quill.snow.css';
+  import AppBar from "$lib/AppBar.svelte";
 
   console.log(verifyUser());
 
@@ -193,15 +194,7 @@
 </script>
 
 
-<div class="app-bar">
-    <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
-    <button class="user-icon" on:click={() => goto('/settings')} aria-label="Go to settings">
-      <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-        <circle cx="12" cy="8" r="4" />
-        <path d="M12 12c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z" />
-      </svg>
-    </button>
-  </div>
+<AppBar/>
   
   <div class="scrollable-page">
     <img src="/images/job_background.webp" alt="Job Background" class="full-width-image" />

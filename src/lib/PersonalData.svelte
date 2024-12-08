@@ -132,6 +132,7 @@
         ...currentUser,
         profilePicture: userProfile.profilePicture
       }));
+      links.set(userProfile.links || []);
     }
   });
 
