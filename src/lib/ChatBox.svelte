@@ -217,83 +217,84 @@
   }
 
 </script>
+{#if $user }
+  <div class="chat-box-container">
+    <div
+      class="chat-header"
+      role="button"
+      tabindex="0"
+      on:click={toggleChatBox}
+      on:keydown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          toggleChatBox();
+          e.preventDefault();
+        }
+      }}
+    >
+      {isOpen ? "Hide Chat" : "Open Chat"}
+    </div>
+    {#if gotNewMessage && !isOpen}
+      <span class="new-message-indicator"></span>
+    {/if}
 
-<div class="chat-box-container">
-  <div
-    class="chat-header"
-    role="button"
-    tabindex="0"
-    on:click={toggleChatBox}
-    on:keydown={(e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        toggleChatBox();
-        e.preventDefault();
-      }
-    }}
-  >
-    {isOpen ? "Hide Chat" : "Open Chat"}
-  </div>
-  {#if gotNewMessage && !isOpen}
-    <span class="new-message-indicator"></span>
-  {/if}
+    <!-- Chat box content -->
+    {#if isOpen}
+      <div class="chat-box">
+        <div class="chat-content">
+          <!-- Chat list -->
+          <div class="chat-list-container">
+            <ul class="chat-list">
+              {#each chatList as chat}
+                <li
+                  class:active={chat.id === currentChatId}
+                  on:click={() => selectChat(chat.ChatId)}>
+                  {$user.role === "APPLICANT" ? chat.RecruiterName : chat.ApplicantName}
+                </li>
+              {/each}
+            </ul>
+          </div>
 
-  <!-- Chat box content -->
-  {#if isOpen}
-    <div class="chat-box">
-      <div class="chat-content">
-        <!-- Chat list -->
-        <div class="chat-list-container">
-          <ul class="chat-list">
-            {#each chatList as chat}
-              <li
-                class:active={chat.id === currentChatId}
-                on:click={() => selectChat(chat.ChatId)}>
-                {$user.role === "APPLICANT" ? chat.RecruiterName : chat.ApplicantName}
-              </li>
-            {/each}
-          </ul>
-        </div>
+          <div class="message-area">
+            {#if currentChatId !== null}
+              {#key gotNewMessage}
+              <div class="messages-container" bind:this={messagesContainer}>
+                <ul class="messages">
+                  {#each chatMessages[currentChatId] as message}
+                    <li
+                      class="message {message.createdBy === $user.userId
+                        ? 'right'
+                        : 'left'}"
+                    >
+                      <div class="bubble">
+                        {message.content || message.text}
+                      </div>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+              {/key}
 
-        <div class="message-area">
-          {#if currentChatId !== null}
-            {#key gotNewMessage}
-            <div class="messages-container" bind:this={messagesContainer}>
-              <ul class="messages">
-                {#each chatMessages[currentChatId] as message}
-                  <li
-                    class="message {message.createdBy === $user.userId
-                      ? 'right'
-                      : 'left'}"
-                  >
-                    <div class="bubble">
-                      {message.content || message.text}
-                    </div>
-                  </li>
-                {/each}
-              </ul>
-            </div>
-            {/key}
-
-            <div class="input-area">
-              <input
-                type="text"
-                placeholder="Type a message..."
-                bind:value={newMessage}
-                on:keydown={(e) => e.key === "Enter" && sendMessage(currentChatId)}
-              />
-            </div>
-          {:else}
-            <div
-              class="messages-container"
-              style="display: flex; align-items: center; justify-content: center;">
-              <p>Select a chat to start messaging</p>
-            </div>
-          {/if}
+              <div class="input-area">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  bind:value={newMessage}
+                  on:keydown={(e) => e.key === "Enter" && sendMessage(currentChatId)}
+                />
+              </div>
+            {:else}
+              <div
+                class="messages-container"
+                style="display: flex; align-items: center; justify-content: center;">
+                <p>Select a chat to start messaging</p>
+              </div>
+            {/if}
+          </div>
         </div>
       </div>
-    </div>
-  {/if}
-</div>
+    {/if}
+  </div>
+{/if}
 
 <style>
 

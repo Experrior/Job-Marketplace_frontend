@@ -499,20 +499,6 @@
 
   function  verifyPDFheight() {
   errors = {};
-    // Validate personal information
-    if (!fullName) errors.fullName = 'Full Name is required.';
-    if (fullName.length > MAX_FULL_NAME_LENGTH) errors.fullName = `Full Name cannot exceed ${MAX_FULL_NAME_LENGTH} characters.`;
-
-    if (!email || !validateEmail(email)) errors.email = 'Valid Email is required.';
-    if (email.length > MAX_EMAIL_LENGTH) errors.email = `Email cannot exceed ${MAX_EMAIL_LENGTH} characters.`;
-
-    if (!phone || !validatePhone(phone)) errors.phone = 'Valid Phone Number is required.';
-    if (phone.length > MAX_PHONE_LENGTH) errors.phone = `Phone number cannot exceed ${MAX_PHONE_LENGTH} characters.`;
-
-    if (summary.length > MAX_OVERVIEW_LENGTH) errors.summary = `Summary cannot exceed ${MAX_OVERVIEW_LENGTH} characters.`;
-    if (Object.keys(errors).length !== 0){
-      return
-    }
 
     const doc = new jsPDF();
     // console.log("testDOC",doc.getPageIngefo(), doc.getPageHeight())
@@ -660,7 +646,6 @@
       285,
       { maxWidth: 190 }
     );
-    alert(y)
     if (y > 275){
       return false
     }
