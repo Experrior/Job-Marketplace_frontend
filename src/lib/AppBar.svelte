@@ -1,7 +1,6 @@
 <script>
     import { goto } from '$app/navigation';
     import { user } from "$lib/stores/user.js";
-
     function navigateToSettings(page) {
         goto(`/settings?tab=${page}`);
     }

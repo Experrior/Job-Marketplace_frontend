@@ -175,8 +175,10 @@
             {#if registrationSuccess}
                 <RegistrationSuccess
                         message="Registration Successful!"
-                        additionalInfo="Check your email to verify your account."
-                />
+                        additionalInfo="Check your email to verify your account." />
+                <button class="button-toggle" on:click={registrationSuccess=false}>
+                    Go back to login
+                </button>
             {:else}
                 <h1>{isLogin ? 'Login' : 'Register'}</h1>
 
@@ -231,6 +233,7 @@
                         <div class="confirmation-message">
                             Your email has been verified. Please wait for your company's approval before logging in.
                         </div>
+
                     {:else if emailVerified}
                         <div class="confirmation-message">
                             Your email has been successfully verified. You can now log in.
