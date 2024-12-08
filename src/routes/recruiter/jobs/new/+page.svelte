@@ -515,41 +515,69 @@
       }
     }
 
-
-
     .required-skills li {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
 
-.skill-name {
-  flex: 1;
-}
+    .skill-name {
+      flex: 1;
+    }
 
-.skill-level {
-  display: flex;
-  flex: 0;
-}
+    .skill-level {
+      display: flex;
+      flex: 0;
+    }
 
-.star, .star.empty {
-  font-size: 40px;
-  margin-right: 2px;
-}
+    .star, .star.empty {
+      font-size: 40px;
+      margin-right: 2px;
+    }
 
-.star {
-  color: #f1c40f;
-}
+    .star {
+      color: #f1c40f;
+    }
 
-.star.empty {
-  color: #ccc;
-}
+    .star.empty {
+      color: #ccc;
+    }
   
     .star.empty {
       color: #ccc;
       font-size: 40px;
     }
 
+    /* Style for the select elements */
+    select#employmentType,
+    select#workLocation,
+    select#experienceLevel {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      background-color: #ffffff;
+      font-size: 1rem;
+      color: #495057;
+      margin-bottom: 1rem;
+    }
+
+    /* Style for the select elements on focus */
+    select#employmentType:focus,
+    select#workLocation:focus,
+    select#experienceLevel:focus {
+      border-color: #80bdff;
+      outline: none;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    /* Style for the select elements when disabled */
+    select#employmentType:disabled,
+    select#workLocation:disabled,
+    select#experienceLevel:disabled {
+      background-color: #e9ecef;
+      color: #6c757d;
+    }
 
 
   </style>
