@@ -19,7 +19,7 @@
   let followedJobIds = new Set();
 
   let companiesLoaded = false;
-
+  let loading = true;
   let filters = {
     location: '',
     requiredExperience: '',
@@ -42,12 +42,12 @@
     await fetchCompanies();
     await fetchJobs();
 
-
-    console.log("Companies: ", companies);
     if (verifyUser()) {
       const savedOffers = await fetchSavedOffers($user.jwt);
       followedJobIds = new Set(savedOffers.map((job) => job.jobId));
     }
+
+    loading = false;
   });
 
   function cleanFilters(filters) {
@@ -143,60 +143,90 @@
 
 <main>
   <div class="content">
-    <div class="job-list-section">
-      <div class="search-bar">
-        <input
-                type="text"
-                placeholder="Search for jobs..."
-                bind:value={searchQuery}
-                on:input={() => {
-            filteredJobs = allJobs.filter((job) =>
-              job.title.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-          }}
-        />
-      </div>
-      <div class="skills-bar">
-        {#each skillsList as skill}
-          <div
-                  class="skill-chip {filters.requiredSkills.includes(skill) ? 'selected' : ''}"
-                  on:click={() => toggleSkill(skill)}
-          >
-            {skill}
-          </div>
-        {/each}
-      </div>
-      <div class="job-list-container">
-        {#if paginatedJobs.length > 0}
-          <div class="job-list">
-            {#each paginatedJobs as job}
-              <JobCard {job} isLiked={followedJobIds.has(job.jobId)} logoUrl={job.logoUrl} useToast={false} />            {/each}
-          </div>
-        {:else}
-          <p>No jobs found for your search criteria.</p>
-        {/if}
-
-        {#if totalPages > 1}
-          <div class="pagination">
-            <button on:click={() => changePage(currentPage - 1)} disabled={currentPage === 1}>
-              Previous
-            </button>
-            <span>Page {currentPage} of {totalPages}</span>
-            <button on:click={() => changePage(currentPage + 1)} disabled={currentPage === totalPages}>
-              Next
-            </button>
-          </div>
-        {/if}
-      </div>
-    </div>
-
-    {#if companiesLoaded}
-      <Filters {companies} {filters} {skillsList} onApplyFilters={applyFilters} />
+    {#if loading}
+      <p>Loading...</p>
     {:else}
-      <p>Loading filters...</p>
-    {/if}  </div>
-  <ChatBox/>
+      <div class="job-list-section">
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <input
+                  type="text"
+                  placeholder="Search for jobs..."
+                  bind:value={searchQuery}
+                  on:input={() => {
+              filteredJobs = allJobs.filter((job) =>
+                job.title.toLowerCase().includes(searchQuery.toLowerCase())
+              );
+            }}
+          />
+        </div>
+
+        <!-- Skills Bar -->
+        <div class="skills-bar">
+          {#each skillsList as skill}
+            <div
+                    class="skill-chip {filters.requiredSkills.includes(skill) ? 'selected' : ''}"
+                    on:click={() => toggleSkill(skill)}
+            >
+              {skill}
+            </div>
+          {/each}
+        </div>
+
+        <!-- Job List Container -->
+        <div class="job-list-container">
+          {#if paginatedJobs.length > 0}
+            <div class="job-list">
+              {#each paginatedJobs as job}
+                <JobCard
+                        {job}
+                        isLiked={followedJobIds.has(job.jobId)}
+                        logoUrl={job.logoUrl}
+                        useToast={false}
+                />
+              {/each}
+            </div>
+          {:else}
+            <p>No jobs found for your search criteria.</p>
+          {/if}
+
+          <!-- Pagination -->
+          {#if totalPages > 1}
+            <div class="pagination">
+              <button
+                      on:click={() => changePage(currentPage - 1)}
+                      disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <span>Page {currentPage} of {totalPages}</span>
+              <button
+                      on:click={() => changePage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          {/if}
+        </div>
+      </div>
+
+      <!-- Filters -->
+      {#if companiesLoaded}
+        <Filters
+                {companies}
+                {filters}
+                {skillsList}
+                on:applyFilters={applyFilters}
+        />
+      {:else}
+        <p>Loading filters...</p>
+      {/if}
+    {/if}
+  </div>
+  <ChatBox />
 </main>
+
 
 <style>
   main {

@@ -6,6 +6,9 @@
   export let onUnlike;
   export let useToast = true; // Default to true for backward compatibility
   export let logoUrl;
+  export let companyName;
+
+  let loading = true;
 
   const API_URL = "http://localhost:8080/job-service/graphql";
 
@@ -39,6 +42,7 @@
   }
 
   async function toggleLike(event) {
+    console.log("Company Name: ", companyName);
     event.stopPropagation(); // Prevent card click propagation
 
     if (!isLiked) {
@@ -103,7 +107,18 @@
 
 <div class="job-card" on:click={navigateToJob}>
   <div class="company-logo">
-    <img src={logoUrl} alt="{job.companyName} Logo" />
+    {#if loading}
+      <div class="placeholder">
+        <span>Loading...</span>
+      </div>
+    {/if}
+    <img
+            src={logoUrl}
+            alt="{companyName} Logo"
+            on:load={() => (loading = false)}
+            on:error={() => (loading = false)}
+            style="display: {loading ? 'none' : 'block'}"
+    />
   </div>
 
   <div class="job-info">
@@ -113,7 +128,7 @@
         <span class="new-label">New</span>
       {/if}
     </div>
-    <p class="company-name">{job.companyName}</p>
+    <p class="company-name">{companyName}</p>
     <div class="job-details">
       <span class="detail"><strong>Location:</strong> {job.location || 'Not specified'}</span>
       <span class="detail"><strong>Work Type:</strong> {job.workLocation || 'Not specified'}</span>
