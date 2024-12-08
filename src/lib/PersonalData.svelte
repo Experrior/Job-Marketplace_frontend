@@ -6,7 +6,11 @@
   import { auth } from "../stores/auth";
   import ProfilePicture from './ProfilePicture.svelte';
 
-  const API_URL = "http://localhost:8080/user-service/graphql";
+
+  const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+  console.log("USING GATEWAY:", apiGateway);
+
+  const API_URL = `${apiGateway}/user-service/graphql`;
 
   const skills = writable([]);
   const educations = writable([]);

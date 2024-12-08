@@ -16,6 +16,9 @@
         logo: ""
     };
 
+    const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+    console.log("USING GATEWAY:", apiGateway);
+
     // Validations
     function validateFields() {
         errors = {};
@@ -54,7 +57,7 @@
                 return;
             }
             console.log('Form Data:', formData);
-            const res = await axios.post('http://localhost:8080/user-service/register/company', formData, {
+            const res = await axios.post(`${apiGateway}/user-service/register/company`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

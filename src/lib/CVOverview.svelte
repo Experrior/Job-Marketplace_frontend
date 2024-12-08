@@ -5,6 +5,9 @@
 
     let cvs = [];
 
+    const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+    console.log("USING GATEWAY:", apiGateway);
+
     onMount(async () => {
         verifyUser();
         const query = `query {
@@ -19,7 +22,7 @@
 
         try {
             const response = await axios.post(
-                "http://localhost:8080/user-service/graphql",
+                `${apiGateway}/user-service/graphql`,
                 { query: query },
                 {
                     headers: {
@@ -49,7 +52,7 @@
 
         try {
             const response = await axios.post(
-                "http://localhost:8080/user-service/resume/remove",
+                `${apiGateway}/user-service/resume/remove`,
                 null,
                 {
                     headers: {

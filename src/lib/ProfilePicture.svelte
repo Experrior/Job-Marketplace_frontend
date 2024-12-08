@@ -4,7 +4,11 @@
     export let firstName; // User's first name
     export let lastName; // User's last name
 
-    let uploadEndpoint = "http://localhost:8080/user-service/user-profile/profile-picture";
+
+    const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+    console.log("USING GATEWAY:", apiGateway);
+
+    let uploadEndpoint = `${apiGateway}/user-service/user-profile/profile-picture`;
 
     let uploadError = ""; // Error message for uploading
 

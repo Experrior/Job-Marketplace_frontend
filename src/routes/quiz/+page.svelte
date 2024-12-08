@@ -19,6 +19,10 @@
     let timer= 600;
     let score = 0;
 
+
+    const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+    console.log("USING GATEWAY:", apiGateway);
+
     onMount(async() => {
 
       //todo change to disauthenticate once a authenticated request fails with code 401
@@ -39,7 +43,7 @@
       const variables = {
           quizIdi:quizId
         };
-      const response = await axios.post('http://localhost:8080/job-service/graphql', {
+      const response = await axios.post(`${apiGateway}/job-service/graphql`, {
             query: query,
             variables: variables
           }, {headers:{
@@ -139,7 +143,7 @@
 
     }
 
-    const response = await axios.post('http://localhost:8080/job-service/graphql',
+    const response = await axios.post(`${apiGateway}/job-service/graphql`,
       {
         query: mutation,
         variables: variables
@@ -199,7 +203,7 @@
       
     };
       try {
-        const response = await axios.post(`http://localhost:8080/job-service/graphql`, {
+        const response = await axios.post(`${apiGateway}/job-service/graphql`, {
           query: query2,
           variables: variables2
         }, {

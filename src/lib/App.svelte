@@ -8,6 +8,10 @@
   import { user, verifyUser } from "$lib/stores/user.js";
   import { fetchSavedOffers } from './services.jobService.js';
 
+
+  const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+  console.log("USING GATEWAY:", apiGateway);
+
   let searchQuery = '';
   let filteredJobs = [];
   let currentPage = 1;
@@ -75,7 +79,7 @@
     try {
       const activeFilters = cleanFilters(filters);
       const response = await axios.post(
-              'http://localhost:8080/job-service/getJobs',
+              `${apiGateway}/job-service/getJobs`,
               activeFilters,
               { params: { limit: 50 } }
       );
@@ -97,7 +101,7 @@
 
   async function fetchCompanies() {
     try {
-      const response = await axios.get('http://localhost:8080/user-service/getCompanies');
+      const response = await axios.get(`${apiGateway}/user-service/getCompanies`);
       if (response.status === 200) {
         companies = response.data.map((company) => ({
           id: company.companyId,

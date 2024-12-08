@@ -51,9 +51,9 @@
     // Fetch quizzes
     try {
       const response = await axios.post(
-      'http://localhost:8080/job-service/graphql',
-        {
-          query: `query {
+              `${apiGateway}/job-service/graphql`,
+              {
+                query: `query {
             quizzesByRecruiter {
               quizId
               quizName
@@ -192,7 +192,7 @@
 
     try {
       const response = await axios.post(
-              'http://localhost:8080/job-service/graphql',
+              `${apiGateway}/job-service/graphql`,
               {
                 query: mutation,
                 variables: variables
@@ -397,7 +397,7 @@
   .delete-button:hover {
     background-color: darkred;
   }
-  
+
     .full-width-image {
       width: 100%;
       max-height: 250px;
