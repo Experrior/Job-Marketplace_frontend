@@ -8,6 +8,7 @@
   let quizzes = [];
   let jobs = [];
   let showDisabledJobs = false;
+  let showDisabledQuizzes = false;
 
   const apiEndpoint = "http://localhost:8080/job-service/graphql";
   const headers = {
@@ -91,6 +92,10 @@
     showDisabledJobs = !showDisabledJobs;
   }
 
+  function toggleShowDisabledQuizzes() {
+    showDisabledQuizzes = !showDisabledQuizzes;
+  }
+
   async function disableJobOffer(jobId) {
     const mutation = `
     mutation {
@@ -146,6 +151,59 @@
       console.error("GraphQL Error:", error);
     }
   }
+
+  async function disableQuiz(quizId) {
+    const mutation = `
+    mutation {
+      deleteQuiz(quizId: "${quizId}") {
+        success,
+        message
+      }
+    }
+  `;
+
+    try {
+      const response = await axios.post(apiEndpoint, { query: mutation }, { headers });
+      const result = response.data.data.deleteQuiz;
+      if (result.success) {
+        alert("Quiz disabled successfully.");
+        fetchQuizzes(); // Refresh the quiz list
+      } else {
+        alert(`Failed to disable quiz: ${result.message}`);
+      }
+    } catch (error) {
+      alert("An error occurred while disabling the quiz.");
+      console.error("GraphQL Error:", error);
+    }
+  }
+
+
+  async function enableQuiz(quizId) {
+    const mutation = `
+    mutation {
+      restoreQuiz(quizId: "${quizId}") {
+        quizId
+        quizName
+        createdAt
+        isDeleted
+      }
+    }
+  `;
+
+    try {
+      const response = await axios.post(apiEndpoint, { query: mutation }, { headers });
+      const result = response.data.data.restoreQuiz;
+      if (result) {
+        alert("Quiz enabled successfully.");
+        fetchQuizzes(); // Refresh the quiz list
+      } else {
+        alert("Failed to enable quiz.");
+      }
+    } catch (error) {
+      alert("An error occurred while enabling the quiz.");
+      console.error("GraphQL Error:", error);
+    }
+  }
 </script>
 
 
@@ -176,7 +234,7 @@
               <div class="job-details">
                 <h3>{job.title}</h3>
                 <p>{job.location}</p>
-                <p>Salary: {job.salary ? job.salary : 'undisclosed'}</p>
+                <p>Salary $: {job.salary ? job.salary : 'undisclosed'}</p>
               </div>
             </div>
             <div class="job-actions">
@@ -194,16 +252,28 @@
 
       <!-- Quiz List -->
       <div class="quiz-list-container">
-        <h2>Quizzes</h2>
-        {#each quizzes as quiz}
-          <button class="quiz-card" on:click={() => navigateToQuiz(quiz.quizId)}>
-            {#if !quiz.isDeleted}
-              <div class="quiz-info">
-                <h3>{quiz.quizName.split('.json')[0]}</h3>
-                <p>Created: {quiz.createdAt.split('.')[0]}</p>
-              </div>
-            {/if}
-          </button>
+        <div class="list-header">
+          <h2>Quizzes</h2>
+          <select on:change={toggleShowDisabledQuizzes} class="filter-dropdown">
+            <option value="active" selected={!showDisabledQuizzes}>Show Active Quizzes</option>
+            <option value="disabled" selected={showDisabledQuizzes}>Show Disabled Quizzes</option>
+          </select>
+        </div>
+
+        {#each quizzes.filter(quiz => showDisabledQuizzes ? quiz.isDeleted : !quiz.isDeleted) as quiz}
+          <div class="quiz-card {quiz.isDeleted ? 'disabled' : ''}">
+            <div class="quiz-info">
+              <h3>{quiz.quizName.split('.json')[0]}</h3>
+              <p>Created: {quiz.createdAt.split('.')[0]}</p>
+            </div>
+            <div class="quiz-actions">
+              {#if !quiz.isDeleted}
+                <button on:click={() => disableQuiz(quiz.quizId)}>Disable</button>
+              {:else}
+                <button on:click={() => enableQuiz(quiz.quizId)}>Enable</button>
+              {/if}
+            </div>
+          </div>
         {/each}
       </div>
     </main>
@@ -228,7 +298,7 @@
   .create-button {
     width: 100%;
     padding: 0.75rem;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     border: none;
     border-radius: 4px;
     background-color: #28a745;
@@ -246,11 +316,12 @@
     border-radius: 4px;
     background: #fff;
     font-size: 1rem;
+    margin-bottom: 1rem;
   }
 
   .job-card, .quiz-card {
     padding: 0.5rem; /* Decreased padding */
-    margin-left: 0;
+    margin: 0;
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -267,12 +338,12 @@
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
   }
 
-  .job-card.disabled {
+  .job-card.disabled, .quiz-card.disabled{
     background: #f8d7da;
     color: #721c24;
   }
 
-  .job-card.disabled:hover {
+  .job-card.disabled:hover, .quiz-card.disabled:hover {
     background: #f2cbcf; /* Darker red background */
     color: #721c24; /* Light pink text */
   }
@@ -302,25 +373,25 @@
       padding-right: 0.5rem;
   }
 
-.job-card:hover, .quiz-card:hover {
-    background-color: #f9f9f9; /* Light gray background on hover */
-}
+  .job-card:hover, .quiz-card:hover {
+      background-color: #f9f9f9; /* Light gray background on hover */
+  }
 
-.quiz-info h3, .quiz-info p {
-    margin: 0;
-    padding: 0;
-    color: black;
-}
+  .quiz-info h3, .quiz-info p {
+      margin: 0;
+      padding: 0;
+      color: black;
+  }
 
-.quiz-info h3 {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-}
+  .quiz-info h3 {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+  }
 
-.quiz-info p {
-    font-size: 1rem;
-    color: #555;
-}
+  .quiz-info p {
+      font-size: 1rem;
+      color: #555;
+  }
 
  .quiz-info {
     display: flex;
@@ -328,31 +399,43 @@
     gap: 1rem;
   }
 
-  .job-actions button {
+  .job-actions, .quiz-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .job-actions button, .quiz-actions button {
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 4px;
     font-size: 0.9rem;
     cursor: pointer;
-    margin-right: 0.5rem;
   }
 
-  .job-actions button:nth-child(1) {
+  .job-actions button:nth-child(1),
+  .quiz-actions button:nth-child(3) {
     background: #007bff;
     color: white;
   }
 
-  .job-actions button:nth-child(2) {
+  .job-actions button:nth-child(2),
+  .quiz-actions button:nth-child(2) {
     background: #ffc107;
     color: black;
   }
 
-  .job-actions button:nth-child(3) {
+  .job-actions button:nth-child(3),
+  .quiz-actions button:nth-child(1) {
     background: #dc3545;
     color: white;
   }
 
-  .job-actions button:hover {
+  .quiz-actions button:nth-child(3) {
+    background: #6c757d; /* Disabled Quiz button color */
+    color: white;
+  }
+
+  .job-actions button:hover, .quiz-actions button:hover {
     opacity: 0.9;
   }
 
