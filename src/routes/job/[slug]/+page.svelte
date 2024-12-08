@@ -3,9 +3,10 @@
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
     import AppBar from '../../../lib/AppBar.svelte';
-    import { user, verifyUser } from '$lib/stores/user';
+    import { user, verifyUser, resetUser } from '$lib/stores/user';
     import Cookie from 'js-cookie';
-    
+    import axios from 'axios';
+
     let jobNotFound = false;
     let jobId = $page.params.slug;
     let newJob = {};
@@ -58,33 +59,42 @@
         console.log('Company Logo:', companyLogo);
 
         try {
-            // Fetch job details
-            const jobQuery = `
-                query($jobIdi: ID!) {
-                    jobById(jobId: $jobIdi) {
-                        jobId
-                        title
-                        location
-                        employmentType
-                        workLocation
-                        requiredExperience
-                        salary
-                        companyId
-                        companyName
-                        requiredSkills
-                        description
-                        createdAt
-                        quizId
-                    }
-                }
-            `;
-            const jobData = await fetchGraphQL(
-                '/job-service/graphql',
-                jobQuery,
-                { jobIdi: jobId }
-            );
-            newJob = jobData.jobById;
+          
 
+            // Fetch job details
+            // const jobQuery = `
+            //     query($jobIdi: ID!) {
+            //         jobById(jobId: $jobIdi) {
+            //             jobId
+            //             title
+            //             location
+            //             employmentType
+            //             workLocation
+            //             requiredExperience
+            //             salary
+            //             companyId
+            //             companyName
+            //             requiredSkills
+            //             description
+            //             createdAt
+            //             quizId
+            //         }
+            //     }
+            // `;
+            // const jobData = await fetchGraphQL(
+            //     '/job-service/graphql',
+            //     jobQuery,
+            //     { jobIdi: jobId }
+            // );
+            // newJob = jobData.jobById;
+            const jobData2 = await axios.get(apiGateway+`/job-service/getJob?jobId=${jobId}`,               {
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              })
+            console.log("TEST@:",jobData2)
+            newJob = jobData2.data;
+            console.log(newJob)
             if (newJob) {
                 skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)].map(
                     (match) => ({
@@ -103,6 +113,7 @@
         }
 
         try {
+        
             // Fetch user resumes
             const resumesQuery = `
                 query {
@@ -141,6 +152,8 @@
 
         } catch (err) {
             console.error('Error fetching user data:', err);
+            error = null;
+            resetUser();
         }
     });
 
