@@ -13,6 +13,7 @@
   let title = '';
   let companyLogo = '';
   let location = '';
+  let category = '';
   let employmentType = '';
   let workLocation = '';
   let salary = '';
@@ -44,33 +45,65 @@
 
     // Set initial value for the description
     quillInstance.on('text-change', () => {
-      description = quillInstance.root.innerHTML; // Bind content to the `description` variable
+      description = quillInstance.root.innerHTML;
     });
 
     // Fetch quizzes
     try {
       const response = await axios.post(
-              'http://localhost:8080/job-service/graphql',
-              {
-                query: `query {
+      'http://localhost:8080/job-service/graphql',
+        {
+          query: `query {
             quizzesByRecruiter {
               quizId
               quizName
             }
           }`
-              },
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${$user.jwt}`
-                }
-              }
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${$user.jwt}`
+          }
+        }
       );
       quizzes = response.data.data.quizzesByRecruiter;
     } catch (error) {
       alert(error);
     }
   });
+
+  const categories = [
+    "Web Development",
+    "Mobile Development",
+    "Gamedev",
+    "Embedded",
+    "Analytics",
+    "Machine Learning",
+    "Cloud Computing",
+    "Networks",
+    "Cybersecurity",
+    "Administration",
+    "ERP",
+    "Consulting",
+    "Compilers"
+  ];
+
+  const categoriesMapping = {
+    'Web Development': 'WEB_DEVELOPMENT',
+    'Mobile Development': 'MOBILE_DEVELOPMENT',
+    'Gamedev': 'GAMEDEV',
+    'Embedded': 'EMBEDDED',
+    'Analytics': 'ANALYTICS',
+    'Machine Learning': 'MACHINE_LEARNING',
+    'Cloud Computing': 'CLOUD_COMPUTING',
+    'Networks': 'NETWORKS',
+    'Cybersecurity': 'CYBERSECURITY',
+    'Administration': 'ADMINISTRATION',
+    'ERP': 'ERP',
+    'Consulting': 'CONSULTING',
+    'Compilers': 'COMPILERS'
+  };
 
   const employmentTypes = [
     'Full-time',
@@ -110,11 +143,13 @@
     const jobRequestValue = {
       title,
       location,
+      category: categoriesMapping[category],
       employmentType: employmentTypeMapping[employmentType],
       workLocation,
       salary: salary ? parseInt(salary) : null,
       description,
       requiredExperience,
+      experienceLevel,
       skillsList
     };
 
@@ -128,6 +163,7 @@
             jobId
             companyId
             title
+            category
             description
             requiredSkills
             requiredExperience
@@ -141,6 +177,7 @@
     const variables = {
       jobDefinition: {
         title: title,
+        category: categoriesMapping[category],
         description: description,
         location: location,
         salary: salary,
@@ -215,44 +252,54 @@
         </div>
   
         <div class="form-group">
-            <label for="location">Location</label>
-            <input id="location" bind:value={location} placeholder="e.g., San Francisco, CA" required />
-          </div>
-      
-          <div class="form-group">
-            <label for="employmentType">Employment Type</label>
-            <select id="employmentType" bind:value={employmentType} required>
-              <option value="" disabled selected>Select employment type</option>
-              {#each employmentTypes as type}
-                <option value="{type}">{type}</option>
-              {/each}
-            </select>
-          </div>
+          <label for="location">Location</label>
+          <input id="location" bind:value={location} placeholder="e.g., San Francisco, CA" required />
+        </div>
 
-          <div class="form-group">
-            <label for="workLocation">Work Location</label>
-            <select id="workLocation" bind:value={workLocation} required>
-              <option value="" disabled selected>Select work location</option>
-              {#each workLocations as loc}
-                <option value="{loc}">{loc.charAt(0).toUpperCase() + loc.slice(1)}</option>
-              {/each}
-            </select>
-          </div>
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" bind:value={category} required>
+            <option value="" disabled selected>Select category</option>
+            {#each categories as type}
+              <option value="{type}">{type}</option>
+            {/each}
+          </select>
+        </div>
 
-          <div class="form-group">
-            <label for="experienceLevel">Experience Level</label>
-            <select id="experienceLevel" bind:value={experienceLevel} required>
-              <option value="" disabled selected>Select experience level</option>
-              {#each experienceLevels as level}
-                <option value="{level}">{level.charAt(0).toUpperCase() + level.slice(1)}</option>
-              {/each}
-            </select>
-          </div>
-      
-          <div class="form-group">
-            <label for="salary">Salary ($)</label>
-            <input id="salary" type="number" min="0" bind:value={salary} placeholder="e.g., 70000" />
-          </div>
+        <div class="form-group">
+          <label for="employmentType">Employment Type</label>
+          <select id="employmentType" bind:value={employmentType} required>
+            <option value="" disabled selected>Select employment type</option>
+            {#each employmentTypes as type}
+              <option value="{type}">{type}</option>
+            {/each}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="workLocation">Work Location</label>
+          <select id="workLocation" bind:value={workLocation} required>
+            <option value="" disabled selected>Select work location</option>
+            {#each workLocations as loc}
+              <option value="{loc}">{loc.charAt(0).toUpperCase() + loc.slice(1)}</option>
+            {/each}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="experienceLevel">Experience Level</label>
+          <select id="experienceLevel" bind:value={experienceLevel} required>
+            <option value="" disabled selected>Select experience level</option>
+            {#each experienceLevels as level}
+              <option value="{level}">{level.charAt(0).toUpperCase() + level.slice(1)}</option>
+            {/each}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="salary">Salary ($)</label>
+          <input id="salary" type="number" min="0" bind:value={salary} placeholder="e.g., 70000" />
+        </div>
 
         <div class="form-group">
           <label for="description">Job Description</label>
@@ -350,31 +397,6 @@
   .delete-button:hover {
     background-color: darkred;
   }
-
-    .app-bar {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background-color: #007bff;
-      padding: 0.5rem 1rem;
-      color: white;
-    }
-  
-    .app-name {
-      color: white;
-      text-decoration: none;
-      font-size: 1.5rem;
-    }
-  
-    .user-icon {
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
   
     .full-width-image {
       width: 100%;
@@ -549,9 +571,11 @@
     }
 
     /* Style for the select elements */
+    select#category,
     select#employmentType,
     select#workLocation,
-    select#experienceLevel {
+    select#experienceLevel,
+    select#quiz{
       width: 100%;
       padding: 0.75rem;
       border: 1px solid #ced4da;
@@ -563,18 +587,22 @@
     }
 
     /* Style for the select elements on focus */
+    select#category:focus,
     select#employmentType:focus,
     select#workLocation:focus,
-    select#experienceLevel:focus {
+    select#experienceLevel:focus,
+    select#quiz:focus {
       border-color: #80bdff;
       outline: none;
       box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
     }
 
     /* Style for the select elements when disabled */
+    select#category:disabled,
     select#employmentType:disabled,
     select#workLocation:disabled,
-    select#experienceLevel:disabled {
+    select#experienceLevel:disabled,
+    select#quiz:disabled {
       background-color: #e9ecef;
       color: #6c757d;
     }
