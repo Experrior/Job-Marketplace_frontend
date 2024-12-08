@@ -20,6 +20,9 @@
   let sortDirection = 'asc';
   let applicantsToShow = 5;
 
+  const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+  console.log("USING GATEWAY:", apiGateway);
+
   onMount(async () => {
     await fetchApplicants();
     await fetchJobDetails();
@@ -57,7 +60,7 @@
     `;
 
     try {
-      const response = await axios.post('http://localhost:8080/job-service/graphql', {
+      const response = await axios.post(`${apiGateway}/job-service/graphql`, {
         query,
         variables: { jobId },
       }, {
@@ -94,7 +97,7 @@
     `;
 
     try {
-      const response = await fetch('http://localhost:8080/job-service/graphql', {
+      const response = await fetch(`${apiGateway}/job-service/graphql`, {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
@@ -158,7 +161,7 @@
   async function startChat(applicantId, applicantName) {
     const fullName = `${$user.firstName} ${$user.lastName}`;
     try {
-      const response = await fetch(`http://localhost:8080/chat-service/startChat?targetUserId=${applicantId}&recruiterName=${fullName}&applicantName=${applicantName}`, {
+      const response = await fetch(`${apiGateway}/chat-service/startChat?targetUserId=${applicantId}&recruiterName=${fullName}&applicantName=${applicantName}`, {
         headers: { "Authorization": `Bearer ${$user.jwt}` }
       });
       const data = await response.text();
@@ -180,7 +183,7 @@
     `;
 
     try {
-      const response = await axios.post('http://localhost:8080/job-service/graphql', {
+      const response = await axios.post(`${apiGateway}/job-service/graphql`, {
         query: mutation
       }, {
         headers: {

@@ -11,6 +11,10 @@
     let questions = [];
     let jsonOutput = "";
 
+    const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+    console.log("USING GATEWAY:", apiGateway);
+
+
     function validateQuizName(event) {
         quizName = event.target.value.replace(/[^\w]/g, '').slice(0, 60);
     }
@@ -68,7 +72,7 @@
         const formData = new FormData();
         formData.append('quizConfig', blob, quizName + ".json");
         try {
-            const response = await axios.post("http://localhost:8080/job-service/quizzes/createQuiz",
+            const response = await axios.post(`${apiGateway}/job-service/quizzes/createQuiz`,
                 formData,
                 {
                     headers: {

@@ -3,6 +3,8 @@
   import axios from "axios";
   import {user, verifyUser} from '$lib/stores/user';
 
+  const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+  console.log("USING GATEWAY:", apiGateway);
   verifyUser();
   let isOpen = false;
   let currentChatId = null;
@@ -46,7 +48,7 @@
   async function getUserChats(){
     try {
       const response = await axios.get(
-        "http://localhost:8080/chat-service/getUserChats",
+        `${apiGateway}/chat-service/getUserChats`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -114,7 +116,7 @@
 }
 
   async function initializeWebSocketConn() {
-    socket = await new WebSocket(`ws://localhost:8080/chat_service/ws?userId=${$user.userId}`);
+    socket = await new WebSocket(`ws://${apiGateway.split('://')[1]}.split)/chat_service/ws?userId=${$user.userId}`);
 
     socket.onmessage = (event) => {
           const messages = JSON.parse(event.data);

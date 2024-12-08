@@ -6,7 +6,10 @@
     import AppBar from "$lib/AppBar.svelte";
     import Toast from "$lib/Toast.svelte";
 
-    const API_URL = "http://localhost:8080/job-service/graphql";
+    const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+    console.log("USING GATEWAY:", apiGateway);
+    
+    const API_URL = `${apiGateway}/job-service/graphql`;
 
     let savedOffers = [];
     let savedOffersCopy = [];
