@@ -200,8 +200,7 @@
         message: {
           content: newMessage,
           chatId: chatId,
-          createdBy: $user.userId,
-          createdByDisplay: $user.firstName
+          createdBy: $user.userId
         },
       };
       await socket.send(JSON.stringify(message));
