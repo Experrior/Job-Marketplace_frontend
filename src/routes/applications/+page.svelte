@@ -130,8 +130,6 @@
 <main>
     <AppBar/>
     <div class="page-container">
-        <h2>My Applications</h2>
-
         {#if error}
             <p class="error">{error}</p>
         {:else if applications.length === 0}
