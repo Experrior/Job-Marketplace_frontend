@@ -20,7 +20,7 @@
     let showError = false;
     let applicationSuccess = false;
     let companyLogo = '';
-
+    let isLoggedIn = false;
 
     console.log('All env vars:', import.meta.env);
     
@@ -51,7 +51,7 @@
     }
 
     onMount(async () => {
-        verifyUser();
+        isLoggedIn = verifyUser();
 
         const urlParams = new URLSearchParams(window.location.search);
         companyLogo = urlParams.get('companyLogo');
@@ -60,40 +60,44 @@
 
         try {
           
-
-            // Fetch job details
-            // const jobQuery = `
-            //     query($jobIdi: ID!) {
-            //         jobById(jobId: $jobIdi) {
-            //             jobId
-            //             title
-            //             location
-            //             employmentType
-            //             workLocation
-            //             requiredExperience
-            //             salary
-            //             companyId
-            //             companyName
-            //             requiredSkills
-            //             description
-            //             createdAt
-            //             quizId
-            //         }
-            //     }
-            // `;
-            // const jobData = await fetchGraphQL(
-            //     '/job-service/graphql',
-            //     jobQuery,
-            //     { jobIdi: jobId }
-            // );
-            // newJob = jobData.jobById;
-            const jobData2 = await axios.get(apiGateway+`/job-service/getJob?jobId=${jobId}`,               {
+            if (isLoggedIn) {
+                const jobQuery = `
+                query($jobIdi: ID!) {
+                    jobById(jobId: $jobIdi) {
+                        jobId
+                        title
+                        location
+                        employmentType
+                        workLocation
+                        requiredExperience
+                        salary
+                        companyId
+                        companyName
+                        requiredSkills
+                        description
+                        createdAt
+                        quizId
+                        views
+                    }
+                }
+            `;
+            const jobData = await fetchGraphQL(
+                '/job-service/graphql',
+                jobQuery,
+                { jobIdi: jobId }
+            );
+            newJob = jobData.jobById;
+            } else{
+                const jobData2 = await axios.get(apiGateway+`/job-service/getJob?jobId=${jobId}`,               {
                 headers: {
                   'Content-Type': 'application/json'
                 }
               })
             console.log("TEST@:",jobData2)
             newJob = jobData2.data;
+            }
+
+
             console.log(newJob)
             if (newJob) {
                 skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)].map(
@@ -241,6 +245,10 @@
                 {#if newJob.createdAt}
                     <p><strong>Posted On:</strong> {formatDate(newJob.createdAt)}</p>
                 {/if}
+                {#if newJob.views}
+                    <p><strong>Views:</strong> {newJob.views}</p>
+                {/if}
+
             </div>
 
             {#if newJob.description}
@@ -273,45 +281,46 @@
                     {/each}
                 </ul>
             {/if}
-
-            <div class="form-group">
-                <label for="resume">Specify CV</label>
-                <select id="resume" bind:value={resume} class="resume-dropdown" required>
-                    <option value="" disabled selected>Select a CV</option>
-                    {#each resumes as resume}
-                        <option value="{resume}">{resume.resumeName}</option>
-                    {/each}
-                </select>
-                {#if showError}
-                    <p class="error-message">Specify a resume.</p>
-                {/if}
-            </div>
-
-            {#if applicationSuccess}
-                <div class="success-card">
-                    <h2>Application Submitted Successfully!</h2>
-                    <p>You have applied for the position of <strong>{newJob.title}</strong> at <strong>{newJob.companyName}</strong>.</p>
-                    <p>Recruiters will review your application and get back to you shortly.</p>
-                    <div class="next-steps">
-                        <h3>Next Steps:</h3>
-                        <ul>
-                            <li>Prepare for potential interviews.</li>
-                            <li>Check your email for updates on your application.</li>
-                        </ul>
-                    </div>
-                    <button class="view-application-button" on:click={() => goto('/applications')}>
-                        View My Applications
-                    </button>
+            {#if isLoggedIn}
+                <div class="form-group">
+                    <label for="resume">Specify CV</label>
+                    <select id="resume" bind:value={resume} class="resume-dropdown" required>
+                        <option value="" disabled selected>Select a CV</option>
+                        {#each resumes as resume}
+                            <option value="{resume}">{resume.resumeName}</option>
+                        {/each}
+                    </select>
+                    {#if showError}
+                        <p class="error-message">Specify a resume.</p>
+                    {/if}
                 </div>
-            {:else if hasApplied}
-                <p>You have already applied for this position.</p>
-                <button class="submit-button" on:click={() => goto('/applications')}>
-                    View Application
-                </button>
-            {:else}
-                <button class="submit-button" on:click={takeQuiz}>
-                    Apply Now
-                </button>
+                
+                {#if applicationSuccess}
+                    <div class="success-card">
+                        <h2>Application Submitted Successfully!</h2>
+                        <p>You have applied for the position of <strong>{newJob.title}</strong> at <strong>{newJob.companyName}</strong>.</p>
+                        <p>Recruiters will review your application and get back to you shortly.</p>
+                        <div class="next-steps">
+                            <h3>Next Steps:</h3>
+                            <ul>
+                                <li>Prepare for potential interviews.</li>
+                                <li>Check your email for updates on your application.</li>
+                            </ul>
+                        </div>
+                        <button class="view-application-button" on:click={() => goto('/applications')}>
+                            View My Applications
+                        </button>
+                    </div>
+                {:else if hasApplied}
+                    <p>You have already applied for this position.</p>
+                    <button class="submit-button" on:click={() => goto('/applications')}>
+                        View Application
+                    </button>
+                {:else}
+                    <button class="submit-button" on:click={takeQuiz}>
+                        Apply Now
+                    </button>
+                {/if}
             {/if}
 
         </div>
