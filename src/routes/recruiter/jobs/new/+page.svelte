@@ -50,7 +50,7 @@
     // Fetch quizzes
     try {
       const response = await axios.post(
-              'http://localhost:8080/job-service/graphql',
+              `${apiGateway}/job-service/graphql`,
               {
                 query: `query {
             quizzesByRecruiter {
@@ -155,7 +155,7 @@
 
     try {
       const response = await axios.post(
-              'http://localhost:8080/job-service/graphql',
+              `${apiGateway}/job-service/graphql`,
               {
                 query: mutation,
                 variables: variables

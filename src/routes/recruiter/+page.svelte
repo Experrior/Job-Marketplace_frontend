@@ -9,7 +9,10 @@
   let jobs = [];
   let showDisabledJobs = false;
 
-  const apiEndpoint = "http://localhost:8080/job-service/graphql";
+  const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+  console.log("USING GATEWAY:", apiGateway);
+
+  const apiEndpoint = `${apiGateway}/job-service/graphql`;
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${$user.jwt}`,

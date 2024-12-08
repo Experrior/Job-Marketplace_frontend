@@ -7,6 +7,10 @@
    import {verifyUser, user} from '$lib/../stores/user'
    import {goto} from '$app/navigation'
 
+
+   const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+   console.log("USING GATEWAY:", apiGateway);
+
    onMount(() => {
     if (!verifyUser()){
     goto('/login');
@@ -22,7 +26,7 @@
     // console.log($user.jwt)
    onMount(async () => {
     try {
-    const response = await axios.post('http://localhost:8080/job-service/graphql',
+    const response = await axios.post(`${apiGateway}/job-service/graphql`,
         {query: `query{
     quizById(quizId: "toReplace"){
         quizName
@@ -127,15 +131,15 @@
 
       quizData = { ...quizData };
     }
-  
+    
     async function saveQuiz() {
         const blob = new Blob([quizData], { type: 'application/json' });
         const formData = new FormData();
         formData.append('quizConfig', blob, quizData.quizName+".json");
-        console.log("http://localhost:8080/job-service/quizzes/updateQuiz/"+quizId)
+        console.log(`${apiGateway}/job-service/quizzes/updateQuiz/`+quizId)
         try {
             const response = await axios.post(
-                "http://localhost:8080/job-service/quizzes/updateQuiz/"+quizId,
+                `${apiGateway}/job-service/quizzes/updateQuiz/`+quizId,
                 formData,
                 {
                     headers: {

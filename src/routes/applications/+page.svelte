@@ -10,8 +10,9 @@
 
     let applications = [];
     let error = '';
-
-    const API_URL = "http://localhost:8080/job-service/graphql";
+    const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+    console.log("USING GATEWAY:", apiGateway);
+    const API_URL = `${apiGateway}/job-service/graphql`;
 
     async function callGraphQL(query, variables = {}) {
         if (!verifyUser()) {
@@ -46,7 +47,7 @@
         }
 
         try {
-            const response = await axios.get(`http://localhost:8080/user-service/getCompanyById`, {
+            const response = await axios.get(`${apiGateway}/user-service/getCompanyById`, {
                 params: { companyId }
             });
             if (response.status === 200) {

@@ -6,6 +6,10 @@
     import { onMount } from 'svelte';
     import RegistrationSuccess from './RegistrationSuccess.svelte';
 
+
+    const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+    console.log("USING GATEWAY:", apiGateway);
+
     let errors = {};
     let isApplicant = true;
     let isLogin = true;
@@ -38,7 +42,7 @@
         awaitingApproval = urlParams.get('awaitingApproval') === 'true';
         companyVerified = urlParams.get('companyVerified') === 'true';
 
-        const res = await axios.get('http://localhost:8080/user-service/getCompanies');
+        const res = await axios.get(`${apiGateway}/user-service/getCompanies`);
         companies = res.data.map(comp => comp.name).sort();
         registerFormData.company = companies[0];
     });
@@ -51,7 +55,7 @@
             return;
         }
         let role = isApplicant ? 'applicant' : 'recruiter';
-        const url = !isLogin ? "http://localhost:8080/user-service/register/" + role : 'http://localhost:8080/user-service/login';
+        const url = !isLogin ? `${apiGateway}/user-service/register/` + role : `${apiGateway}/user-service/login`;
 
         var response = null;
         try {
@@ -129,7 +133,7 @@
             }
         `;
         try {
-            const response = await axios.post('http://localhost:8080/user-service/graphql', { query }, {
+            const response = await axios.post(`${apiGateway}/user-service/graphql`, { query }, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('jwt')}`
