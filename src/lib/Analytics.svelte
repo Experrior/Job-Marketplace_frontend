@@ -3,6 +3,14 @@
     import { Chart, registerables } from 'chart.js';
     Chart.register(...registerables);
 
+    const categories = [
+        { id: 'salary', label: 'Salary Analytics' },
+        { id: 'applications', label: 'Application Statistics' },
+        { id: 'offers', label: 'Job Offers' }
+    ];
+
+    let selectedCategory = 'salary';
+
     const topLocationsBySalary = {
         "topLocationsBySalary": [
             { "location": "San Francisco, CA", "averageSalary": 145000 },
@@ -230,7 +238,8 @@
             data: topLocationsBySalary.topLocationsBySalary,
             xKey: 'location',
             yKey: 'averageSalary',
-            type: 'bar'
+            type: 'bar',
+            category: 'salary'
         },
         {
             id: 'chart2',
@@ -239,7 +248,8 @@
             data: topIndustriesBySalary.topIndustriesBySalary,
             xKey: 'industry',
             yKey: 'averageSalary',
-            type: 'bar'
+            type: 'bar',
+            category: 'salary'
         },
         {
             id: 'chart3',
@@ -248,8 +258,9 @@
             data: mostViewedJobOffers.mostViewedJobOffers,
             xKey: 'jobTitle',
             yKey: 'views',
-            type: 'bar', // Changed from 'horizontalBar' to 'bar'
-            indexAxis: 'y' // Added to make it horizontal
+            type: 'bar',
+            indexAxis: 'y',
+            category: 'offers'
         },
         {
             id: 'chart4',
@@ -259,7 +270,8 @@
             xKey: 'metric',
             yKey: 'value',
             type: 'doughnut',
-            singleValue: true // Custom flag to handle single value
+            singleValue: true,
+            category: 'applications'
         },
         {
             id: 'chart5',
@@ -268,7 +280,8 @@
             data: averageApplicationsByLevel.averageApplicationsByLevel,
             xKey: 'level',
             yKey: 'averageApplications',
-            type: 'line'
+            type: 'line',
+            category: 'applications'
         },
         {
             id: 'chart6',
@@ -278,7 +291,9 @@
             xKey: 'metric',
             yKey: 'value',
             type: 'pie',
-            singleValue: true
+            singleValue: true,
+            category: 'applications'
+            
         },
         {
             id: 'chart7',
@@ -287,7 +302,8 @@
             data: averageJobOffersByIndustry.averageJobOffersByIndustry,
             xKey: 'industry',
             yKey: 'averageJobOffers',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart8',
@@ -296,7 +312,8 @@
             data: percentageChangeJobOffersByIndustry.percentageChangeJobOffersByIndustry,
             xKey: 'industry',
             yKey: 'percentageChange',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart9',
@@ -305,7 +322,8 @@
             data: jobOffersBySeniority.jobOffersBySeniority,
             xKey: 'seniority',
             yKey: 'jobOffers',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart10',
@@ -314,7 +332,8 @@
             data: yearsOfExperienceHistogram.yearsOfExperienceHistogram,
             xKey: 'range',
             yKey: 'percentage',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart11',
@@ -323,7 +342,8 @@
             data: averageRequiredYearsBySeniority.averageRequiredYearsBySeniority,
             xKey: 'seniority',
             yKey: 'averageYears',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart12',
@@ -332,7 +352,8 @@
             data: averageRequiredYearsByIndustry.averageRequiredYearsByIndustry,
             xKey: 'industry',
             yKey: 'averageYears',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart13',
@@ -341,8 +362,9 @@
             data: topMostViewedJobOffers.topMostViewedJobOffers,
             xKey: 'jobTitle',
             yKey: 'views',
-            type: 'bar', // Changed from 'horizontalBar' to 'bar'
-            indexAxis: 'y' // Added to make it horizontal
+            type: 'bar',
+            indexAxis: 'y',
+            category: 'offers'
         },
         {
             id: 'chart14',
@@ -351,7 +373,8 @@
             data: topCompaniesByAverageSalary.topCompaniesByAverageSalary,
             xKey: 'company',
             yKey: 'averageSalary',
-            type: 'bar'
+            type: 'bar',
+            category: 'salary'
         },
         {
             id: 'chart15',
@@ -360,7 +383,8 @@
             data: topCompaniesByJobOffers.topCompaniesByJobOffers,
             xKey: 'company',
             yKey: 'jobOffers',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart16',
@@ -369,7 +393,8 @@
             data: salaryDifferenceByIndustry.salaryDifferenceByIndustry,
             xKey: 'industry',
             yKey: 'difference',
-            type: 'bar'
+            type: 'bar',
+            category: 'salary'
         },
         {
             id: 'chart17',
@@ -379,7 +404,8 @@
             xKey: 'level',
             yKey: 'percentage',
             type: 'bar',
-            nested: true // Custom flag to handle nested data
+            nested: true,
+            category: 'offers'
         }
     ];
 
@@ -603,11 +629,31 @@
         color: white;
     }
 
+    
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        overflow-y: auto; /* Ensure vertical scrolling */
+    }
+
+    html, body {
+        height: 100%; /* Set height to allow proper scrolling */
+    }
+
     main {
         margin-top: 80px;
         max-width: 1400px;
         margin: 0 auto;
         padding: 2rem;
+        display: block; /* Ensure it behaves as a block element */
+    }
+
+    .charts-container {
+        display: grid;
+        grid-template-columns: 1fr; /* Single column layout */
+        gap: 2rem;
+        overflow-y: auto; /* Enable scrolling if content overflows */
+        padding-bottom: 2rem; /* Add space at the bottom for scroll visibility */
     }
 
     .chart-title {

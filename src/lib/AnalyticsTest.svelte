@@ -3,6 +3,14 @@
     import { Chart, registerables } from 'chart.js';
     Chart.register(...registerables);
 
+    const categories = [
+        { id: 'salary', label: 'Salary Analytics' },
+        { id: 'applications', label: 'Application Statistics' },
+        { id: 'offers', label: 'Job Offers' }
+    ];
+
+    let selectedCategory = 'salary';
+
     const topLocationsBySalary = {
         "topLocationsBySalary": [
             { "location": "San Francisco, CA", "averageSalary": 145000 },
@@ -160,7 +168,7 @@
         "ratioOfLevelRequiredByIndustry": [
             {
                 "industry": "Tech",
-                "levels": {
+                "level": {
                     "Entry": 40,
                     "Mid": 35,
                     "Senior": 20,
@@ -170,7 +178,7 @@
             },
             {
                 "industry": "Finance",
-                "levels": {
+                "level": {
                     "Entry": 30,
                     "Mid": 40,
                     "Senior": 25,
@@ -180,7 +188,7 @@
             },
             {
                 "industry": "Healthcare",
-                "levels": {
+                "level": {
                     "Entry": 35,
                     "Mid": 30,
                     "Senior": 25,
@@ -190,7 +198,7 @@
             },
             {
                 "industry": "Consulting",
-                "levels": {
+                "level": {
                     "Entry": 25,
                     "Mid": 35,
                     "Senior": 30,
@@ -200,7 +208,7 @@
             },
             {
                 "industry": "Energy",
-                "levels": {
+                "level": {
                     "Entry": 20,
                     "Mid": 40,
                     "Senior": 30,
@@ -230,7 +238,8 @@
             data: topLocationsBySalary.topLocationsBySalary,
             xKey: 'location',
             yKey: 'averageSalary',
-            type: 'bar'
+            type: 'bar',
+            category: 'salary'
         },
         {
             id: 'chart2',
@@ -239,7 +248,8 @@
             data: topIndustriesBySalary.topIndustriesBySalary,
             xKey: 'industry',
             yKey: 'averageSalary',
-            type: 'bar'
+            type: 'bar',
+            category: 'salary'
         },
         {
             id: 'chart3',
@@ -248,18 +258,9 @@
             data: mostViewedJobOffers.mostViewedJobOffers,
             xKey: 'jobTitle',
             yKey: 'views',
-            type: 'bar', // Changed from 'horizontalBar' to 'bar'
-            indexAxis: 'y' // Added to make it horizontal
-        },
-        {
-            id: 'chart4',
-            label: 'Average Applications Per User',
-            description: 'On average, each user submits this number of applications.',
-            data: averageApplicationsPerUser.averageApplicationsPerUser,
-            xKey: 'metric',
-            yKey: 'value',
-            type: 'doughnut',
-            singleValue: true // Custom flag to handle single value
+            type: 'bar',
+            indexAxis: 'y',
+            category: 'offers'
         },
         {
             id: 'chart5',
@@ -268,17 +269,8 @@
             data: averageApplicationsByLevel.averageApplicationsByLevel,
             xKey: 'level',
             yKey: 'averageApplications',
-            type: 'line'
-        },
-        {
-            id: 'chart6',
-            label: 'Total Applications Last 30 Days',
-            description: 'Total number of applications submitted in the last 30 days.',
-            data: totalApplicationsLast30Days.totalApplicationsLast30Days,
-            xKey: 'metric',
-            yKey: 'value',
-            type: 'pie',
-            singleValue: true
+            type: 'line',
+            category: 'applications'
         },
         {
             id: 'chart7',
@@ -287,7 +279,8 @@
             data: averageJobOffersByIndustry.averageJobOffersByIndustry,
             xKey: 'industry',
             yKey: 'averageJobOffers',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart8',
@@ -296,7 +289,8 @@
             data: percentageChangeJobOffersByIndustry.percentageChangeJobOffersByIndustry,
             xKey: 'industry',
             yKey: 'percentageChange',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart9',
@@ -305,7 +299,8 @@
             data: jobOffersBySeniority.jobOffersBySeniority,
             xKey: 'seniority',
             yKey: 'jobOffers',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart10',
@@ -314,7 +309,8 @@
             data: yearsOfExperienceHistogram.yearsOfExperienceHistogram,
             xKey: 'range',
             yKey: 'percentage',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart11',
@@ -323,7 +319,8 @@
             data: averageRequiredYearsBySeniority.averageRequiredYearsBySeniority,
             xKey: 'seniority',
             yKey: 'averageYears',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart12',
@@ -332,7 +329,8 @@
             data: averageRequiredYearsByIndustry.averageRequiredYearsByIndustry,
             xKey: 'industry',
             yKey: 'averageYears',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart13',
@@ -341,8 +339,9 @@
             data: topMostViewedJobOffers.topMostViewedJobOffers,
             xKey: 'jobTitle',
             yKey: 'views',
-            type: 'bar', // Changed from 'horizontalBar' to 'bar'
-            indexAxis: 'y' // Added to make it horizontal
+            type: 'bar',
+            indexAxis: 'y',
+            category: 'offers'
         },
         {
             id: 'chart14',
@@ -351,7 +350,8 @@
             data: topCompaniesByAverageSalary.topCompaniesByAverageSalary,
             xKey: 'company',
             yKey: 'averageSalary',
-            type: 'bar'
+            type: 'bar',
+            category: 'salary'
         },
         {
             id: 'chart15',
@@ -360,7 +360,8 @@
             data: topCompaniesByJobOffers.topCompaniesByJobOffers,
             xKey: 'company',
             yKey: 'jobOffers',
-            type: 'bar'
+            type: 'bar',
+            category: 'offers'
         },
         {
             id: 'chart16',
@@ -369,7 +370,8 @@
             data: salaryDifferenceByIndustry.salaryDifferenceByIndustry,
             xKey: 'industry',
             yKey: 'difference',
-            type: 'bar'
+            type: 'bar',
+            category: 'salary'
         },
         {
             id: 'chart17',
@@ -377,106 +379,49 @@
             description: 'Proportion of different seniority levels required in each industry.',
             data: ratioOfLevelRequiredByIndustry.ratioOfLevelRequiredByIndustry,
             xKey: 'level',
-            yKey: 'percentage',
+            yKey: 'industry',
             type: 'bar',
-            nested: true // Custom flag to handle nested data
+            nested: true,
+            category: 'applications'
         }
     ];
 
     // Function to dynamically create charts
+    let filteredDataSources = dataSources.filter(chart => chart.category === selectedCategory);
+
+    let chartInstances = {};
+
+    function handleCategoryChange(event) {
+        selectedCategory = event.target.value;
+        filteredDataSources = dataSources.filter(chart => chart.category === selectedCategory);
+
+        // Destroy existing charts and clear instances
+        Object.values(chartInstances).forEach(chart => chart.destroy());
+        chartInstances = {};
+
+        // Ensure the DOM updates with new canvases before initializing charts
+        setTimeout(() => {
+            initializeCharts();
+        }, 0);
+    }
+
+    function initializeCharts() {
+        filteredDataSources.forEach(({ id, label, data, xKey, yKey, type, singleValue, nested, indexAxis }) => {
+            createChart(id, label, data, xKey, yKey, type, { singleValue, nested, indexAxis });
+        });
+    }
+
     function createChart(canvasId, chartLabel, dataset, xKey, yKey, type = 'bar', optionsOverride = {}) {
-        const ctx = document.getElementById(canvasId).getContext('2d');
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
 
-        // Handle single value charts
-        if (optionsOverride.singleValue) {
-            new Chart(ctx, {
-                type,
-                data: {
-                    labels: [chartLabel],
-                    datasets: [
-                        {
-                            label: yKey,
-                            data: [dataset[yKey]],
-                            backgroundColor: ['rgba(54, 162, 235, 0.6)'],
-                            borderColor: ['rgba(54, 162, 235, 1)'],
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            enabled: true
-                        }
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-            return;
+        const ctx = canvas.getContext('2d');
+
+        if (chartInstances[canvasId]) {
+            chartInstances[canvasId].destroy();
         }
 
-        // Handle nested data (e.g., ratioOfLevelRequiredByIndustry)
-        if (optionsOverride.nested) {
-            // Example: Create a stacked bar chart for each industry
-            const levels = Object.keys(dataset[0].levels);
-            const labels = dataset.map(item => item.industry);
-            const dataSets = levels.map(level => ({
-                label: level,
-                data: dataset.map(item => item.levels[level]),
-                backgroundColor: getColorForLevel(level)
-            }));
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: dataSets
-                },
-                options: {
-                    plugins: {
-                        title: {
-                            display: false,
-                            text: chartLabel
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false
-                        },
-                        legend: {
-                            position: 'top',
-                        }
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            stacked: true,
-                            title: {
-                                display: true,
-                                text: 'Industry'
-                            },
-                            indexAxis: optionsOverride.indexAxis || 'x' // Ensure indexAxis is set if needed
-                        },
-                        y: {
-                            stacked: true,
-                            title: {
-                                display: true,
-                                text: 'Percentage (%)'
-                            },
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-            return;
-        }
-
-        // Regular chart creation
-        new Chart(ctx, {
+        chartInstances[canvasId] = new Chart(ctx, {
             type,
             data: {
                 labels: dataset.map(item => item[xKey]),
@@ -487,60 +432,19 @@
                         backgroundColor: type === 'line' ? 'rgba(75, 192, 192, 0.2)' : 'rgba(54, 162, 235, 0.6)',
                         borderColor: type === 'line' ? 'rgba(75, 192, 192, 1)' : 'rgba(54, 162, 235, 1)',
                         borderWidth: 2,
-                        pointRadius: type === 'line' ? 3 : 0,
-                        fill: type === 'line' ? true : false
+                        fill: type === 'line'
                     }
                 ]
             },
             options: {
-                indexAxis: type === 'bar' && optionsOverride.indexAxis === 'y' ? 'y' : 'x',
-                plugins: {
-                    legend: {
-                        display: type !== 'pie' && type !== 'doughnut'
-                    },
-                    tooltip: {
-                        enabled: true
-                    }
-                },
                 responsive: true,
-                maintainAspectRatio: false,
-                scales: type === 'pie' || type === 'doughnut' ? {} : {
-                    x: {
-                        type: 'category',
-                        title: {
-                            display: true,
-                            text: xKey
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: yKey
-                        },
-                        beginAtZero: true
-                    }
-                }
+                maintainAspectRatio: false
             }
         });
     }
 
-    // Utility function to generate consistent colors for nested charts
-    function getColorForLevel(level) {
-        const colors = {
-            "Entry": 'rgba(255, 99, 132, 0.6)',
-            "Mid": 'rgba(54, 162, 235, 0.6)',
-            "Senior": 'rgba(255, 206, 86, 0.6)',
-            "Director": 'rgba(75, 192, 192, 0.6)',
-            "Executive": 'rgba(153, 102, 255, 0.6)'
-        };
-        return colors[level] || 'rgba(201, 203, 207, 0.6)';
-    }
-
-    // Create all charts on mount
     onMount(() => {
-        dataSources.forEach(({ id, label, data, xKey, yKey, type, singleValue, nested, indexAxis }) => {
-            createChart(id, label, data, xKey, yKey, type, { singleValue, nested, indexAxis });
-        });
+        initializeCharts();
     });
 </script>
 
@@ -556,8 +460,16 @@
 
 <main>
     <h1 class="chart-title">Analytics</h1>
+    <div class="dropdown-container">
+        <label for="categoryDropdown">Choose a category:</label>
+        <select id="categoryDropdown" bind:value={selectedCategory} on:change={handleCategoryChange}>
+            {#each categories as { id, label }}
+                <option value={id}>{label}</option>
+            {/each}
+        </select>
+    </div>
     <div class="charts-container">
-        {#each dataSources as { id, label, description }}
+        {#each filteredDataSources as { id, label, description }}
             <div class="chart-wrapper">
                 <h2 class="chart-label">{label}</h2>
                 <canvas id={id}></canvas>
@@ -568,6 +480,20 @@
 </main>
 
 <style>
+    .dropdown-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+
+    select {
+        padding: 0.5rem;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 1rem;
+        margin-left: 1rem;
+    }
     .app-bar {
         position: fixed;
         top: 0;
