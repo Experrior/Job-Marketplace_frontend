@@ -34,9 +34,9 @@ const resetUser = () => user.set(template);
 
 
 function verifyUser() {
-  if (!browser) return;
+  // if (!browser) return;
 
-  const currentUser = get(user);
+  let currentUser = get(user);
 
   const userExists = currentUser.jwt;
 
