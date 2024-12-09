@@ -117,8 +117,9 @@
     }
   }
 
-  function applyFilters() {
-    fetchJobs();
+  async function applyFilters() {
+    console.log('test2')
+    await fetchJobs();
   }
 
   function changePage(pageNumber) {
