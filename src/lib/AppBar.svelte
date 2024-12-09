@@ -28,6 +28,7 @@
             {#if $user.role === 'APPLICANT'}
                 <a on:click={() => goto('/applications')} class="app-link" aria-label="My Applications">My Applications</a>
             {/if}
+            <a on:click={() => goto('/analytics')} class="app-link" aria-label="Analtyics">Analtyics</a>
         {/if}
     </div>
 
