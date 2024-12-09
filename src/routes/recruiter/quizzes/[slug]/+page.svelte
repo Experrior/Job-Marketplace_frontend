@@ -4,7 +4,7 @@
    import { page } from '$app/stores';
    import { onMount } from 'svelte';
    import axios from 'axios';
-   import {verifyUser, user} from '$lib/../stores/user'
+   import {verifyUser, user} from '$lib/stores/user'
    import {goto} from '$app/navigation'
 
 
