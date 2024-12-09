@@ -2,7 +2,12 @@
     export let filters;
     export let onApplyFilters;
     export let companies = [];
-
+    import { createEventDispatcher } from 'svelte';
+    
+    const dispatch = createEventDispatcher();
+    function applyFilters() {
+        dispatch('applyFilters', { filters });
+    }
     // Manage selected skills
     let filteredCompanies = [];
     let dropdownVisible = false;
@@ -123,7 +128,7 @@
         Max Salary
         <input type="number" bind:value={filters.maxSalary} />
     </label>
-    <button on:click={onApplyFilters}>Apply Filters</button>
+    <button on:click={applyFilters}>Apply Filters</button>
 </div>
 
 <style>
