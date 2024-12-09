@@ -1,53 +1,53 @@
-import { writable, get, readable } from 'svelte/store';
-import { browser } from '$app/environment';
+// import { writable, get, readable } from 'svelte/store';
+// import { browser } from '$app/environment';
 
-const template = {
-  displayName: '',
-  profilePicture: '',
-  email: '',
-  firstName: '',
-  jwt: '',
-  refreshToken: '',
-  role: 'recruiter'
-};
+// const template = {
+//   displayName: '',
+//   profilePicture: '',
+//   email: '',
+//   firstName: '',
+//   jwt: '',
+//   refreshToken: '',
+//   role: 'recruiter'
+// };
 
-const user = writable(template);
+// const user = writable(template);
 
-if (browser) {
+// if (browser) {
 
-  const storedUser = localStorage.getItem('user');
-  if (storedUser) {
-    try {
-      user.set(JSON.parse(storedUser));
-    } catch (e) {
-      console.error('Failed to parse user from localStorage:', e);
-    }
-  }
+//   const storedUser = localStorage.getItem('user');
+//   if (storedUser) {
+//     try {
+//       user.set(JSON.parse(storedUser));
+//     } catch (e) {
+//       console.error('Failed to parse user from localStorage:', e);
+//     }
+//   }
 
-  user.subscribe((value) => {
-    localStorage.setItem('user', JSON.stringify(value));
-  });
-}
+//   user.subscribe((value) => {
+//     localStorage.setItem('user', JSON.stringify(value));
+//   });
+// }
 
-const resetUser = () => user.set(template);
+// const resetUser = () => user.set(template);
 
 
 
-function verifyUser() {
-  if (!browser) return;
+// function verifyUser() {
+//   // if (!browser) return;
 
-  const currentUser = get(user);
+//   let currentUser = get(user);
 
-  const userExists = currentUser.jwt;
+//   const userExists = currentUser.jwt;
 
-  if (!userExists) {
-    resetUser();
-    localStorage.removeItem('user');
-    console.warn('User is not logged in. Resetting user store and clearing localStorage.');
-    return false;
-  }
+//   if (!userExists) {
+//     resetUser();
+//     localStorage.removeItem('user');
+//     console.warn('User is not logged in. Resetting user store and clearing localStorage.');
+//     return false;
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
-export { user, resetUser, verifyUser };
+// export { user, resetUser, verifyUser };

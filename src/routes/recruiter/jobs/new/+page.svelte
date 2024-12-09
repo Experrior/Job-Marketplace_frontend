@@ -8,6 +8,9 @@
   import 'quill/dist/quill.snow.css';
   import AppBar from "$lib/AppBar.svelte";
 
+  const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+  console.log("USING GATEWAY:", apiGateway);
+
   console.log(verifyUser());
 
   let title = '';

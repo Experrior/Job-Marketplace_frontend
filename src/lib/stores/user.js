@@ -37,7 +37,7 @@ const resetUser = () => user.set(template);
 
 
 function verifyUser() {
-  if (!browser) return;
+  if (!browser) return true;
 
   const currentUser = get(user);
   if (!currentUser) {
