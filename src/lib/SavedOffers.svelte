@@ -5,6 +5,9 @@
     import JobCard from "$lib/JobCard.svelte";
     import AppBar from "$lib/AppBar.svelte";
     import Toast from "$lib/Toast.svelte";
+    import {get} from "svelte/store";
+    import {companyCache} from "../stores/companyCache.js";
+    import axios from "axios";
 
     const apiGateway = import.meta.env.VITE_GATEWAY_URL;
     console.log("USING GATEWAY:", apiGateway);
@@ -52,6 +55,7 @@
                 title
                 location
                 salary
+                companyId
                 createdAt
             }
         }`;
@@ -60,8 +64,14 @@
             const result = await callGraphQL(query);
 
             if (result && result.followedJobs) {
-                savedOffers = result.followedJobs;
-                savedOffersCopy = [...result.followedJobs];
+                savedOffers = await Promise.all(result.followedJobs.map(async (job) => {
+                    const companyDetails = await fetchCompanyDetails(job.companyId);
+                    return {
+                        ...job,
+                        company: companyDetails
+                    };
+                }));
+                savedOffersCopy = [...savedOffers];
             } else {
                 console.error('GraphQL error:', result.errors);
                 error = 'Could not load saved offers. Please try again later.';
@@ -69,6 +79,32 @@
         } catch (err) {
             console.error('Failed to fetch saved offers:', err);
             error = 'Could not load saved offers. Please try again later.';
+        }
+    }
+
+    async function fetchCompanyDetails(companyId) {
+        const cache = get(companyCache);
+        if (cache[companyId]) {
+            return cache[companyId];
+        }
+
+        try {
+            const response = await axios.get(`http://localhost:8080/user-service/getCompanyById`, {
+                params: { companyId }
+            });
+            if (response.status === 200) {
+                companyCache.update(cache => {
+                    cache[companyId] = response.data;
+                    return cache;
+                });
+                return response.data;
+            } else {
+                console.error('Error fetching company details:', response.status, response.statusText);
+                return null;
+            }
+        } catch (error) {
+            console.error('Network or server error:', error);
+            return null;
         }
     }
 
@@ -95,15 +131,11 @@
         if (restoredJobId) {
             // Find the job in pendingRemovals with full data
             const jobToRestore = pendingRemovals.find(job => job.jobId === restoredJobId);
-            console.log("Restoring job:", jobToRestore);
             if (jobToRestore) {
-                // Remove the job from pendingRemovals
                 pendingRemovals = pendingRemovals.filter(job => job.jobId !== restoredJobId);
-                console.log("Pending removals:", pendingRemovals);
 
                 // Reinsert the job into savedOffers in the correct position
                 const originalIndex = savedOffersCopy.findIndex(job => job.jobId === restoredJobId);
-                console.log("Original index:", originalIndex);
                 savedOffers = [
                     ...savedOffers.slice(0, originalIndex),
                     jobToRestore,
@@ -162,8 +194,7 @@
         <div class="job-list-container">
             <ul class="job-list">
                 {#each savedOffers as job}
-                    <JobCard {job} isLiked={true} useToast={true} onUnlike={handleUnlike} />
-                {/each}
+                    <JobCard {job} isLiked={true} useToast={true} logoUrl={job.company.logoUrl} companyName={job.company.name} onUnlike={handleUnlike} />                {/each}
             </ul>
         </div>
     {/if}

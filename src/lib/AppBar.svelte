@@ -22,12 +22,13 @@
         <a href="/" class="app-name" aria-label="Go to home">Job Market</a>
         {#if $user }
             {#if $user.role === 'RECRUITER'}
-                <a href="/recruiter" class="app-name recruiter-link" aria-label="Jobs panel">My Jobs Panel</a>
+                <a href="/recruiter" class="app-name" aria-label="Jobs panel">My Jobs Panel</a>
             {/if}
             <a on:click={() => goto('/savedOffers')} class="app-link" aria-label="Saved Offers">Saved Offers</a>
             {#if $user.role === 'APPLICANT'}
                 <a on:click={() => goto('/applications')} class="app-link" aria-label="My Applications">My Applications</a>
             {/if}
+            <a on:click={() => goto('/analytics')} class="app-link" aria-label="Analtyics">Analtyics</a>
         {/if}
     </div>
 
