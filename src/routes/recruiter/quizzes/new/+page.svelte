@@ -1,7 +1,7 @@
 <script>
     import { goto } from '$app/navigation';
     import AppBar from '$lib/AppBar.svelte';
-    import { user } from "$lib/../stores/user.js";
+    import { user } from "$lib/stores/user.js";
     import axios from 'axios';
 
     let quizName = '';
