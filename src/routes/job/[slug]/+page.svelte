@@ -52,6 +52,7 @@
 
     onMount(async () => {
         isLoggedIn = verifyUser();
+        console.log("Is logged in:", isLoggedIn);
 
         const urlParams = new URLSearchParams(window.location.search);
         companyLogo = urlParams.get('companyLogo');
@@ -77,7 +78,6 @@
                         description
                         createdAt
                         quizId
-                        views
                     }
                 }
             `;
@@ -130,11 +130,13 @@
                     }
                 }
             `;
-            const resumesData = await fetchGraphQL('/user-service/graphql', resumesQuery);
-            resumes = resumesData.userResumes;
 
-            // Fetch user applications
-            const applicationsQuery = `
+            if($user.role === 'APPLICANT') {
+                const resumesData = await fetchGraphQL('/user-service/graphql', resumesQuery);
+                resumes = resumesData.userResumes;
+
+                // Fetch user applications
+                const applicationsQuery = `
                 query {
                     userApplications {
                         job {
@@ -143,16 +145,17 @@
                     }
                 }
             `;
-            const applicationsData = await fetchGraphQL(
-                '/job-service/graphql',
-                applicationsQuery
-            );
-            applications = applicationsData.userApplications;
+                const applicationsData = await fetchGraphQL(
+                    '/job-service/graphql',
+                    applicationsQuery
+                );
+                applications = applicationsData.userApplications;
 
-            hasApplied = applications.some((app) => app.job.jobId === jobId);
+                hasApplied = applications.some((app) => app.job.jobId === jobId);
 
-            console.log('Applications:', applications);
-            console.log('Has applied:', hasApplied);
+                console.log('Applications:', applications);
+                console.log('Has applied:', hasApplied);
+            }
 
         } catch (err) {
             console.error('Error fetching user data:', err);
@@ -244,9 +247,6 @@
                 {/if}
                 {#if newJob.createdAt}
                     <p><strong>Posted On:</strong> {formatDate(newJob.createdAt)}</p>
-                {/if}
-                {#if newJob.views}
-                    <p><strong>Views:</strong> {newJob.views}</p>
                 {/if}
 
             </div>

@@ -31,6 +31,8 @@
   let quizzes = [];
   let quillInstance;
 
+  const apiGateway = import.meta.env.VITE_GATEWAY_URL;
+  console.log("USING GATEWAY:", apiGateway);
   onMount(async () => {
     // Initialize Quill editor
     quillInstance = new Quill('#quill-editor', {
