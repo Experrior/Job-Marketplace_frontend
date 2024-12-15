@@ -1,6 +1,6 @@
 <script>
     export let filters;
-    export let onApplyFilters;
+    // export let onApplyFilters;
     export let companies = [];
     import { createEventDispatcher } from 'svelte';
     
