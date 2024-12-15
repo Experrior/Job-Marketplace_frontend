@@ -44,15 +44,13 @@
 
   onMount(async () => {
     await fetchCompanies();
-    await fetchJobs();
-    if ($user.jwt)
-    {
-      await fetchRecommendations();
-    }
-
     if (verifyUser()) {
+      await fetchRecommendations();
       const savedOffers = await fetchSavedOffers($user.jwt);
       followedJobIds = new Set(savedOffers.map((job) => job.jobId));
+    }else{
+
+      await fetchJobs();
     }
 
     loading = false;
@@ -93,7 +91,9 @@
           isNew: isNewJob(job.createdAt),
           logoUrl: companies.find(company => company.id === job.companyId)?.logoUrl
         }));
-        totalPages = Math.ceil(allJobs.length / jobsPerPage);
+        filteredJobs = allJobs;
+        totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+        console.log(filteredJobs)
       } else {
         console.error('Error fetching jobs:', response.status, response.statusText);
       }
@@ -102,20 +102,63 @@
     }
   }
 
+/**
+ * Converts a snake_case string to camelCase.
+ * @param {string} str - The snake_case string.
+ * @returns {string} - The camelCase string.
+ */
+ const snakeToCamel = (str) => {
+  return str.replace(/_([a-z])/g, (match, p1) => p1.toUpperCase());
+};
+
+/**
+ * Converts all keys of an object from snake_case to camelCase.
+ * @param {Object} obj - The input object with snake_case keys.
+ * @returns {Object} - The new object with camelCase keys.
+ */
+const convertKeysToCamel = (obj) => {
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    const camelKey = snakeToCamel(key);
+    acc[camelKey] = value;
+    return acc;
+  }, {});
+};
+
+
+const convertKeysToCamelRecursive = (data) => {
+  if (Array.isArray(data)) {
+    return data.map(item => convertKeysToCamelRecursive(item));
+  } else if (data !== null && typeof data === 'object') {
+    return Object.entries(data).reduce((acc, [key, value]) => {
+      const camelKey = snakeToCamel(key);
+      acc[camelKey] = convertKeysToCamelRecursive(value);
+      return acc;
+    }, {});
+  }
+  return data;
+};
+
+
+
   async function fetchRecommendations() {
-    if ($user.jwt)
+    if (true)
     {
       try {
-        const response = await axios.post(
+        const response = await axios.get(
                 `${apiGateway}/analytics/recommendations/${$user.userId}`
         );
         if (response.status === 200) {
-          allJobs = response.data.content.map(job => ({
+
+          const camelCasedData = convertKeysToCamelRecursive(response.data);
+          console.log("CODOKURWY", camelCasedData)
+          allJobs = camelCasedData.map(job => ({
             ...job,
             isNew: isNewJob(job.createdAt),
             logoUrl: companies.find(company => company.id === job.companyId)?.logoUrl
           }));
-          totalPages = Math.ceil(allJobs.length / jobsPerPage);
+          filteredJobs = allJobs;
+          totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+          console.log("FILTERED:",filteredJobs);
         } else {
           console.error('Error fetching jobs:', response.status, response.statusText);
         }
@@ -168,6 +211,7 @@
           (currentPage - 1) * jobsPerPage,
           currentPage * jobsPerPage
   );
+ 
 </script>
 
 <AppBar />
@@ -186,7 +230,7 @@
                   bind:value={searchQuery}
                   on:input={() => {
               filteredJobs = allJobs.filter((job) =>
-                job.title.toLowerCase().includes(searchQuery.toLowerCase())
+                job.jobTitle.toLowerCase().includes(searchQuery.toLowerCase())
               );
             }}
           />
