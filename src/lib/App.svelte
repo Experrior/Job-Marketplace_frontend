@@ -45,6 +45,10 @@
   onMount(async () => {
     await fetchCompanies();
     await fetchJobs();
+    if ($user.jwt)
+    {
+      await fetchRecommendations();
+    }
 
     if (verifyUser()) {
       const savedOffers = await fetchSavedOffers($user.jwt);
@@ -89,13 +93,35 @@
           isNew: isNewJob(job.createdAt),
           logoUrl: companies.find(company => company.id === job.companyId)?.logoUrl
         }));
-        filteredJobs = allJobs;
-        totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+        totalPages = Math.ceil(allJobs.length / jobsPerPage);
       } else {
         console.error('Error fetching jobs:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Network or server error:', error);
+    }
+  }
+
+  async function fetchRecommendations() {
+    if ($user.jwt)
+    {
+      try {
+        const response = await axios.post(
+                `${apiGateway}/analytics/recommendations/${$user.userId}`
+        );
+        if (response.status === 200) {
+          allJobs = response.data.content.map(job => ({
+            ...job,
+            isNew: isNewJob(job.createdAt),
+            logoUrl: companies.find(company => company.id === job.companyId)?.logoUrl
+          }));
+          totalPages = Math.ceil(allJobs.length / jobsPerPage);
+        } else {
+          console.error('Error fetching jobs:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Network or server error:', error);
+      }
     }
   }
 
