@@ -150,7 +150,7 @@ const convertKeysToCamelRecursive = (data) => {
         if (response.status === 200) {
 
           const camelCasedData = convertKeysToCamelRecursive(response.data);
-          console.log("CODOKURWY", camelCasedData)
+
           allJobs = camelCasedData.map(job => ({
             ...job,
             isNew: isNewJob(job.createdAt),
