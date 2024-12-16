@@ -60,34 +60,34 @@
 
         try {
           
-            if (isLoggedIn) {
-                const jobQuery = `
-                query($jobIdi: ID!) {
-                    jobById(jobId: $jobIdi) {
-                        jobId
-                        title
-                        location
-                        employmentType
-                        workLocation
-                        requiredExperience
-                        salary
-                        companyId
-                        companyName
-                        requiredSkills
-                        description
-                        createdAt
-                        quizId
-                        views
-                    }
-                }
-            `;
-            const jobData = await fetchGraphQL(
-                '/job-service/graphql',
-                jobQuery,
-                { jobIdi: jobId }
-            );
-            newJob = jobData.jobById;
-            } else{
+            // if (isLoggedIn) {
+            //     const jobQuery = `
+            //     query($jobIdi: ID!) {
+            //         jobById(jobId: $jobIdi) {
+            //             jobId
+            //             title
+            //             location
+            //             employmentType
+            //             workLocation
+            //             requiredExperience
+            //             salary
+            //             companyId
+            //             companyName
+            //             requiredSkills
+            //             description
+            //             createdAt
+            //             quizId
+            //             views
+            //         }
+            //     }
+            // `; console.log('hugyftdrseawedfrgh')
+            // const jobData = await fetchGraphQL(
+            //     '/job-service/graphql',
+            //     jobQuery,
+            //     { jobIdi: jobId }
+            // );
+            // newJob = jobData.jobById;
+            // } else{
                 const jobData2 = await axios.get(apiGateway+`/job-service/getJob?jobId=${jobId}`,               {
                 headers: {
                   'Content-Type': 'application/json'
@@ -95,7 +95,7 @@
               })
             console.log("TEST@:",jobData2)
             newJob = jobData2.data;
-            }
+            // }
 
 
             console.log(newJob)
@@ -207,6 +207,7 @@
             }
         }
     }
+    console.log(skillsList)
 </script>
 
 <AppBar/>
