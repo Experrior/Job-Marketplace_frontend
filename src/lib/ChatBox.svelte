@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, afterUpdate } from "svelte";
   import axios from "axios";
   import {user, verifyUser} from '$lib/stores/user';
 
@@ -15,12 +15,11 @@
   let chatsMap = {};
   let messagesContainer;
 
-
   let socket;
 
   onMount(async () => {
     console.log("MYUSERID: ", $user.userId)
-    console.log("JWT: ", $user.jwt)
+
     await initializeWebSocketConn();
     await getUserChats()
     console.log("chatList:", chatList)
@@ -30,6 +29,9 @@
 
   });
 
+  afterUpdate(() => {
+		console.log("afterUpdate");
+  });
 
   function scrollToBottom() {
     if (messagesContainer) {
@@ -59,30 +61,26 @@
       if (response.status !== 200) {
         throw new Error(`Error fetching chats: ${response.statusText}`);
       }
-      if (!response.data || response.data.length === 0){
-        console.log("Chats not found")
-      }else{
-        chatList = response.data;
+
+      chatList = response.data;
       if (chatList.length > 0) {
         selectChat(chatList[0].ChatId);
         for (const chat in chatList) {
           chatsMap[chat.ChatId] = chat
         }
       }
-      }
-
     } catch (error) {
       console.error(error);
     }
 
   }
 
-  // onDestroy(() => {
-  //   if (socket && socket.readyState === WebSocket.OPEN) {
-  //     socket.close();
-  //     console.log("CLOSED WEBSOCKET")
-  //   }
-  // });
+  onDestroy(() => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.close();
+      console.log("CLOSED WEBSOCKET")
+    }
+  });
 
 
   async function toggleChatBox() {
@@ -118,7 +116,6 @@
 }
 
   async function initializeWebSocketConn() {
-    console.log('test2:', `ws://${apiGateway.split('://')[1]}/chat_service/ws?userId=${$user.userId}`)
     socket = await new WebSocket(`ws://${apiGateway.split('://')[1]}/chat_service/ws?userId=${$user.userId}`);
 
     socket.onmessage = (event) => {
