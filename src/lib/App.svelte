@@ -46,10 +46,12 @@
     await fetchCompanies();
     if (verifyUser()) {
       await fetchRecommendations();
+      if (!allJobs || allJobs.length === 0){
+        await fetchJobs();
+      }
       const savedOffers = await fetchSavedOffers($user.jwt);
       followedJobIds = new Set(savedOffers.map((job) => job.jobId));
     }else{
-
       await fetchJobs();
     }
 
@@ -159,8 +161,9 @@ const convertKeysToCamelRecursive = (data) => {
           filteredJobs = allJobs;
           totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
           console.log("FILTERED:",filteredJobs);
-        } else {
-          console.error('Error fetching jobs:', response.status, response.statusText);
+        } else if (response.status === 404) {
+          console.log('Error fetching jobs:', response.status, response.statusText);
+          return null
         }
       } catch (error) {
         console.error('Network or server error:', error);

@@ -12,7 +12,7 @@
     }
   
     async function renderCharts() {
-      const all_jsons = await axios.get('http://localhost:8089/charts/get-json');
+      const all_jsons = await axios.get('http://localhost:8080/analytics/charts/get-json');
       const json1 = all_jsons.data.top_10_locations_by_average_salaries;
       const json2 = all_jsons.data.top_5_industries_by_average_salaries;
       const json3 = all_jsons.data.avg_applications_by_level;
