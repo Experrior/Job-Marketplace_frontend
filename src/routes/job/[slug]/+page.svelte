@@ -95,23 +95,22 @@
               })
             console.log("TEST@:",jobData2)
             newJob = jobData2.data;
-            // }
 
-
-            console.log(newJob)
+            console.log("skils: ", newJob.requiredSkills)
             if (newJob) {
-                skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)].map(
-                    (match) => ({
-                        name: match[1],
-                        level: Number(match[2]),
-                    })
-                );
+                skillsList = newJob.requiredSkills
+            //     skillsList = [...newJob.requiredSkills.matchAll(/Skill\(name=([^,]+), level=(\d+)/g)].map(
+            //         (match) => ({
+            //             name: match[1],
+            //             level: Number(match[2]),
+            //         })
+            //     );
+            // }
             }
-
             console.log('New Job:', newJob);
         } catch (err) {
             error = err.message || 'An error occurred while fetching the job.';
-            jobNotFound = true;
+            // jobNotFound = true;
         } finally {
             loading = false;
         }
@@ -167,10 +166,10 @@
     }
 
     async function takeQuiz() {
-        if (!resume.resumeId) {
-            showError = true;
-            return;
-        }
+        // if (!resume.resumeId) {
+        //     showError = true;
+        //     return;
+        // }
         showError = false;
 
         if (newJob.quizId) {
@@ -217,8 +216,8 @@
 
     {#if loading}
         <p class="loading-message">Loading...</p>
-    {:else if error}
-        <p class="error-message">Job not found</p>
+    <!-- {:else if error}
+        <p class="error-message">Job not found</p> -->
     {:else if newJob}
         <div class="job-description">
             {#if companyLogo}

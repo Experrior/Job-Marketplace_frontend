@@ -233,7 +233,7 @@ const convertKeysToCamelRecursive = (data) => {
                   bind:value={searchQuery}
                   on:input={() => {
               filteredJobs = allJobs.filter((job) =>
-                job.jobTitle.toLowerCase().includes(searchQuery.toLowerCase())
+                job.title.toLowerCase().includes(searchQuery.toLowerCase())
               );
             }}
           />

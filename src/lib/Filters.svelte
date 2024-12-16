@@ -17,7 +17,7 @@
         filters.workLocation = event.target.value;
     }
 
-    function handleEmploymentTypeChange(event) {
+    function handleEmploymentTypeChange(event) { 
         filters.employmentType = event.target.value;
     }
 
